@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Speed Runner - Fixed Green Jump</title>
+    <title>Speed Runner - Hidden Reset</title>
     <style>
         body { 
             margin: 0; padding: 0; overflow: hidden; 
@@ -49,16 +49,17 @@
         const obs_scale = isPC ? 2.0 : 1.0;
         const p_gravity = isPC ? 0.7 : 0.6;
         
-        // --- ジャンプの高さ設定 ---
-        const JUMP_SMALL = isPC ? -6.0 : -3.0;  
+        // ジャンプの高さ設定
+        const JUMP_SMALL = isPC ? -6.2 : -3.2;  
         const JUMP_BIG = isPC ? -14.5 : -10.0;    
 
         let gameState = 'START';
         let score = 0;
         let highScore = localStorage.getItem('dinoBest') || 0;
-        let gameTick = 0;
+        
+        // スピード・タイマー管理
+        let cycleTimer = 0; 
         const initialBaseSpeed = isPC ? 5.5 : 4.5;
-        let baseSpeed = initialBaseSpeed;
         let currentSpeed = initialBaseSpeed;
 
         const player = { 
@@ -72,9 +73,9 @@
         };
 
         const obstacleTypes = [
-            { w: 15 * obs_scale, h: 50 * obs_scale, pts: 10, color: '#e74c3c' }, 
-            { w: 60 * obs_scale, h: 15 * obs_scale, pts: 5,  color: '#f1c40f' }, 
-            { w: 25 * obs_scale, h: 25 * obs_scale, pts: 1,  color: '#3498db' }
+            { w: 15 * obs_scale, h: 55 * obs_scale, pts: 10, color: '#e74c3c' }, 
+            { w: 57 * obs_scale, h: 13 * obs_scale, pts: 5,  color: '#f1c40f' }, 
+            { w: 25 * obs_scale, h: 23 * obs_scale, pts: 1,  color: '#3498db' }
         ];
         let obstacles = [];
         let spawnTimer = 0;
@@ -115,11 +116,7 @@
         };
 
         const endInput = () => {
-            // ジャンプ中に指を離した時の処理
             if (player.isJumping && player.vy < JUMP_SMALL) {
-                // --- ここを調整 ---
-                // 数字を 0 に近づける（例: -3.0や-2.0）ほど、ふわっと高く残ります。
-                // 数字を大きくする（例: -0.5や0）ほど、すぐに落下が始まります。
                 player.vy = -3.8; 
             }
             isPressing = false;
@@ -133,8 +130,8 @@
         window.addEventListener('touchend', endInput);
 
         function resetGame() {
-            score = 0; gameTick = 0; 
-            baseSpeed = initialBaseSpeed;
+            score = 0;
+            cycleTimer = 0;
             currentSpeed = initialBaseSpeed;
             obstacles = []; 
             spawnTimer = 0;
@@ -145,9 +142,18 @@
         function update() {
             const groundY = canvas.height - 40;
             if (gameState === 'PLAYING') {
-                gameTick++;
-                baseSpeed += 0.0001; 
-                currentSpeed = baseSpeed;
+                cycleTimer++;
+                
+                // 加速
+                currentSpeed += 0.0015;
+
+                // 40秒（2400フレーム）以降にランダムでリセット（表示はなし）
+                if (cycleTimer > 2400) {
+                    if (Math.random() < 0.008) {
+                        cycleTimer = 0;
+                        currentSpeed = initialBaseSpeed;
+                    }
+                }
 
                 player.vy += player.gravity;
                 player.y += player.vy;
@@ -178,6 +184,8 @@
                     if (!o.passed && o.x + o.w < player.x) { score += o.pts; o.passed = true; }
                     if (o.x + o.w < 0) obstacles.splice(i, 1);
                 }
+
+                // 表示をシンプルに（BESTとSCOREのみ）
                 ui.innerHTML = `BEST: ${highScore}<br>SCORE: ${score}`;
             }
             draw(groundY);
@@ -188,11 +196,8 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#7f8c8d';
             ctx.fillRect(0, groundY, canvas.width, 2);
-            
-            // ★色の変化を削除し、常に緑色（#27ae60）に設定しました
             ctx.fillStyle = '#27ae60';
             ctx.fillRect(player.x, player.y, player.width, player.height);
-
             obstacles.forEach(o => {
                 ctx.fillStyle = o.color;
                 ctx.fillRect(o.x, o.y, o.w, o.h);
