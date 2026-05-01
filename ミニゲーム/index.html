@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Speed Runner - Fixed Green Jump</title>
+    <style>
+        body { 
+            margin: 0; padding: 0; overflow: hidden; 
+            background: #2c3e50; 
+            display: flex; align-items: center; justify-content: center;
+            width: 100vw; height: 100vh;
+            touch-action: none;
+            font-family: sans-serif;
+        }
+        canvas { 
+            background: #ecf0f1; 
+            display: block;
+            box-shadow: 0 0 30px rgba(0,0,0,0.7);
+            max-width: 1200px; 
+            max-height: 675px; 
+            width: 100%;
+            height: auto;
+        }
+        #ui { 
+            position: absolute; 
+            z-index: 100;
+            pointer-events: none;
+            color: #2c3e50;
+            font-weight: bold;
+            background: rgba(255,255,255,0.6); 
+            padding: 5px 10px;
+            font-size: 14px; 
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">BEST: 0<br>SCORE: 0</div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const ui = document.getElementById('ui');
+
+        const isPC = window.innerWidth >= 960;
+        const p_sz = isPC ? 45 : 25; 
+        const obs_scale = isPC ? 2.0 : 1.0;
+        const p_gravity = isPC ? 0.7 : 0.6;
+        
+        // --- ジャンプの高さ設定 ---
+        const JUMP_SMALL = isPC ? -6.0 : -3.0;  
+        const JUMP_BIG = isPC ? -14.5 : -10.0;    
+
+        let gameState = 'START';
+        let score = 0;
+        let highScore = localStorage.getItem('dinoBest') || 0;
+        let gameTick = 0;
+        const initialBaseSpeed = isPC ? 5.5 : 4.5;
+        let baseSpeed = initialBaseSpeed;
+        let currentSpeed = initialBaseSpeed;
+
+        const player = { 
+            x: isPC ? 60 : 40,
+            y: 0, 
+            width: p_sz, 
+            height: p_sz, 
+            vy: 0, 
+            gravity: p_gravity, 
+            isJumping: false 
+        };
+
+        const obstacleTypes = [
+            { w: 15 * obs_scale, h: 50 * obs_scale, pts: 10, color: '#e74c3c' }, 
+            { w: 60 * obs_scale, h: 15 * obs_scale, pts: 5,  color: '#f1c40f' }, 
+            { w: 25 * obs_scale, h: 25 * obs_scale, pts: 1,  color: '#3498db' }
+        ];
+        let obstacles = [];
+        let spawnTimer = 0;
+        let nextSpawnThreshold = 40; 
+
+        function resize() {
+            const screenW = window.innerWidth;
+            const screenH = window.innerHeight;
+            let gameW = screenW;
+            let gameH = screenW * (9 / 16);
+            if (gameH > screenH) {
+                gameH = screenH;
+                gameW = screenH * (16 / 9);
+            }
+            canvas.width = gameW;
+            canvas.height = gameH;
+            const canvasRect = canvas.getBoundingClientRect();
+            ui.style.top = (canvasRect.top + 10) + "px";
+            ui.style.left = (canvasRect.left + 10) + "px";
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        let isPressing = false;
+
+        const handleInput = (e) => {
+            if (e.code && !['Space', 'ArrowUp'].includes(e.code)) return;
+            if (gameState !== 'PLAYING') {
+                resetGame();
+                gameState = 'PLAYING';
+                return;
+            }
+            if (!player.isJumping) {
+                isPressing = true;
+                player.isJumping = true;
+                player.vy = JUMP_BIG;
+            }
+        };
+
+        const endInput = () => {
+            // ジャンプ中に指を離した時の処理
+            if (player.isJumping && player.vy < JUMP_SMALL) {
+                // --- ここを調整 ---
+                // 数字を 0 に近づける（例: -3.0や-2.0）ほど、ふわっと高く残ります。
+                // 数字を大きくする（例: -0.5や0）ほど、すぐに落下が始まります。
+                player.vy = -3.8; 
+            }
+            isPressing = false;
+        };
+
+        window.addEventListener('mousedown', handleInput);
+        window.addEventListener('mouseup', endInput);
+        window.addEventListener('keydown', handleInput);
+        window.addEventListener('keyup', endInput);
+        window.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(e); }, {passive: false});
+        window.addEventListener('touchend', endInput);
+
+        function resetGame() {
+            score = 0; gameTick = 0; 
+            baseSpeed = initialBaseSpeed;
+            currentSpeed = initialBaseSpeed;
+            obstacles = []; 
+            spawnTimer = 0;
+            nextSpawnThreshold = isPC ? 40 : 30;
+            player.y = 0; player.vy = 0; player.isJumping = false;
+        }
+
+        function update() {
+            const groundY = canvas.height - 40;
+            if (gameState === 'PLAYING') {
+                gameTick++;
+                baseSpeed += 0.0001; 
+                currentSpeed = baseSpeed;
+
+                player.vy += player.gravity;
+                player.y += player.vy;
+
+                if (player.y > groundY - player.height) {
+                    player.y = groundY - player.height;
+                    player.vy = 0;
+                    player.isJumping = false;
+                }
+
+                spawnTimer += (currentSpeed / 10);
+                if (spawnTimer > nextSpawnThreshold) {
+                    const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+                    obstacles.push({ x: canvas.width, y: groundY - type.h, ...type, passed: false });
+                    spawnTimer = 0;
+                    const minGap = isPC ? 35 : 25;   
+                    const varGap = isPC ? 50 : 40;  
+                    nextSpawnThreshold = minGap + Math.random() * varGap;
+                }
+
+                for (let i = obstacles.length - 1; i >= 0; i--) {
+                    let o = obstacles[i];
+                    o.x -= currentSpeed;
+                    if (player.x < o.x + o.w && player.x + player.width > o.x && player.y < o.y + o.h && player.y + player.height > o.y) {
+                        gameState = 'GAMEOVER';
+                        if (score > highScore) { highScore = score; localStorage.setItem('dinoBest', highScore); }
+                    }
+                    if (!o.passed && o.x + o.w < player.x) { score += o.pts; o.passed = true; }
+                    if (o.x + o.w < 0) obstacles.splice(i, 1);
+                }
+                ui.innerHTML = `BEST: ${highScore}<br>SCORE: ${score}`;
+            }
+            draw(groundY);
+            requestAnimationFrame(update);
+        }
+
+        function draw(groundY) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#7f8c8d';
+            ctx.fillRect(0, groundY, canvas.width, 2);
+            
+            // ★色の変化を削除し、常に緑色（#27ae60）に設定しました
+            ctx.fillStyle = '#27ae60';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            obstacles.forEach(o => {
+                ctx.fillStyle = o.color;
+                ctx.fillRect(o.x, o.y, o.w, o.h);
+            });
+            if (gameState === 'START' || gameState === 'GAMEOVER') {
+                ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.textAlign = 'center';
+                ctx.font = 'bold 24px sans-serif';
+                ctx.fillText(gameState === 'START' ? 'SPEED RUNNER' : 'GAME OVER', canvas.width / 2, canvas.height / 2 - 10);
+                ctx.font = '16px sans-serif';
+                ctx.fillText('Click to Start', canvas.width / 2, canvas.height / 2 + 30);
+            }
+        }
+        update();
+    </script>
+</body>
+</html>
