@@ -57,11 +57,19 @@
         // PCとスマホの判定
         const isPC = window.innerWidth >= 960;
 
+        // --- キャライラストの読み込み ---
+        const pImgL = new Image();
+        const pImgR = new Image();
+        pImgL.src = 'meanal.png'; // 走るポーズ1
+        pImgR.src = 'meanar.png'; // 走るポーズ2
+        let pReadyCount = 0;
+        pImgL.onload = pImgR.onload = () => { pReadyCount++; };
+
         // --- スマホ版でのみ大きくするための設定 ---
-        const p_sz = isPC ? 50 : 90; 
+        const p_sz = isPC ? 80 : 160; // イラストなので少し大きめに調整
         const p_gravity = isPC ? 1.0 : 1.5;
         const JUMP_BIG = isPC ? -18.0 : -26.0; 
-        const JUMP_SMALL = JUMP_BIG; // 常に一定ジャンプ
+        const JUMP_SMALL = JUMP_BIG; 
 
         // --- 背景画像の設定 ---
         const bgImages = [];
@@ -75,7 +83,7 @@
             bgImages[index].onload = () => { bgReadyCount++; };
         });
 
-        // --- スピード管理 (スマホ版は速めに設定) ---
+        // --- スピード管理 ---
         let gameState = 'START';
         let score = 0;
         let highScore = localStorage.getItem('dinoBest') || 0;
@@ -90,10 +98,10 @@
             height: p_sz, 
             vy: 0, 
             gravity: p_gravity, 
-            isJumping: false 
+            isJumping: false,
+            animTimer: 0 // アニメーション用
         };
 
-        // --- 障害物サイズ (スマホ版は巨大化) ---
         const obstacleTypes = isPC ? [
             { w: 30, h: 100, pts: 10, color: '#e74c3c' }, 
             { w: 120, h: 30, pts: 5,  color: '#f1c40f' }, 
@@ -129,14 +137,9 @@
             }
         };
 
-        const endInput = () => { /* 常に一定ジャンプのため空 */ };
-
         window.addEventListener('mousedown', handleInput);
-        window.addEventListener('mouseup', endInput);
         window.addEventListener('keydown', handleInput);
-        window.addEventListener('keyup', endInput);
         window.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(e); }, {passive: false});
-        window.addEventListener('touchend', endInput);
 
         function resetGame() {
             score = 0; cycleTimer = 0;
@@ -150,17 +153,10 @@
             const groundY = V_HEIGHT - 60; 
             if (gameState === 'PLAYING') {
                 cycleTimer++;
-                
-                // 加速 (スマホは少し速く加速)
                 currentSpeed += isPC ? 0.002 : 0.005;
 
-                // 40秒以降にランダムで速度リセット
-                if (cycleTimer > 2400) {
-                    if (Math.random() < 0.008) {
-                        cycleTimer = 0;
-                        currentSpeed = initialBaseSpeed;
-                    }
-                }
+                // アニメーション用タイマー加算
+                player.animTimer++;
 
                 player.vy += player.gravity;
                 player.y += player.vy;
@@ -194,39 +190,42 @@
             draw(groundY);
             requestAnimationFrame(update);
         }
-function draw(groundY) {
+
+        function draw(groundY) {
             ctx.clearRect(0, 0, V_WIDTH, V_HEIGHT);
 
-            // --- 背景描画 (読み込み待ちの予備色をなくしました) ---
-            if (bgReadyCount > 0) { // 1枚でも読み込めていればOK
+            // 背景描画
+            if (bgReadyCount > 0) {
                 if (gameState === 'PLAYING') bgScroll += currentSpeed * 0.8;
                 let offsetX = -(bgScroll % (V_WIDTH * 3));
-                
                 for (let j = 0; j < 2; j++) {
                     for (let i = 0; i < 3; i++) {
-                        // 画像が準備できている場合のみ描画。
-                        // 準備中の時は、前のフレームの画像が残るか、透明になります。
                         if (bgImages[i] && bgImages[i].complete) {
                             ctx.drawImage(bgImages[i], offsetX + (j * V_WIDTH * 3) + (i * V_WIDTH), 0, V_WIDTH, V_HEIGHT);
                         }
                     }
                 }
             }
-            // else { /* ここにあった水色の予備背景を消去しました */ }
+        
+
+            //背景なし
+            /*ctx.fillStyle = "#ecf0f1"; 
+            ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);*/
 
             // 地面の補助線
             ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.fillRect(0, groundY, V_WIDTH, 4);
 
-            // --- (以下、プレイヤーや障害物の描画はそのまま) ---
-
-            // 地面の補助線 (イラストに地面があるなら透明度を下げてもOK)
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.fillRect(0, groundY, V_WIDTH, 4);
-
-            // プレイヤー
-            ctx.fillStyle = '#27ae60';
-            ctx.fillRect(player.x, player.y, player.width, player.height);
+            // --- プレイヤー描画 (イラストを切り替え) ---
+            if (pReadyCount === 2) {
+                // 30フレーム(0.5秒)ごとにLとRを入れ替える
+                const currentImg = (Math.floor(player.animTimer / 30) % 2 === 0) ? pImgL : pImgR;
+                ctx.drawImage(currentImg, player.x, player.y, player.width, player.height);
+            } else {
+                // 読み込み待ち用
+                ctx.fillStyle = '#27ae60';
+                ctx.fillRect(player.x, player.y, player.width, player.height);
+            }
 
             // 障害物
             obstacles.forEach(o => {
