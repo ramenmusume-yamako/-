@@ -60,7 +60,7 @@
         // --- スマホ版でのみ大きくするための設定 ---
         const p_sz = isPC ? 50 : 90; 
         const p_gravity = isPC ? 1.0 : 1.2;
-        const JUMP_BIG = isPC ? -18.0 : -22.0; 
+        const JUMP_BIG = isPC ? -18.0 : -24.0; 
         const JUMP_SMALL = JUMP_BIG; // 常に一定ジャンプ
 
         // --- 背景画像の設定 ---
@@ -80,7 +80,7 @@
         let score = 0;
         let highScore = localStorage.getItem('dinoBest') || 0;
         let cycleTimer = 0; 
-        const initialBaseSpeed = isPC ? 7.0 : 10.5; 
+        const initialBaseSpeed = isPC ? 7.0 : 12.5; 
         let currentSpeed = initialBaseSpeed;
 
         const player = { 
@@ -152,7 +152,7 @@
                 cycleTimer++;
                 
                 // 加速 (スマホは少し速く加速)
-                currentSpeed += isPC ? 0.002 : 0.003;
+                currentSpeed += isPC ? 0.002 : 0.005;
 
                 // 40秒以降にランダムで速度リセット
                 if (cycleTimer > 2400) {
