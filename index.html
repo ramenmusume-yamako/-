@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Speed Runner - Hidden Reset</title>
+    <title>Speed Runner - Fixed Ratio</title>
     <style>
         body { 
             margin: 0; padding: 0; overflow: hidden; 
@@ -17,10 +17,13 @@
             background: #ecf0f1; 
             display: block;
             box-shadow: 0 0 30px rgba(0,0,0,0.7);
-            max-width: 1200px; 
-            max-height: 675px; 
+            /* 比率を維持したまま、画面に合わせて最大化 */
+            aspect-ratio: 16 / 9;
             width: 100%;
             height: auto;
+            max-width: 100vw;
+            max-height: 100vh;
+            object-fit: contain;
         }
         #ui { 
             position: absolute; 
@@ -30,8 +33,10 @@
             font-weight: bold;
             background: rgba(255,255,255,0.6); 
             padding: 5px 10px;
-            font-size: 14px; 
+            font-size: 18px; 
             border-radius: 5px;
+            top: 20px;
+            left: 20px;
         }
     </style>
 </head>
@@ -44,27 +49,43 @@
         const ctx = canvas.getContext('2d');
         const ui = document.getElementById('ui');
 
+        // --- ゲーム内部の基準解像度を 1280x720 に固定 ---
+        const V_WIDTH = 1280;
+        const V_HEIGHT = 720;
+        canvas.width = V_WIDTH;
+        canvas.height = V_HEIGHT;
+
+        // 比率を固定するため、PC/スマホの判定は主に操作感の調整用に使用
         const isPC = window.innerWidth >= 960;
-        const p_sz = isPC ? 45 : 25; 
-        const obs_scale = isPC ? 2.0 : 1.0;
-        const p_gravity = isPC ? 0.7 : 0.6;
+        const p_sz = 50;  // キャラサイズも固定
+        const p_gravity = 1.0;
         
-        // --- ジャンプの高さ設定 ---
-        // この数値をいじるだけで、常に一定の高さになります。
-        const JUMP_BIG = isPC ? -16.5 : -10.5; 
-        const JUMP_SMALL = JUMP_BIG; // 念のため小ジャンプも同じ値にしておきます  
+        // --- 背景画像の設定 ---
+        const bgImages = [];
+        const bgSrcs = ['bg1.jpg', 'bg2.jpg', 'bg3.jpg']; 
+        let bgReadyCount = 0;
+        let bgScroll = 0;
+
+        bgSrcs.forEach((src, index) => {
+            bgImages[index] = new Image();
+            bgImages[index].src = src;
+            bgImages[index].onload = () => { bgReadyCount++; };
+        });
+
+        // --- ジャンプの高さ設定（固定比率なので一つでOK） ---
+        const JUMP_BIG = -18.5; 
+        const JUMP_SMALL = JUMP_BIG;
 
         let gameState = 'START';
         let score = 0;
         let highScore = localStorage.getItem('dinoBest') || 0;
         
-        // スピード・タイマー管理
         let cycleTimer = 0; 
-        const initialBaseSpeed = isPC ? 5.5 : 4.5;
+        const initialBaseSpeed = 7.0; // 基準速度
         let currentSpeed = initialBaseSpeed;
 
         const player = { 
-            x: isPC ? 60 : 40,
+            x: 100, 
             y: 0, 
             width: p_sz, 
             height: p_sz, 
@@ -74,28 +95,19 @@
         };
 
         const obstacleTypes = [
-            { w: 15 * obs_scale, h: 55 * obs_scale, pts: 10, color: '#e74c3c' }, 
-            { w: 57 * obs_scale, h: 13 * obs_scale, pts: 5,  color: '#f1c40f' }, 
-            { w: 25 * obs_scale, h: 23 * obs_scale, pts: 1,  color: '#3498db' }
+            { w: 30, h: 100, pts: 10, color: '#e74c3c' }, 
+            { w: 120, h: 30, pts: 5,  color: '#f1c40f' }, 
+            { w: 50, h: 50, pts: 1,  color: '#3498db' }
         ];
         let obstacles = [];
         let spawnTimer = 0;
         let nextSpawnThreshold = 40; 
 
+        // リサイズ処理をシンプル化（Canvas自体はCSS側で拡大縮小される）
         function resize() {
-            const screenW = window.innerWidth;
-            const screenH = window.innerHeight;
-            let gameW = screenW;
-            let gameH = screenW * (9 / 16);
-            if (gameH > screenH) {
-                gameH = screenH;
-                gameW = screenH * (16 / 9);
-            }
-            canvas.width = gameW;
-            canvas.height = gameH;
             const canvasRect = canvas.getBoundingClientRect();
-            ui.style.top = (canvasRect.top + 10) + "px";
-            ui.style.left = (canvasRect.left + 10) + "px";
+            ui.style.top = (canvasRect.top + 20) + "px";
+            ui.style.left = (canvasRect.left + 20) + "px";
         }
         window.addEventListener('resize', resize);
         resize();
@@ -116,11 +128,7 @@
             }
         };
 
-        const endInput = () => {
-            // 中身を空っぽにします。
-            // これで、いつ離してもキャラは物理法則に従って最高点まで跳びます。
-            isPressing = false;
-        };
+        const endInput = () => { isPressing = false; };
 
         window.addEventListener('mousedown', handleInput);
         window.addEventListener('mouseup', endInput);
@@ -130,24 +138,19 @@
         window.addEventListener('touchend', endInput);
 
         function resetGame() {
-            score = 0;
-            cycleTimer = 0;
+            score = 0; cycleTimer = 0;
             currentSpeed = initialBaseSpeed;
-            obstacles = []; 
-            spawnTimer = 0;
-            nextSpawnThreshold = isPC ? 40 : 30;
+            bgScroll = 0; obstacles = []; 
+            spawnTimer = 0; nextSpawnThreshold = 60;
             player.y = 0; player.vy = 0; player.isJumping = false;
         }
 
         function update() {
-            const groundY = canvas.height - 40;
+            const groundY = V_HEIGHT - 60; // 地面の位置を少し調整
             if (gameState === 'PLAYING') {
                 cycleTimer++;
-                
-                // 加速
-                currentSpeed += 0.0015;
+                currentSpeed += 0.002;
 
-                // 40秒（2400フレーム）以降にランダムでリセット（表示はなし）
                 if (cycleTimer > 2400) {
                     if (Math.random() < 0.008) {
                         cycleTimer = 0;
@@ -167,11 +170,9 @@
                 spawnTimer += (currentSpeed / 10);
                 if (spawnTimer > nextSpawnThreshold) {
                     const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-                    obstacles.push({ x: canvas.width, y: groundY - type.h, ...type, passed: false });
+                    obstacles.push({ x: V_WIDTH, y: groundY - type.h, ...type, passed: false });
                     spawnTimer = 0;
-                    const minGap = isPC ? 35 : 25;   
-                    const varGap = isPC ? 50 : 40;  
-                    nextSpawnThreshold = minGap + Math.random() * varGap;
+                    nextSpawnThreshold = 50 + Math.random() * 80;
                 }
 
                 for (let i = obstacles.length - 1; i >= 0; i--) {
@@ -184,8 +185,6 @@
                     if (!o.passed && o.x + o.w < player.x) { score += o.pts; o.passed = true; }
                     if (o.x + o.w < 0) obstacles.splice(i, 1);
                 }
-
-                // 表示をシンプルに（BESTとSCOREのみ）
                 ui.innerHTML = `BEST: ${highScore}<br>SCORE: ${score}`;
             }
             draw(groundY);
@@ -193,24 +192,44 @@
         }
 
         function draw(groundY) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#7f8c8d';
-            ctx.fillRect(0, groundY, canvas.width, 2);
+            ctx.clearRect(0, 0, V_WIDTH, V_HEIGHT);
+
+            if (bgReadyCount === 3) {
+                if (gameState === 'PLAYING') bgScroll += currentSpeed * 0.6;
+                let offsetX = -(bgScroll % (V_WIDTH * 3));
+                for (let j = 0; j < 2; j++) {
+                    for (let i = 0; i < 3; i++) {
+                        ctx.drawImage(bgImages[i], offsetX + (j * V_WIDTH * 3) + (i * V_WIDTH), 0, V_WIDTH, V_HEIGHT);
+                    }
+                }
+            } else {
+                ctx.fillStyle = '#ecf0f1';
+                ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
+            }
+
+            // 地面
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.fillRect(0, groundY, V_WIDTH, 4);
+
+            // プレイヤー
             ctx.fillStyle = '#27ae60';
             ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // 障害物
             obstacles.forEach(o => {
                 ctx.fillStyle = o.color;
                 ctx.fillRect(o.x, o.y, o.w, o.h);
             });
+
             if (gameState === 'START' || gameState === 'GAMEOVER') {
                 ctx.fillStyle = 'rgba(0,0,0,0.6)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
                 ctx.fillStyle = 'white';
                 ctx.textAlign = 'center';
-                ctx.font = 'bold 24px sans-serif';
-                ctx.fillText(gameState === 'START' ? 'SPEED RUNNER' : 'GAME OVER', canvas.width / 2, canvas.height / 2 - 10);
-                ctx.font = '16px sans-serif';
-                ctx.fillText('Click to Start', canvas.width / 2, canvas.height / 2 + 30);
+                ctx.font = 'bold 40px sans-serif';
+                ctx.fillText(gameState === 'START' ? 'SPEED RUNNER' : 'GAME OVER', V_WIDTH / 2, V_HEIGHT / 2 - 20);
+                ctx.font = '24px sans-serif';
+                ctx.fillText('Tap to Start', V_WIDTH / 2, V_HEIGHT / 2 + 40);
             }
         }
         update();
