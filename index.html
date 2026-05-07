@@ -194,29 +194,31 @@
             draw(groundY);
             requestAnimationFrame(update);
         }
-
-        function draw(groundY) {
+function draw(groundY) {
             ctx.clearRect(0, 0, V_WIDTH, V_HEIGHT);
 
-            // 背景描画（判定を少し緩めます）
+            // --- 背景描画 (読み込み待ちの予備色をなくしました) ---
             if (bgReadyCount > 0) { // 1枚でも読み込めていればOK
                 if (gameState === 'PLAYING') bgScroll += currentSpeed * 0.8;
                 let offsetX = -(bgScroll % (V_WIDTH * 3));
                 
-                // 読み込み済みの画像だけを表示するループ
                 for (let j = 0; j < 2; j++) {
                     for (let i = 0; i < 3; i++) {
-                        // 画像が読み込み完了している場合のみ描画
-                        if (bgImages[i].complete) {
+                        // 画像が準備できている場合のみ描画。
+                        // 準備中の時は、前のフレームの画像が残るか、透明になります。
+                        if (bgImages[i] && bgImages[i].complete) {
                             ctx.drawImage(bgImages[i], offsetX + (j * V_WIDTH * 3) + (i * V_WIDTH), 0, V_WIDTH, V_HEIGHT);
                         }
                     }
                 }
-            } else {
-                // まだ1枚も読み込めていない時の予備背景（空の色など）
-                ctx.fillStyle = '#87CEEB'; // 空色
-                ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
             }
+            // else { /* ここにあった水色の予備背景を消去しました */ }
+
+            // 地面の補助線
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.fillRect(0, groundY, V_WIDTH, 4);
+
+            // --- (以下、プレイヤーや障害物の描画はそのまま) ---
 
             // 地面の補助線 (イラストに地面があるなら透明度を下げてもOK)
             ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
