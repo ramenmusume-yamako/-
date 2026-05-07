@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Speed Runner - Fixed Ratio</title>
+    <title>Speed Runner - Ramen Edition</title>
     <style>
         body { 
             margin: 0; padding: 0; overflow: hidden; 
@@ -17,7 +17,6 @@
             background: #ecf0f1; 
             display: block;
             box-shadow: 0 0 30px rgba(0,0,0,0.7);
-            /* 比率を維持したまま、画面に合わせて最大化 */
             aspect-ratio: 16 / 9;
             width: 100%;
             height: auto;
@@ -49,17 +48,21 @@
         const ctx = canvas.getContext('2d');
         const ui = document.getElementById('ui');
 
-        // --- ゲーム内部の基準解像度を 1280x720 に固定 ---
+        // --- ゲーム内部の基準解像度 ---
         const V_WIDTH = 1280;
         const V_HEIGHT = 720;
         canvas.width = V_WIDTH;
         canvas.height = V_HEIGHT;
 
-        // 比率を固定するため、PC/スマホの判定は主に操作感の調整用に使用
+        // PCとスマホの判定
         const isPC = window.innerWidth >= 960;
-        const p_sz = isPC ? 50 : 90;  // スマホ(右)だけ 90px に大きく
-        const p_gravity = isPC ? 1.0 : 1.0; // キャラが重くなった分、スマホの重力も少し調整
-        
+
+        // --- スマホ版でのみ大きくするための設定 ---
+        const p_sz = isPC ? 50 : 90; 
+        const p_gravity = isPC ? 1.0 : 1.2;
+        const JUMP_BIG = isPC ? -18.0 : -22.0; 
+        const JUMP_SMALL = JUMP_BIG; // 常に一定ジャンプ
+
         // --- 背景画像の設定 ---
         const bgImages = [];
         const bgSrcs = ['bg1.jpg', 'bg2.jpg', 'bg3.jpg']; 
@@ -72,17 +75,12 @@
             bgImages[index].onload = () => { bgReadyCount++; };
         });
 
-        // --- ジャンプの高さ設定（固定比率なので一つでOK） ---
-        // キャラが大きくなったので、スマホ(右)は少し強めに跳ねさせます
-        const JUMP_BIG = isPC ? -18.5 : -22.0; 
-        const JUMP_SMALL = JUMP_BIG;
-
+        // --- スピード管理 (スマホ版は速めに設定) ---
         let gameState = 'START';
         let score = 0;
         let highScore = localStorage.getItem('dinoBest') || 0;
-        
         let cycleTimer = 0; 
-        const initialBaseSpeed = 7.0; // 基準速度
+        const initialBaseSpeed = isPC ? 7.0 : 10.5; 
         let currentSpeed = initialBaseSpeed;
 
         const player = { 
@@ -95,22 +93,21 @@
             isJumping: false 
         };
 
+        // --- 障害物サイズ (スマホ版は巨大化) ---
         const obstacleTypes = isPC ? [
-            // PC版のサイズ
             { w: 30, h: 100, pts: 10, color: '#e74c3c' }, 
             { w: 120, h: 30, pts: 5,  color: '#f1c40f' }, 
             { w: 50, h: 50, pts: 1,  color: '#3498db' }
         ] : [
-            // スマホ版のサイズ（全体的にデカく！）
             { w: 50, h: 160, pts: 10, color: '#e74c3c' }, 
             { w: 180, h: 50, pts: 5,  color: '#f1c40f' }, 
             { w: 80, h: 80, pts: 1,  color: '#3498db' }
         ];
+
         let obstacles = [];
         let spawnTimer = 0;
         let nextSpawnThreshold = 40; 
 
-        // リサイズ処理をシンプル化（Canvas自体はCSS側で拡大縮小される）
         function resize() {
             const canvasRect = canvas.getBoundingClientRect();
             ui.style.top = (canvasRect.top + 20) + "px";
@@ -118,8 +115,6 @@
         }
         window.addEventListener('resize', resize);
         resize();
-
-        let isPressing = false;
 
         const handleInput = (e) => {
             if (e.code && !['Space', 'ArrowUp'].includes(e.code)) return;
@@ -129,13 +124,12 @@
                 return;
             }
             if (!player.isJumping) {
-                isPressing = true;
                 player.isJumping = true;
                 player.vy = JUMP_BIG;
             }
         };
 
-        const endInput = () => { isPressing = false; };
+        const endInput = () => { /* 常に一定ジャンプのため空 */ };
 
         window.addEventListener('mousedown', handleInput);
         window.addEventListener('mouseup', endInput);
@@ -153,11 +147,14 @@
         }
 
         function update() {
-            const groundY = V_HEIGHT - 60; // 地面の位置を少し調整
+            const groundY = V_HEIGHT - 60; 
             if (gameState === 'PLAYING') {
                 cycleTimer++;
-                currentSpeed += 0.002;
+                
+                // 加速 (スマホは少し速く加速)
+                currentSpeed += isPC ? 0.002 : 0.003;
 
+                // 40秒以降にランダムで速度リセット
                 if (cycleTimer > 2400) {
                     if (Math.random() < 0.008) {
                         cycleTimer = 0;
@@ -201,8 +198,9 @@
         function draw(groundY) {
             ctx.clearRect(0, 0, V_WIDTH, V_HEIGHT);
 
+            // 背景描画
             if (bgReadyCount === 3) {
-                if (gameState === 'PLAYING') bgScroll += currentSpeed * 0.6;
+                if (gameState === 'PLAYING') bgScroll += currentSpeed * 0.8;
                 let offsetX = -(bgScroll % (V_WIDTH * 3));
                 for (let j = 0; j < 2; j++) {
                     for (let i = 0; i < 3; i++) {
@@ -214,7 +212,7 @@
                 ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
             }
 
-            // 地面
+            // 地面の補助線 (イラストに地面があるなら透明度を下げてもOK)
             ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.fillRect(0, groundY, V_WIDTH, 4);
 
