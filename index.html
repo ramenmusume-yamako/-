@@ -57,8 +57,8 @@
 
         // 比率を固定するため、PC/スマホの判定は主に操作感の調整用に使用
         const isPC = window.innerWidth >= 960;
-        const p_sz = 50;  // キャラサイズも固定
-        const p_gravity = 1.0;
+        const p_sz = isPC ? 50 : 90;  // スマホ(右)だけ 90px に大きく
+        const p_gravity = isPC ? 1.0 : 1.0; // キャラが重くなった分、スマホの重力も少し調整
         
         // --- 背景画像の設定 ---
         const bgImages = [];
@@ -73,7 +73,8 @@
         });
 
         // --- ジャンプの高さ設定（固定比率なので一つでOK） ---
-        const JUMP_BIG = -18.5; 
+        // キャラが大きくなったので、スマホ(右)は少し強めに跳ねさせます
+        const JUMP_BIG = isPC ? -18.5 : -22.0; 
         const JUMP_SMALL = JUMP_BIG;
 
         let gameState = 'START';
@@ -94,10 +95,16 @@
             isJumping: false 
         };
 
-        const obstacleTypes = [
+        const obstacleTypes = isPC ? [
+            // PC版のサイズ
             { w: 30, h: 100, pts: 10, color: '#e74c3c' }, 
             { w: 120, h: 30, pts: 5,  color: '#f1c40f' }, 
             { w: 50, h: 50, pts: 1,  color: '#3498db' }
+        ] : [
+            // スマホ版のサイズ（全体的にデカく！）
+            { w: 50, h: 160, pts: 10, color: '#e74c3c' }, 
+            { w: 180, h: 50, pts: 5,  color: '#f1c40f' }, 
+            { w: 80, h: 80, pts: 1,  color: '#3498db' }
         ];
         let obstacles = [];
         let spawnTimer = 0;
