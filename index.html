@@ -49,9 +49,10 @@
         const obs_scale = isPC ? 2.0 : 1.0;
         const p_gravity = isPC ? 0.7 : 0.6;
         
-        // ジャンプの高さ設定
-        const JUMP_SMALL = isPC ? -6.2 : -3.2;  
-        const JUMP_BIG = isPC ? -14.5 : -10.0;    
+        // --- ジャンプの高さ設定 ---
+        // この数値をいじるだけで、常に一定の高さになります。
+        const JUMP_BIG = isPC ? -16.5 : -11.0; 
+        const JUMP_SMALL = JUMP_BIG; // 念のため小ジャンプも同じ値にしておきます  
 
         let gameState = 'START';
         let score = 0;
@@ -116,9 +117,8 @@
         };
 
         const endInput = () => {
-            if (player.isJumping && player.vy < JUMP_SMALL) {
-                player.vy = -3.8; 
-            }
+            // 中身を空っぽにします。
+            // これで、いつ離してもキャラは物理法則に従って最高点まで跳びます。
             isPressing = false;
         };
 
