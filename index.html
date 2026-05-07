@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Speed Runner - Ramen Edition</title>
+    <title>Speed Runner - Full Graphics Edition</title>
     <style>
         body { 
             margin: 0; padding: 0; overflow: hidden; 
@@ -48,30 +48,22 @@
         const ctx = canvas.getContext('2d');
         const ui = document.getElementById('ui');
 
-        // --- ゲーム内部の基準解像度 ---
         const V_WIDTH = 1280;
         const V_HEIGHT = 720;
         canvas.width = V_WIDTH;
         canvas.height = V_HEIGHT;
 
-        // PCとスマホの判定
         const isPC = window.innerWidth >= 960;
 
-        // --- キャライラストの読み込み ---
+        // --- 1. キャラ画像の読み込み ---
         const pImgL = new Image();
         const pImgR = new Image();
-        pImgL.src = 'meanal.png'; // 走るポーズ1
-        pImgR.src = 'meanar.png'; // 走るポーズ2
+        pImgL.src = 'meanal.png'; 
+        pImgR.src = 'meanar.png'; 
         let pReadyCount = 0;
         pImgL.onload = pImgR.onload = () => { pReadyCount++; };
 
-        // --- スマホ版でのみ大きくするための設定 ---
-        const p_sz = isPC ? 80 : 160; // イラストなので少し大きめに調整
-        const p_gravity = isPC ? 1.0 : 1.5;
-        const JUMP_BIG = isPC ? -18.0 : -26.0; 
-        const JUMP_SMALL = JUMP_BIG; 
-
-        // --- 背景画像の設定 ---
+        // --- 2. 背景画像の設定 (復活！) ---
         const bgImages = [];
         const bgSrcs = ['bg1.jpg', 'bg2.jpg', 'bg3.jpg']; 
         let bgReadyCount = 0;
@@ -83,7 +75,11 @@
             bgImages[index].onload = () => { bgReadyCount++; };
         });
 
-        // --- スピード管理 ---
+        // --- 設定値 ---
+        const p_sz = isPC ? 200 : 350; 
+        const p_gravity = isPC ? 1.0 : 1.5;
+        const JUMP_BIG = isPC ? -22.0 : -32.0; 
+
         let gameState = 'START';
         let score = 0;
         let highScore = localStorage.getItem('dinoBest') || 0;
@@ -99,13 +95,13 @@
             vy: 0, 
             gravity: p_gravity, 
             isJumping: false,
-            animTimer: 0 // アニメーション用
+            animTimer: 0
         };
 
         const obstacleTypes = isPC ? [
-            { w: 30, h: 100, pts: 10, color: '#e74c3c' }, 
-            { w: 120, h: 30, pts: 5,  color: '#f1c40f' }, 
-            { w: 50, h: 50, pts: 1,  color: '#3498db' }
+            { w: 50, h: 120, pts: 30, color: '#e74c3c' }, 
+            { w: 140, h: 50, pts: 25,  color: '#f1c40f' }, 
+            { w: 70, h: 70, pts: 21,  color: '#3498db' }
         ] : [
             { w: 50, h: 160, pts: 10, color: '#e74c3c' }, 
             { w: 180, h: 50, pts: 5,  color: '#f1c40f' }, 
@@ -144,8 +140,7 @@
         function resetGame() {
             score = 0; cycleTimer = 0;
             currentSpeed = initialBaseSpeed;
-            bgScroll = 0; obstacles = []; 
-            spawnTimer = 0; nextSpawnThreshold = 60;
+            obstacles = []; spawnTimer = 0;
             player.y = 0; player.vy = 0; player.isJumping = false;
         }
 
@@ -154,8 +149,6 @@
             if (gameState === 'PLAYING') {
                 cycleTimer++;
                 currentSpeed += isPC ? 0.002 : 0.005;
-
-                // アニメーション用タイマー加算
                 player.animTimer++;
 
                 player.vy += player.gravity;
@@ -178,7 +171,15 @@
                 for (let i = obstacles.length - 1; i >= 0; i--) {
                     let o = obstacles[i];
                     o.x -= currentSpeed;
-                    if (player.x < o.x + o.w && player.x + player.width > o.x && player.y < o.y + o.h && player.y + player.height > o.y) {
+
+                    const pPadW = player.width * 0.4; 
+                    const pPadH = player.height * 0.15;
+                    const pLeft = player.x + pPadW;
+                    const pRight = player.x + player.width - pPadW;
+                    const pTop = player.y + pPadH;
+                    const pBottom = player.y + player.height - pPadH;
+
+                    if (pLeft < o.x + o.w && pRight > o.x && pTop < o.y + o.h && pBottom > o.y) {
                         gameState = 'GAMEOVER';
                         if (score > highScore) { highScore = score; localStorage.setItem('dinoBest', highScore); }
                     }
@@ -194,7 +195,7 @@
         function draw(groundY) {
             ctx.clearRect(0, 0, V_WIDTH, V_HEIGHT);
 
-            // 背景描画
+            // --- 背景描画 (復活＆スマホ最適化版) ---
             if (bgReadyCount > 0) {
                 if (gameState === 'PLAYING') bgScroll += currentSpeed * 0.8;
                 let offsetX = -(bgScroll % (V_WIDTH * 3));
@@ -205,24 +206,21 @@
                         }
                     }
                 }
+            } else {
+                // 背景が読み込まれるまでの仮の色
+                ctx.fillStyle = "#ecf0f1"; 
+                ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
             }
-        
 
-            //背景なし
-            /*ctx.fillStyle = "#ecf0f1"; 
-            ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);*/
-
-            // 地面の補助線
+            // 地面
             ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.fillRect(0, groundY, V_WIDTH, 4);
 
-            // --- プレイヤー描画 (イラストを切り替え) ---
+            // プレイヤー描画
             if (pReadyCount === 2) {
-                // 30フレーム(0.5秒)ごとにLとRを入れ替える
                 const currentImg = (Math.floor(player.animTimer / 30) % 2 === 0) ? pImgL : pImgR;
                 ctx.drawImage(currentImg, player.x, player.y, player.width, player.height);
             } else {
-                // 読み込み待ち用
                 ctx.fillStyle = '#27ae60';
                 ctx.fillRect(player.x, player.y, player.width, player.height);
             }
