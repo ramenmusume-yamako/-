@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Speed Runner - Ninja Food Full Edition</title>
+    <title>走れ！ラーメン娘！！</title>
     <style>
         body { 
             margin: 0; padding: 0; overflow: hidden; 
@@ -55,7 +55,7 @@
 
         const isPC = window.innerWidth >= 960;
 
-        // --- 1. キャラ画像の読み込み ---
+        // --- 画像読み込み ---
         const pImgL = new Image();
         const pImgR = new Image();
         pImgL.src = 'meanal.png'; 
@@ -63,7 +63,6 @@
         let pReadyCount = 0;
         pImgL.onload = pImgR.onload = () => { pReadyCount++; };
 
-        // --- 2. 背景画像の設定 ---
         const bgImages = [];
         const bgSrcs = ['bg1.jpg', 'bg2.jpg', 'bg3.jpg']; 
         let bgReadyCount = 0;
@@ -74,46 +73,35 @@
             bgImages[index].onload = () => { bgReadyCount++; };
         });
 
-        // --- 3. 障害物画像の読み込み ---
-        // --- 3. 障害物画像の読み込み (修正版) ---
         const imgNaruto = new Image(); imgNaruto.src = 'naruto.png';
         const imgMenma = new Image();  imgMenma.src = 'menma.png';
         const imgNori = new Image();   imgNori.src = 'nori.png';
-        let obsReadyCount = 0;
-        imgNaruto.onload = imgMenma.onload = imgNori.onload = () => { obsReadyCount++; };
 
-        // --- 設定値 (PC版 : スマホ版) ---
-        const p_sz = isPC ? 220 : 260; // キャラサイズ：スマホは特大350
+        // --- 設定値 ---
+        const p_sz = isPC ? 220 : 260; 
         const p_gravity = isPC ? 1.0 : 1.5;
-        const JUMP_BIG = isPC ? -24.0 : -33.0; // 巨体に合わせてジャンプも強化
+        const JUMP_BIG = isPC ? -24.0 : -33.0; 
 
         let gameState = 'START';
         let score = 0;
-        let highScore = localStorage.getItem('dinoBest') || 0;
+        let highScore = localStorage.getItem('dinoBestTime') || 0;
         let cycleTimer = 0; 
         const initialBaseSpeed = isPC ? 7.0 : 12.5; 
         let currentSpeed = initialBaseSpeed;
 
         const player = { 
-            x: 100, 
-            y: 0, 
-            width: p_sz, 
-            height: p_sz, 
-            vy: 0, 
-            gravity: p_gravity, 
-            isJumping: false,
-            animTimer: 0
+            x: 100, y: 0, width: p_sz, height: p_sz, 
+            vy: 0, gravity: p_gravity, isJumping: false, animTimer: 0
         };
 
-        // 障害物タイプの設定 (イラストを紐付け)
         const obstacleTypes = isPC ? [
-            { w: 100, h: 200, pts: 30, img: imgMenma,padW: 0.2, padH: 0.3 },
-            { w: 210, h: 90, pts: 25, img: imgNori,padW: 0.7, padH: 0.2 },
-            { w: 110, h: 110, pts: 21, img: imgNaruto,padW: 0.3, padH: 0.3 }
+            { w: 100, h: 200, img: imgMenma,  padW: 0.2, padH: 0.3 },
+            { w: 210, h: 90,  img: imgNori,   padW: 0.7, padH: 0.2 },
+            { w: 110, h: 110, img: imgNaruto, padW: 0.3, padH: 0.3 }
         ] : [
-            { w: 130, h: 240, pts: 25, img: imgMenma,padW: 0.3, padH: 0.3 },
-            { w: 240, h: 120, pts: 20, img: imgNori,padW: 0.3, padH: 0.3 },
-            { w: 140, h: 140, pts: 16, img: imgNaruto,padW: 0.3, padH: 0.3 }
+            { w: 130, h: 240, img: imgMenma,  padW: 0.3, padH: 0.3 },
+            { w: 240, h: 120, img: imgNori,   padW: 0.3, padH: 0.3 },
+            { w: 140, h: 140, img: imgNaruto, padW: 0.3, padH: 0.3 }
         ];
 
         let obstacles = [];
@@ -128,8 +116,14 @@
         window.addEventListener('resize', resize);
         resize();
 
+        // --- 入力制御の改良 ---
         const handleInput = (e) => {
+            // 左クリック(button 0)を無視する
+            if (e.type === 'mousedown' && e.button === 0) return;
+
+            // キーボードの場合はスペースか上キーのみ反応
             if (e.code && !['Space', 'ArrowUp'].includes(e.code)) return;
+
             if (gameState !== 'PLAYING') {
                 resetGame();
                 gameState = 'PLAYING';
@@ -146,19 +140,25 @@
         window.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(e); }, {passive: false});
 
         function resetGame() {
-            score = 0; cycleTimer = 0;
+            score = 0;
+            cycleTimer = 0;
             currentSpeed = initialBaseSpeed;
-            obstacles = []; spawnTimer = 0;
-            player.y = 0; player.vy = 0; player.isJumping = false;
+            obstacles = [];
+            spawnTimer = 0;
+            nextSpawnThreshold = 40;
+            player.y = 0;
+            player.vy = 0;
+            player.isJumping = false;
         }
 
         function update() {
             const groundY = V_HEIGHT - 60; 
             if (gameState === 'PLAYING') {
                 cycleTimer++;
-                currentSpeed += isPC ? 0.002 : 0.005;
-                player.animTimer++;
+                currentSpeed += isPC ? 0.005 : 0.01; 
+                score += 1 / 60; 
 
+                player.animTimer++;
                 player.vy += player.gravity;
                 player.y += player.vy;
 
@@ -168,44 +168,45 @@
                     player.isJumping = false;
                 }
 
-                // --- 障害物生成の改良ロジック (難易度アップ版) ---
-spawnTimer += (currentSpeed / 10);
+                spawnTimer += (currentSpeed / 10);
+                if (spawnTimer > nextSpawnThreshold) {
+                    const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+                    obstacles.push({ x: V_WIDTH, y: groundY - type.h, ...type, passed: false });
+                    spawnTimer = 0;
+                    let baseGap = isPC ? 30 : 25; 
+                    let heightBonus = type.h * 0.3; 
+                    let widthBonus = type.w * 0.1; 
+                    nextSpawnThreshold = baseGap + heightBonus + widthBonus + (Math.random() * 30);
+                }
 
-if (spawnTimer > nextSpawnThreshold) {
-    const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-    obstacles.push({ x: V_WIDTH, y: groundY - type.h, ...type, passed: false });
-    
-    spawnTimer = 0;
-
-    // --- ここで「密度」をコントロール！ ---
-    let baseGap = isPC ? 30 : 25;   // 【ここを小さく！】 基本の隙間を半分くらいに
-    let heightBonus = type.h * 0.3; // 【ここを小さく！】 高さによる待ち時間を減らす
-    let widthBonus = type.w * 0.1;  // 【ここを小さく！】 幅による待ち時間を減らす
-    
-    // 最後に足すランダム要素も小さくすると、一定の間隔でドンドン来ます
-    nextSpawnThreshold = baseGap + heightBonus + widthBonus + (Math.random() * 30);
-}
-
-                // 当たり判定 (キャラが大きいため、余白を考慮して内側に絞る)
                 for (let i = obstacles.length - 1; i >= 0; i--) {
                     let o = obstacles[i];
                     o.x -= currentSpeed;
 
-                    const pPadW = player.width * 0.4;  // 横を40%絞る
-                    const pPadH = player.height * 0.15; // 縦を15%絞る
-                    const pLeft = player.x + pPadW;
-                    const pRight = player.x + player.width - pPadW;
-                    const pTop = player.y + pPadH;
-                    const pBottom = player.y + player.height - pPadH;
+                    const pPadW = player.width * 0.4;
+                    const pPadH = player.height * 0.15;
+                    const pL = player.x + pPadW;
+                    const pR = player.x + player.width - pPadW;
+                    const pT = player.y + pPadH;
+                    const pB = player.y + player.height - pPadH;
 
-                    if (pLeft < o.x + o.w && pRight > o.x && pTop < o.y + o.h && pBottom > o.y) {
+                    const oPadW = o.w * (o.padW || 0);
+                    const oPadH = o.h * (o.padH || 0);
+                    const oL = o.x + oPadW;
+                    const oR = o.x + o.w - oPadW;
+                    const oT = o.y + oPadH;
+                    const oB = o.y + o.h - oPadH;
+
+                    if (pL < oR && pR > oL && pT < oB && pB > oT) {
                         gameState = 'GAMEOVER';
-                        if (score > highScore) { highScore = score; localStorage.setItem('dinoBest', highScore); }
+                        if (score > highScore) { 
+                            highScore = score; 
+                            localStorage.setItem('dinoBestTime', highScore); 
+                        }
                     }
-                    if (!o.passed && o.x + o.w < player.x) { score += o.pts; o.passed = true; }
                     if (o.x + o.w < 0) obstacles.splice(i, 1);
                 }
-                ui.innerHTML = `BEST: ${highScore}<br>SCORE: ${score}`;
+                ui.innerHTML = `BEST: ${Math.floor(highScore)}<br>SCORE: ${Math.floor(score)}`;
             }
             draw(groundY);
             requestAnimationFrame(update);
@@ -214,7 +215,6 @@ if (spawnTimer > nextSpawnThreshold) {
         function draw(groundY) {
             ctx.clearRect(0, 0, V_WIDTH, V_HEIGHT);
 
-            // 背景描画
             if (bgReadyCount > 0) {
                 if (gameState === 'PLAYING') bgScroll += currentSpeed * 0.8;
                 let offsetX = -(bgScroll % (V_WIDTH * 3));
@@ -225,49 +225,62 @@ if (spawnTimer > nextSpawnThreshold) {
                         }
                     }
                 }
-            } else {
-                ctx.fillStyle = "#ecf0f1"; 
-                ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
             }
 
-            // 地面の線 (少し透明な白)
             ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.fillRect(0, groundY, V_WIDTH, 4);
 
-            // プレイヤー描画
             if (pReadyCount === 2) {
                 const currentImg = (Math.floor(player.animTimer / 30) % 2 === 0) ? pImgL : pImgR;
                 ctx.drawImage(currentImg, player.x, player.y, player.width, player.height);
-            } else {
-                ctx.fillStyle = '#27ae60';
-                ctx.fillRect(player.x, player.y, player.width, player.height);
             }
 
-            // --- 障害物描画 (1つずつチェックして描画する修正版) ---
             obstacles.forEach(o => {
-                // 画像が読み込まれていて、正しく表示できるかチェック
-                if (o.img && o.img.complete && o.img.naturalWidth !== 0) {
+                if (o.img && o.img.complete) {
                     ctx.drawImage(o.img, o.x, o.y, o.w, o.h);
-                } else {
-                    // 画像がない時のバックアップ（形で見分けられるように色を変えています）
-                    ctx.fillStyle = o.color || '#e74c3c'; 
-                    ctx.fillRect(o.x, o.y, o.w, o.h);
-                    
-                    // デバッグ用：画像が読み込めていない場合にコンソールにログを出す
-                    if(cycleTimer % 100 === 0) console.log("画像読み込み中、またはエラー:", o.img.src);
                 }
             });
 
-            // スタート＆ゲームオーバー画面
             if (gameState === 'START' || gameState === 'GAMEOVER') {
-                ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                ctx.fillStyle = 'rgba(0,0,0,0.8)';
                 ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
                 ctx.fillStyle = 'white';
                 ctx.textAlign = 'center';
-                ctx.font = 'bold 40px sans-serif';
-                ctx.fillText(gameState === 'START' ? 'SPEED RUNNER' : 'GAME OVER', V_WIDTH / 2, V_HEIGHT / 2 - 20);
-                ctx.font = '24px sans-serif';
-                ctx.fillText('Tap to Start', V_WIDTH / 2, V_HEIGHT / 2 + 40);
+
+                if (gameState === 'START') {
+                    ctx.font = 'bold 80px sans-serif'; 
+                    ctx.fillStyle = '#f1c40f'; 
+                    ctx.fillText('走れ！ラーメン娘！！', V_WIDTH / 2, V_HEIGHT / 2 - 100);
+                    
+                    ctx.font = '24px sans-serif';
+                    ctx.fillStyle = '#bdc3c7';
+                    ctx.fillText('【 操作説明 】', V_WIDTH / 2, V_HEIGHT / 2 - 20);
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = '30px sans-serif';
+                    ctx.fillText('スペースキー または タップでジャンプ！', V_WIDTH / 2, V_HEIGHT / 2 + 30);
+                    ctx.fillText('トッピングをよけて、1秒でも長く走りきれ！', V_WIDTH / 2, V_HEIGHT / 2 + 80);
+                    
+                    ctx.font = 'bold 36px sans-serif';
+                    ctx.fillStyle = '#f1c40f';
+                    ctx.fillText('>> Press Space or Tap <<', V_WIDTH / 2, V_HEIGHT / 2 + 180);
+                } else {
+                    ctx.font = 'bold 80px sans-serif';
+                    ctx.fillStyle = '#e67e22'; // 完食らしい暖かみのあるオレンジ
+                    ctx.fillText('完 食', V_WIDTH / 2, V_HEIGHT / 2 - 100);
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = '45px sans-serif';
+                    ctx.fillText(`記録: ${Math.floor(score)} 秒`, V_WIDTH / 2, V_HEIGHT / 2 + 10);
+                    
+                    ctx.font = '24px sans-serif';
+                    ctx.fillStyle = '#f1c40f';
+                    ctx.fillText(`最高記録: ${Math.floor(highScore)} 秒`, V_WIDTH / 2, V_HEIGHT / 2 + 65);
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = '30px sans-serif';
+                    ctx.fillText('スペースキー または タップでリトライ！', V_WIDTH / 2, V_HEIGHT / 2 + 160);
+                }
             }
         }
         update();
