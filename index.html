@@ -37,6 +37,15 @@
             top: 20px;
             left: 20px;
         }
+        /* スマホ版のスコアを小さく */
+        @media (max-width: 959px) {
+            #ui {
+                font-size: 13px; 
+                padding: 4px 8px;
+                top: 15px;
+                left: 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -110,18 +119,16 @@
 
         function resize() {
             const canvasRect = canvas.getBoundingClientRect();
-            ui.style.top = (canvasRect.top + 20) + "px";
-            ui.style.left = (canvasRect.left + 20) + "px";
+            // スマホ表示の時はtop/leftを少し詰める
+            const offset = window.innerWidth >= 960 ? 20 : 15;
+            ui.style.top = (canvasRect.top + offset) + "px";
+            ui.style.left = (canvasRect.left + offset) + "px";
         }
         window.addEventListener('resize', resize);
         resize();
 
-        // --- 入力制御の改良 ---
         const handleInput = (e) => {
-            // 左クリック(button 0)を無視する
             if (e.type === 'mousedown' && e.button === 0) return;
-
-            // キーボードの場合はスペースか上キーのみ反応
             if (e.code && !['Space', 'ArrowUp'].includes(e.code)) return;
 
             if (gameState !== 'PLAYING') {
@@ -266,7 +273,7 @@
                     ctx.fillText('>> Press Space or Tap <<', V_WIDTH / 2, V_HEIGHT / 2 + 180);
                 } else {
                     ctx.font = 'bold 80px sans-serif';
-                    ctx.fillStyle = '#e67e22'; // 完食らしい暖かみのあるオレンジ
+                    ctx.fillStyle = '#e67e22'; 
                     ctx.fillText('完 食', V_WIDTH / 2, V_HEIGHT / 2 - 100);
                     
                     ctx.fillStyle = 'white';
