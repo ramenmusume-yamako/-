@@ -83,7 +83,7 @@
         imgNaruto.onload = imgMenma.onload = imgNori.onload = () => { obsReadyCount++; };
 
         // --- 設定値 (PC版 : スマホ版) ---
-        const p_sz = isPC ? 220 : 350; // キャラサイズ：スマホは特大350
+        const p_sz = isPC ? 220 : 300; // キャラサイズ：スマホは特大350
         const p_gravity = isPC ? 1.0 : 1.5;
         const JUMP_BIG = isPC ? -24.0 : -35.0; // 巨体に合わせてジャンプも強化
 
@@ -111,9 +111,9 @@
             { w: 210, h: 90, pts: 25, img: imgNori,padW: 0.7, padH: 0.2 },
             { w: 110, h: 110, pts: 21, img: imgNaruto,padW: 0.3, padH: 0.3 }
         ] : [
-            { w: 65, h: 175, pts: 25, img: imgMenma,padW: 0.3, padH: 0.3 },
-            { w: 195, h: 65, pts: 20, img: imgNori,padW: 0.3, padH: 0.3 },
-            { w: 95, h: 95, pts: 16, img: imgNaruto,padW: 0.3, padH: 0.3 }
+            { w: 80, h: 190, pts: 25, img: imgMenma,padW: 0.3, padH: 0.3 },
+            { w: 210, h: 80, pts: 20, img: imgNori,padW: 0.3, padH: 0.3 },
+            { w: 110, h: 110, pts: 16, img: imgNaruto,padW: 0.3, padH: 0.3 }
         ];
 
         let obstacles = [];
