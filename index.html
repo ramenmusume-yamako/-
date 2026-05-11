@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Speed Runner - Full Graphics Edition</title>
+    <title>Speed Runner - Ninja Food Full Edition</title>
     <style>
         body { 
             margin: 0; padding: 0; overflow: hidden; 
@@ -63,22 +63,29 @@
         let pReadyCount = 0;
         pImgL.onload = pImgR.onload = () => { pReadyCount++; };
 
-        // --- 2. 背景画像の設定 (復活！) ---
+        // --- 2. 背景画像の設定 ---
         const bgImages = [];
         const bgSrcs = ['bg1.jpg', 'bg2.jpg', 'bg3.jpg']; 
         let bgReadyCount = 0;
         let bgScroll = 0;
-
         bgSrcs.forEach((src, index) => {
             bgImages[index] = new Image();
             bgImages[index].src = src;
             bgImages[index].onload = () => { bgReadyCount++; };
         });
 
-        // --- 設定値 ---
-        const p_sz = isPC ? 200 : 250; 
+        // --- 3. 障害物画像の読み込み ---
+        // --- 3. 障害物画像の読み込み (修正版) ---
+        const imgNaruto = new Image(); imgNaruto.src = 'naruto.png';
+        const imgMenma = new Image();  imgMenma.src = 'menma.png';
+        const imgNori = new Image();   imgNori.src = 'nori.png';
+        let obsReadyCount = 0;
+        imgNaruto.onload = imgMenma.onload = imgNori.onload = () => { obsReadyCount++; };
+
+        // --- 設定値 (PC版 : スマホ版) ---
+        const p_sz = isPC ? 220 : 350; // キャラサイズ：スマホは特大350
         const p_gravity = isPC ? 1.0 : 1.5;
-        const JUMP_BIG = isPC ? -22.0 : -32.0; 
+        const JUMP_BIG = isPC ? -24.0 : -35.0; // 巨体に合わせてジャンプも強化
 
         let gameState = 'START';
         let score = 0;
@@ -98,14 +105,15 @@
             animTimer: 0
         };
 
+        // 障害物タイプの設定 (イラストを紐付け)
         const obstacleTypes = isPC ? [
-            { w: 50, h: 120, pts: 30, color: '#e74c3c' }, 
-            { w: 140, h: 50, pts: 25,  color: '#f1c40f' }, 
-            { w: 70, h: 70, pts: 21,  color: '#3498db' }
+            { w: 100, h: 200, pts: 30, img: imgMenma,padW: 0.2, padH: 0.3 },
+            { w: 210, h: 90, pts: 25, img: imgNori,padW: 0.7, padH: 0.2 },
+            { w: 110, h: 110, pts: 21, img: imgNaruto,padW: 0.3, padH: 0.3 }
         ] : [
-            { w: 65, h: 175, pts: 25, color: '#e74c3c' }, 
-            { w: 195, h: 65, pts: 20,  color: '#f1c40f' }, 
-            { w: 95, h: 95, pts: 16,  color: '#3498db' }
+            { w: 65, h: 175, pts: 25, img: imgMenma,padW: 0.3, padH: 0.3 },
+            { w: 195, h: 65, pts: 20, img: imgNori,padW: 0.3, padH: 0.3 },
+            { w: 95, h: 95, pts: 16, img: imgNaruto,padW: 0.3, padH: 0.3 }
         ];
 
         let obstacles = [];
@@ -168,12 +176,13 @@
                     nextSpawnThreshold = 50 + Math.random() * 80;
                 }
 
+                // 当たり判定 (キャラが大きいため、余白を考慮して内側に絞る)
                 for (let i = obstacles.length - 1; i >= 0; i--) {
                     let o = obstacles[i];
                     o.x -= currentSpeed;
 
-                    const pPadW = player.width * 0.4; 
-                    const pPadH = player.height * 0.15;
+                    const pPadW = player.width * 0.4;  // 横を40%絞る
+                    const pPadH = player.height * 0.15; // 縦を15%絞る
                     const pLeft = player.x + pPadW;
                     const pRight = player.x + player.width - pPadW;
                     const pTop = player.y + pPadH;
@@ -195,7 +204,7 @@
         function draw(groundY) {
             ctx.clearRect(0, 0, V_WIDTH, V_HEIGHT);
 
-            // --- 背景描画 (復活＆スマホ最適化版) ---
+            // 背景描画
             if (bgReadyCount > 0) {
                 if (gameState === 'PLAYING') bgScroll += currentSpeed * 0.8;
                 let offsetX = -(bgScroll % (V_WIDTH * 3));
@@ -207,12 +216,11 @@
                     }
                 }
             } else {
-                // 背景が読み込まれるまでの仮の色
                 ctx.fillStyle = "#ecf0f1"; 
                 ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
             }
 
-            // 地面
+            // 地面の線 (少し透明な白)
             ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.fillRect(0, groundY, V_WIDTH, 4);
 
@@ -225,12 +233,22 @@
                 ctx.fillRect(player.x, player.y, player.width, player.height);
             }
 
-            // 障害物
+            // --- 障害物描画 (1つずつチェックして描画する修正版) ---
             obstacles.forEach(o => {
-                ctx.fillStyle = o.color;
-                ctx.fillRect(o.x, o.y, o.w, o.h);
+                // 画像が読み込まれていて、正しく表示できるかチェック
+                if (o.img && o.img.complete && o.img.naturalWidth !== 0) {
+                    ctx.drawImage(o.img, o.x, o.y, o.w, o.h);
+                } else {
+                    // 画像がない時のバックアップ（形で見分けられるように色を変えています）
+                    ctx.fillStyle = o.color || '#e74c3c'; 
+                    ctx.fillRect(o.x, o.y, o.w, o.h);
+                    
+                    // デバッグ用：画像が読み込めていない場合にコンソールにログを出す
+                    if(cycleTimer % 100 === 0) console.log("画像読み込み中、またはエラー:", o.img.src);
+                }
             });
 
+            // スタート＆ゲームオーバー画面
             if (gameState === 'START' || gameState === 'GAMEOVER') {
                 ctx.fillStyle = 'rgba(0,0,0,0.6)';
                 ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
