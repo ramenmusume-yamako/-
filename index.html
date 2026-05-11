@@ -17,18 +17,28 @@
             background: #ecf0f1; 
             display: block;
             box-shadow: 0 0 30px rgba(0,0,0,0.7);
-            max-width: 100%; max-height: 100%;
-            width: auto; height: auto;
+            /* 画面内に必ず全体を収める設定 */
+            max-width: 100%; 
+            max-height: 100%;
+            width: auto; 
+            height: auto;
             object-fit: contain;
         }
         #ui { 
-            position: absolute; z-index: 100;
-            pointer-events: none; color: #2c3e50; font-weight: bold;
+            position: absolute; 
+            z-index: 100;
+            pointer-events: none; 
+            color: #2c3e50; 
+            font-weight: bold;
             background: rgba(255,255,255,0.6); 
-            padding: 5px 10px; font-size: 18px; border-radius: 5px;
+            padding: 5px 10px; 
+            font-size: 18px; 
+            border-radius: 5px;
             display: none;
         }
-        @media (max-width: 959px) { #ui { font-size: 12px; padding: 3px 6px; } }
+        @media (max-width: 959px) {
+            #ui { font-size: 12px; padding: 3px 6px; }
+        }
     </style>
 </head>
 <body>
@@ -64,10 +74,10 @@
         const imgMenma = new Image();  imgMenma.src = 'menma.png';
         const imgNori = new Image();   imgNori.src = 'nori.png';
 
-        // --- 設定値（バランス調整） ---
+        // --- 設定値 ---
         const p_sz = isPC ? 220 : 260; 
-        const p_gravity = isPC ? 1.2 : 1.8; // 重力を少し強めて着地を早く
-        const JUMP_BIG = isPC ? -26.0 : -35.0; // ジャンプの高さも微調整
+        const p_gravity = isPC ? 1.2 : 1.8; 
+        const JUMP_BIG = isPC ? -26.0 : -35.0; 
 
         let gameState = 'START';
         let score = 0;
@@ -81,23 +91,26 @@
         };
 
         const obstacleTypes = [
-            { id:'menma', w: 110, h: 220, img: imgMenma,  padW: 0.3, padH: 0.2 },
-            { id:'nori',  w: 220, h: 100, img: imgNori,   padW: 0.3, padH: 0.2 },
-            { id:'naruto',w: 120, h: 120, img: imgNaruto, padW: 0.3, padH: 0.2 }
+            { id:'menma', w: 110, h: 220, img: imgMenma },
+            { id:'nori',  w: 220, h: 100, img: imgNori },
+            { id:'naruto',w: 120, h: 120, img: imgNaruto }
         ];
 
         let obstacles = [];
         let spawnTimer = 0;
-        let nextSpawnThreshold = 60; // 初期の間隔
+        let nextSpawnThreshold = 60; 
 
         function resize() {
+            // キャンバスが実際に表示されている画面上の位置を取得
             const rect = canvas.getBoundingClientRect();
             const offset = window.innerWidth >= 960 ? 20 : 10;
+            // UIをキャンバス内の左上に正確に配置
             ui.style.top = (rect.top + offset) + "px";
             ui.style.left = (rect.left + offset) + "px";
         }
+        // 画面サイズ変更時や回転時に実行
         window.addEventListener('resize', resize);
-        window.addEventListener('orientationchange', () => setTimeout(resize, 200));
+        window.addEventListener('orientationchange', () => setTimeout(resize, 300));
         resize();
 
         const handleInput = (e) => {
@@ -128,7 +141,7 @@
         function update() {
             const groundY = V_HEIGHT - 60; 
             if (gameState === 'PLAYING') {
-                currentSpeed += isPC ? 0.004 : 0.008; // 加速を少し緩やかに
+                currentSpeed += isPC ? 0.004 : 0.007; 
                 score += 1 / 60; 
                 player.animTimer++;
                 player.vy += player.gravity;
@@ -140,25 +153,18 @@
                     player.isJumping = false;
                 }
 
-                // --- 改善された出現ロジック ---
                 spawnTimer += currentSpeed;
                 if (spawnTimer > nextSpawnThreshold) {
                     const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                     obstacles.push({ x: V_WIDTH, y: groundY - type.h, ...type });
                     spawnTimer = 0;
-                    
-                    // 次の障害物までの「最低距離」を保証
-                    // スピードが上がるほど、距離（ピクセル数）を広げて反応時間を確保
-                    const minGap = 450 + (currentSpeed * 10); 
-                    const randomGap = Math.random() * 400;
-                    nextSpawnThreshold = minGap + randomGap;
+                    nextSpawnThreshold = 500 + (currentSpeed * 10) + (Math.random() * 400);
                 }
 
                 for (let i = obstacles.length - 1; i >= 0; i--) {
                     let o = obstacles[i];
                     o.x -= currentSpeed;
 
-                    // 当たり判定の最適化
                     const pL = player.x + player.width * 0.45, pR = player.x + player.width * 0.55;
                     const pT = player.y + player.height * 0.3, pB = player.y + player.height * 0.85;
                     const oL = o.x + o.w * 0.2, oR = o.x + o.w * 0.8;
