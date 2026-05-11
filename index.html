@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>走れ！ラーメン娘！！</title>
     <style>
         body { 
@@ -17,11 +17,11 @@
             background: #ecf0f1; 
             display: block;
             box-shadow: 0 0 30px rgba(0,0,0,0.7);
-            aspect-ratio: 16 / 9;
-            width: 100%;
+            /* ↓ 画面内に必ず収めるための設定 */
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
             height: auto;
-            max-width: 100vw;
-            max-height: 100vh;
             object-fit: contain;
         }
         #ui { 
@@ -34,16 +34,12 @@
             padding: 5px 10px;
             font-size: 18px; 
             border-radius: 5px;
-            top: 20px;
-            left: 20px;
-            display: none; /* 初期状態は非表示 */
+            display: none;
         }
         @media (max-width: 959px) {
             #ui {
                 font-size: 12px; 
                 padding: 3px 6px;
-                top: 10px;
-                left: 10px;
             }
         }
     </style>
@@ -65,20 +61,15 @@
         const isPC = window.innerWidth >= 960;
 
         // --- 画像読み込み ---
-        const pImgL = new Image();
-        const pImgR = new Image();
-        pImgL.src = 'meanal.png'; 
-        pImgR.src = 'meanar.png'; 
-        let pReadyCount = 0;
-        pImgL.onload = pImgR.onload = () => { pReadyCount++; };
+        const pImgL = new Image(); const pImgR = new Image();
+        pImgL.src = 'meanal.png'; pImgR.src = 'meanar.png';
+        let pReadyCount = 0; pImgL.onload = pImgR.onload = () => { pReadyCount++; };
 
         const bgImages = [];
-        const bgSrcs = ['bg1.jpg', 'bg2.jpg', 'bg3.jpg']; 
-        let bgReadyCount = 0;
-        let bgScroll = 0;
+        const bgSrcs = ['bg1.jpg', 'bg2.jpg', 'bg3.jpg'];
+        let bgReadyCount = 0; let bgScroll = 0;
         bgSrcs.forEach((src, index) => {
-            bgImages[index] = new Image();
-            bgImages[index].src = src;
+            bgImages[index] = new Image(); bgImages[index].src = src;
             bgImages[index].onload = () => { bgReadyCount++; };
         });
 
@@ -118,22 +109,24 @@
         let nextSpawnThreshold = 40; 
 
         function resize() {
-            const canvasRect = canvas.getBoundingClientRect();
+            // キャンバスが実際に表示されている位置とサイズを取得
+            const rect = canvas.getBoundingClientRect();
             const offset = window.innerWidth >= 960 ? 20 : 10;
-            ui.style.top = (canvasRect.top + offset) + "px";
-            ui.style.left = (canvasRect.left + offset) + "px";
+            // UIの位置を表示されているキャンバスの左上に合わせる
+            ui.style.top = (rect.top + offset) + "px";
+            ui.style.left = (rect.left + offset) + "px";
         }
         window.addEventListener('resize', resize);
+        window.addEventListener('orientationchange', () => setTimeout(resize, 200));
         resize();
 
         const handleInput = (e) => {
             if (e.type === 'mousedown' && e.button === 0) return;
             if (e.code && !['Space', 'ArrowUp'].includes(e.code)) return;
-
             if (gameState !== 'PLAYING') {
                 resetGame();
                 gameState = 'PLAYING';
-                ui.style.display = 'block'; // プレイ開始時に表示
+                ui.style.display = 'block';
                 return;
             }
             if (!player.isJumping) {
@@ -147,15 +140,9 @@
         window.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(e); }, {passive: false});
 
         function resetGame() {
-            score = 0;
-            cycleTimer = 0;
-            currentSpeed = initialBaseSpeed;
-            obstacles = [];
-            spawnTimer = 0;
-            nextSpawnThreshold = 40;
-            player.y = 0;
-            player.vy = 0;
-            player.isJumping = false;
+            score = 0; cycleTimer = 0; currentSpeed = initialBaseSpeed;
+            obstacles = []; spawnTimer = 0; nextSpawnThreshold = 40;
+            player.y = 0; player.vy = 0; player.isJumping = false;
         }
 
         function update() {
@@ -164,7 +151,6 @@
                 cycleTimer++;
                 currentSpeed += isPC ? 0.005 : 0.01; 
                 score += 1 / 60; 
-
                 player.animTimer++;
                 player.vy += player.gravity;
                 player.y += player.vy;
@@ -178,35 +164,23 @@
                 spawnTimer += (currentSpeed / 10);
                 if (spawnTimer > nextSpawnThreshold) {
                     const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-                    obstacles.push({ x: V_WIDTH, y: groundY - type.h, ...type, passed: false });
+                    obstacles.push({ x: V_WIDTH, y: groundY - type.h, ...type });
                     spawnTimer = 0;
-                    let baseGap = isPC ? 30 : 25; 
-                    let heightBonus = type.h * 0.3; 
-                    let widthBonus = type.w * 0.1; 
-                    nextSpawnThreshold = baseGap + heightBonus + widthBonus + (Math.random() * 30);
+                    nextSpawnThreshold = 30 + (Math.random() * 40);
                 }
 
                 for (let i = obstacles.length - 1; i >= 0; i--) {
                     let o = obstacles[i];
                     o.x -= currentSpeed;
 
-                    const pPadW = player.width * 0.4;
-                    const pPadH = player.height * 0.15;
-                    const pL = player.x + pPadW;
-                    const pR = player.x + player.width - pPadW;
-                    const pT = player.y + pPadH;
-                    const pB = player.y + player.height - pPadH;
-
-                    const oPadW = o.w * (o.padW || 0);
-                    const oPadH = o.h * (o.padH || 0);
-                    const oL = o.x + oPadW;
-                    const oR = o.x + o.w - oPadW;
-                    const oT = o.y + oPadH;
-                    const oB = o.y + o.h - oPadH;
+                    const pL = player.x + player.width * 0.4, pR = player.x + player.width * 0.6;
+                    const pT = player.y + player.height * 0.2, pB = player.y + player.height * 0.9;
+                    const oL = o.x + o.w * 0.2, oR = o.x + o.w * 0.8;
+                    const oT = o.y + o.h * 0.2, oB = o.y + o.h * 0.9;
 
                     if (pL < oR && pR > oL && pT < oB && pB > oT) {
                         gameState = 'GAMEOVER';
-                        ui.style.display = 'none'; // 完食画面では非表示
+                        ui.style.display = 'none';
                         if (score > highScore) { 
                             highScore = score; 
                             localStorage.setItem('dinoBestTime', highScore); 
@@ -222,7 +196,6 @@
 
         function draw(groundY) {
             ctx.clearRect(0, 0, V_WIDTH, V_HEIGHT);
-
             if (bgReadyCount > 0) {
                 if (gameState === 'PLAYING') bgScroll += currentSpeed * 0.8;
                 let offsetX = -(bgScroll % (V_WIDTH * 3));
@@ -234,7 +207,6 @@
                     }
                 }
             }
-
             ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.fillRect(0, groundY, V_WIDTH, 4);
 
@@ -244,48 +216,25 @@
             }
 
             obstacles.forEach(o => {
-                if (o.img && o.img.complete) {
-                    ctx.drawImage(o.img, o.x, o.y, o.w, o.h);
-                }
+                if (o.img && o.img.complete) ctx.drawImage(o.img, o.x, o.y, o.w, o.h);
             });
 
             if (gameState === 'START' || gameState === 'GAMEOVER') {
                 ctx.fillStyle = 'rgba(0,0,0,0.8)';
                 ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
-                ctx.fillStyle = 'white';
                 ctx.textAlign = 'center';
-
                 if (gameState === 'START') {
-                    ctx.font = 'bold 80px sans-serif'; 
-                    ctx.fillStyle = '#f1c40f'; 
+                    ctx.fillStyle = '#f1c40f'; ctx.font = 'bold 80px sans-serif';
                     ctx.fillText('走れ！ラーメン娘！！', V_WIDTH / 2, V_HEIGHT / 2 - 100);
-                    
-                    ctx.font = '24px sans-serif';
-                    ctx.fillStyle = '#bdc3c7';
-                    ctx.fillText('【 操作説明 】', V_WIDTH / 2, V_HEIGHT / 2 - 20);
-                    
-                    ctx.fillStyle = 'white';
-                    ctx.font = '30px sans-serif';
+                    ctx.fillStyle = 'white'; ctx.font = '30px sans-serif';
                     ctx.fillText('スペースキー または タップでジャンプ！', V_WIDTH / 2, V_HEIGHT / 2 + 30);
-                    ctx.fillText('トッピングをよけて、1秒でも長く走りきれ！', V_WIDTH / 2, V_HEIGHT / 2 + 80);
-                    
-                    ctx.font = 'bold 36px sans-serif';
-                    ctx.fillStyle = '#f1c40f';
+                    ctx.font = 'bold 36px sans-serif'; ctx.fillStyle = '#f1c40f';
                     ctx.fillText('>> Press Space or Tap <<', V_WIDTH / 2, V_HEIGHT / 2 + 180);
                 } else {
-                    ctx.font = 'bold 80px sans-serif';
-                    ctx.fillStyle = '#e67e22'; 
+                    ctx.fillStyle = '#e67e22'; ctx.font = 'bold 80px sans-serif';
                     ctx.fillText('完 食', V_WIDTH / 2, V_HEIGHT / 2 - 100);
-                    
-                    ctx.fillStyle = 'white';
-                    ctx.font = '45px sans-serif';
+                    ctx.fillStyle = 'white'; ctx.font = '45px sans-serif';
                     ctx.fillText(`記録: ${Math.floor(score)} 秒`, V_WIDTH / 2, V_HEIGHT / 2 + 10);
-                    
-                    ctx.font = '24px sans-serif';
-                    ctx.fillStyle = '#f1c40f';
-                    ctx.fillText(`最高記録: ${Math.floor(highScore)} 秒`, V_WIDTH / 2, V_HEIGHT / 2 + 65);
-                    
-                    ctx.fillStyle = 'white';
                     ctx.font = '30px sans-serif';
                     ctx.fillText('スペースキー または タップでリトライ！', V_WIDTH / 2, V_HEIGHT / 2 + 160);
                 }
