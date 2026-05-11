@@ -168,13 +168,23 @@
                     player.isJumping = false;
                 }
 
-                spawnTimer += (currentSpeed / 10);
-                if (spawnTimer > nextSpawnThreshold) {
-                    const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-                    obstacles.push({ x: V_WIDTH, y: groundY - type.h, ...type, passed: false });
-                    spawnTimer = 0;
-                    nextSpawnThreshold = 50 + Math.random() * 80;
-                }
+                // --- 障害物生成の改良ロジック (難易度アップ版) ---
+spawnTimer += (currentSpeed / 10);
+
+if (spawnTimer > nextSpawnThreshold) {
+    const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+    obstacles.push({ x: V_WIDTH, y: groundY - type.h, ...type, passed: false });
+    
+    spawnTimer = 0;
+
+    // --- ここで「密度」をコントロール！ ---
+    let baseGap = isPC ? 30 : 25;   // 【ここを小さく！】 基本の隙間を半分くらいに
+    let heightBonus = type.h * 0.3; // 【ここを小さく！】 高さによる待ち時間を減らす
+    let widthBonus = type.w * 0.1;  // 【ここを小さく！】 幅による待ち時間を減らす
+    
+    // 最後に足すランダム要素も小さくすると、一定の間隔でドンドン来ます
+    nextSpawnThreshold = baseGap + heightBonus + widthBonus + (Math.random() * 30);
+}
 
                 // 当たり判定 (キャラが大きいため、余白を考慮して内側に絞る)
                 for (let i = obstacles.length - 1; i >= 0; i--) {
