@@ -9,15 +9,20 @@
             margin: 0; padding: 0; overflow: hidden; 
             background: #2c3e50; 
             display: flex; align-items: center; justify-content: center;
-            width: 100vw; height: 100vh;
+            width: 100vw; 
+            /* ↓ 100vh から 100dvh に完全修正。アドレスバーを考慮した正確な高さになります */
+            height: 100dvh; 
             touch-action: none;
             font-family: sans-serif;
+            box-sizing: border-box;
+            /* ノッチやナビゲーションバーの安全余白を確保 */
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
         canvas { 
             background: #ecf0f1; 
             display: block;
             box-shadow: 0 0 30px rgba(0,0,0,0.7);
-            /* 画面内に必ず全体を収める設定 */
+            /* 画面内に必ず全体を収める設定（縦横比維持） */
             max-width: 100%; 
             max-height: 100%;
             width: auto; 
@@ -110,7 +115,10 @@
         }
         // 画面サイズ変更時や回転時に実行
         window.addEventListener('resize', resize);
-        window.addEventListener('orientationchange', () => setTimeout(resize, 300));
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resize, 200);
+            setTimeout(resize, 500); // 変化が完了するのを待って再計算
+        });
         resize();
 
         const handleInput = (e) => {
@@ -232,6 +240,9 @@
                 }
             }
         }
+        
+        // 読み込みが完了したときにも配置を合わせる
+        window.addEventListener('load', resize);
         update();
     </script>
 </body>
