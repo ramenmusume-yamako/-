@@ -101,9 +101,12 @@
         let startCallTimer = 0; 
         let gameOverTimer = 0; 
         
-        // 単一の最高記録用
+        let isPageVisible = true;
+        
+        // ★ LINEバグ（時間ワープ）対策用のタイムスタンプ変数
+        let lastTime = performance.now();
+
         let highScore = localStorage.getItem('dinoBestTime') || 0;
-        // ★ 過去のTOP3記録用配列（データがない場合は[0, 0, 0]で初期化）
         let topScores = JSON.parse(localStorage.getItem('dinoTopScores')) || [0, 0, 0];
 
         const initialBaseSpeed = isPC ? 8.0 : 13.0; 
@@ -147,21 +150,16 @@
             speedPhaseTimer = 0; 
         }
 
-        // ★ 新しくスコアを保存・ランキング更新する関数
         function saveScore(currentScore) {
             const finalScore = Math.floor(currentScore);
-            
-            // 従来の単一ハイスコアの更新
             if (finalScore > highScore) {
                 highScore = finalScore;
                 localStorage.setItem('dinoBestTime', highScore);
             }
-
-            // TOP3ランキングの更新ロジック
-            topScores.push(finalScore);              // 今回の記録を末尾に追加
-            topScores.sort((a, b) => b - a);         // 大きい順（降順）に並び替え
-            topScores = topScores.slice(0, 3);       // 上位3つだけ残す
-            localStorage.setItem('dinoTopScores', JSON.stringify(topScores)); // 保存
+            topScores.push(finalScore);              
+            topScores.sort((a, b) => b - a);         
+            topScores = topScores.slice(0, 3);       
+            localStorage.setItem('dinoTopScores', JSON.stringify(topScores)); 
         }
 
         const handleInput = (e) => {
@@ -204,6 +202,17 @@
         window.addEventListener('keydown', handleInput);
         window.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(e); }, {passive: false});
 
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                isPageVisible = false;
+                if (gameState === 'PLAYING') bgm.pause();
+            } else {
+                isPageVisible = true;
+                lastTime = performance.now(); // 画面に戻ってきた瞬間の時間をリセットしてワープを防ぐ
+                if (gameState === 'PLAYING' && startCallTimer <= 0) bgm.play().catch(o => {});
+            }
+        });
+
         function resetGame() {
             score = 0; 
             displayScore = 0; 
@@ -217,27 +226,56 @@
             player.gravity = BASE_GRAVITY; 
             player.isJumping = false;
             
+            lastTime = performance.now(); // リトライ時も時間計測をリセット
             setRandomResetThreshold(); 
         }
 
-        function update() {
+        // ★ メインの処理ループ（引数にcurrentTimeを追加）
+        function update(currentTime) {
+            // 現在の時間をミリ秒で正確に取得
+            if (!currentTime) currentTime = performance.now();
+
+            // 前回のフレームから「何ミリ秒」経過したかを計算
+            let deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+
+            if (!isPageVisible) {
+                requestAnimationFrame(update);
+                return;
+            }
+
+            // ★ 【ここがLINEバグ対策の超重要ガード】
+            // 通常は1フレーム16ms前後。もしフリーズや裏回りで「100ms（約0.1秒）以上」の
+            // 異常な時間が一瞬で経過していた場合は、LINEのラグワープとみなして、
+            // そのフレームの経過時間を強制的に通常1フレーム分（16.6ms）に固定・上書きします。
+            if (deltaTime > 100) {
+                deltaTime = 16.666;
+            }
+
+            // 経過時間をベースにした倍率（通常の60FPSならほぼ「1.0」になる）
+            const dtRatio = deltaTime / (1000 / 60);
+
             if (gameState === 'PLAYING') {
-                player.animTimer++; 
+                // アニメーションやタイマーを「dtRatio（実際の経過時間分）」だけ進める
+                player.animTimer += dtRatio; 
 
                 if (startCallTimer > 0) {
-                    startCallTimer--;
-                    bgScroll += initialBaseSpeed * 0.7;
+                    startCallTimer -= dtRatio;
+                    bgScroll += (initialBaseSpeed * 0.7) * dtRatio;
 
-                    if (startCallTimer === 0) {
+                    if (startCallTimer <= 0) {
+                        startCallTimer = 0;
                         bgm.play().catch(o => {});
                     }
                 } else {
-                    currentSpeed += isPC ? 0.004 : 0.007; 
-                    score += 1 / 60; 
+                    // ★ 加速ペースやスコア加算にも経過時間倍率(dtRatio)を掛けることで
+                    // どれだけ処理がガタついても、スピードが一定以上に急加速するのを完全に防ぎます
+                    currentSpeed += (isPC ? 0.004 : 0.007) * dtRatio; 
+                    score += (1 / 60) * dtRatio; 
                     
-                    bgScroll += currentSpeed * 0.7; 
+                    bgScroll += (currentSpeed * 0.7) * dtRatio; 
 
-                    speedPhaseTimer++;
+                    speedPhaseTimer += dtRatio;
                     if (speedPhaseTimer >= nextResetThreshold) {
                         currentSpeed = initialBaseSpeed; 
                         setRandomResetThreshold();       
@@ -247,8 +285,9 @@
                     const gentleGravityRatio = 1.0 + (Math.sqrt(speedRatio) - 1.0) * 0.5;
                     player.gravity = BASE_GRAVITY * gentleGravityRatio;
 
-                    player.vy += player.gravity;
-                    player.y += player.vy;
+                    // 移動量にdtRatioを掛け算
+                    player.vy += player.gravity * dtRatio;
+                    player.y += player.vy * dtRatio;
 
                     if (player.y > GROUND_Y - player.height) {
                         player.y = GROUND_Y - player.height;
@@ -256,7 +295,7 @@
                         player.isJumping = false;
                     }
 
-                    spawnTimer += currentSpeed;
+                    spawnTimer += currentSpeed * dtRatio;
                     if (spawnTimer > nextSpawnThreshold) {
                         const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                         obstacles.push({ x: V_WIDTH, y: GROUND_Y - type.h, ...type });
@@ -266,7 +305,7 @@
 
                     for (let i = obstacles.length - 1; i >= 0; i--) {
                         let o = obstacles[i];
-                        o.x -= currentSpeed;
+                        o.x -= currentSpeed * dtRatio;
 
                         const pL = player.x + player.width * 0.45, pR = player.x + player.width * 0.55;
                         const pT = player.y + player.height * 0.3, pB = player.y + player.height * 0.85;
@@ -285,7 +324,6 @@
 
                             gameOverTimer = 120; 
 
-                            // ★ 衝突時にランキング保存処理を呼ぶ
                             saveScore(score);
                         }
                         if (o.x + o.w < -100) obstacles.splice(i, 1);
@@ -296,11 +334,12 @@
 
             if (gameState === 'GAMEOVER') {
                 if (gameOverTimer > 0) {
-                    gameOverTimer--; 
+                    gameOverTimer -= dtRatio; 
+                    if (gameOverTimer < 0) gameOverTimer = 0;
                 } else {
                     const targetScore = Math.floor(score);
                     if (displayScore < targetScore) {
-                        countTimer++;
+                        countTimer += dtRatio;
                         if (countTimer >= 4) {
                             displayScore += 1;
                             countTimer = 0;
@@ -378,15 +417,13 @@
                     
                     let textY, fontSize, textX;
                     if (gameOverTimer > 0) {
-                        // ★ 最初の2秒間：画面中央に特大サイズで表示！
                         ctx.textBaseline = 'middle';
                         textX = V_WIDTH / 2;
                         textY = V_HEIGHT / 2;
                         fontSize = 120; 
                     } else {
-                        // ★ 2秒経過後：左上に寄せるように定位置に移動
                         ctx.textBaseline = 'alphabetic';
-                        textX = V_WIDTH / 2 - 220; // 右にランキングを入れるために少し左へ
+                        textX = V_WIDTH / 2 - 220; 
                         textY = V_HEIGHT / 2 - 100;
                         fontSize = 80;
                     }
@@ -396,12 +433,10 @@
                     ctx.fillText('完 食', textX, textY);
                     ctx.restore();
                     
-                    // ★ 2秒経過後に左側リザルトと、右側縦並びランキングを同時に出す
                     if (gameOverTimer === 0) {
                         ctx.save();
-                        // --- 左側：今回のスコアエリア ---
                         ctx.textAlign = 'center';
-                        const leftCenterX = V_WIDTH / 2 - 220; // 左半分の中心点
+                        const leftCenterX = V_WIDTH / 2 - 220; 
                         
                         ctx.fillStyle = 'white'; ctx.font = '45px sans-serif';
                         ctx.fillText(`記録: ${displayScore} 秒`, leftCenterX, V_HEIGHT / 2 + 10);
@@ -418,33 +453,27 @@
                             ctx.fillText('画面タップで演出をスキップ', leftCenterX, V_HEIGHT / 2 + 160);
                         }
 
-                        // --- 右側：過去3つの最高得点（ランキング）エリア ---
-                        const rightCenterX = V_WIDTH / 2 + 260; // 右半分の中心点
-                        const rankYStart = V_HEIGHT / 2 - 130;  // ランキングの書き始めの高さ
+                        const rightCenterX = V_WIDTH / 2 + 260; 
+                        const rankYStart = V_HEIGHT / 2 - 130;  
                         
-                        // 背景枠
                         ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
                         ctx.fillRect(rightCenterX - 200, rankYStart - 60, 400, 310);
                         
-                        // 見出し
                         ctx.fillStyle = '#f1c40f';
                         ctx.font = 'bold 32px sans-serif';
                         ctx.fillText('歴代最高記録 TOP3', rightCenterX, rankYStart - 15);
                         
-                        // 3つのスコアをループで描画
                         const medals = ['🥇 1st', '🥈 2nd', '🥉 3rd'];
-                        const medalColors = ['#f1c40f', '#e67e22', '#bdc3c7']; // 金・銅・銀
+                        const medalColors = ['#f1c40f', '#e67e22', '#bdc3c7']; 
                         
                         for (let i = 0; i < 3; i++) {
                             const currentY = rankYStart + 55 + (i * 65);
                             
-                            // 順位ラベル
                             ctx.textAlign = 'left';
                             ctx.fillStyle = medalColors[i];
                             ctx.font = 'bold 30px sans-serif';
                             ctx.fillText(medals[i], rightCenterX - 150, currentY);
                             
-                            // スコア値
                             ctx.textAlign = 'right';
                             ctx.fillStyle = 'white';
                             ctx.font = 'bold 32px font-serif';
@@ -457,7 +486,8 @@
         }
         
         window.addEventListener('load', resize);
-        update();
+        // ループの初回起動
+        requestAnimationFrame(update);
     </script>
 </body>
 </html>
