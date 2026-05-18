@@ -100,7 +100,12 @@
         let countTimer = 0;   
         let startCallTimer = 0; 
         let gameOverTimer = 0; 
+        
+        // 単一の最高記録用
         let highScore = localStorage.getItem('dinoBestTime') || 0;
+        // ★ 過去のTOP3記録用配列（データがない場合は[0, 0, 0]で初期化）
+        let topScores = JSON.parse(localStorage.getItem('dinoTopScores')) || [0, 0, 0];
+
         const initialBaseSpeed = isPC ? 8.0 : 13.0; 
         let currentSpeed = initialBaseSpeed;
 
@@ -142,6 +147,23 @@
             speedPhaseTimer = 0; 
         }
 
+        // ★ 新しくスコアを保存・ランキング更新する関数
+        function saveScore(currentScore) {
+            const finalScore = Math.floor(currentScore);
+            
+            // 従来の単一ハイスコアの更新
+            if (finalScore > highScore) {
+                highScore = finalScore;
+                localStorage.setItem('dinoBestTime', highScore);
+            }
+
+            // TOP3ランキングの更新ロジック
+            topScores.push(finalScore);              // 今回の記録を末尾に追加
+            topScores.sort((a, b) => b - a);         // 大きい順（降順）に並び替え
+            topScores = topScores.slice(0, 3);       // 上位3つだけ残す
+            localStorage.setItem('dinoTopScores', JSON.stringify(topScores)); // 保存
+        }
+
         const handleInput = (e) => {
             if (e.type === 'mousedown' && e.button === 0) return;
             if (e.code && !['Space', 'ArrowUp'].includes(e.code)) return;
@@ -172,10 +194,8 @@
 
             if (gameState === 'PLAYING' && startCallTimer <= 0 && !player.isJumping) {
                 player.isJumping = true;
-                
-                // ★ジャンプ初速の変化をより緩やかにマイルドに調整
                 const speedRatio = currentSpeed / initialBaseSpeed;
-                const gentleRatio = 1.0 + (speedRatio - 1.0) * 0.4; // 速度変化の影響を40%にマイルド化
+                const gentleRatio = 1.0 + (speedRatio - 1.0) * 0.4; 
                 player.vy = BASE_JUMP * Math.sqrt(gentleRatio);
             }
         };
@@ -223,9 +243,7 @@
                         setRandomResetThreshold();       
                     }
 
-                    // ★【ここを修正！】重力が重くなるテンポを劇的に遅く、滑らかにしました
                     const speedRatio = currentSpeed / initialBaseSpeed;
-                    // ルート(Math.sqrt)を取り、さらに「1 + 変化量の半分(0.5)」に抑えることで、落下速度の急増を防ぎます
                     const gentleGravityRatio = 1.0 + (Math.sqrt(speedRatio) - 1.0) * 0.5;
                     player.gravity = BASE_GRAVITY * gentleGravityRatio;
 
@@ -267,10 +285,8 @@
 
                             gameOverTimer = 120; 
 
-                            if (score > highScore) { 
-                                highScore = score; 
-                                localStorage.setItem('dinoBestTime', highScore); 
-                            }
+                            // ★ 衝突時にランキング保存処理を呼ぶ
+                            saveScore(score);
                         }
                         if (o.x + o.w < -100) obstacles.splice(i, 1);
                     }
@@ -360,37 +376,81 @@
                 } else {
                     ctx.save();
                     
-                    let textY, fontSize;
+                    let textY, fontSize, textX;
                     if (gameOverTimer > 0) {
+                        // ★ 最初の2秒間：画面中央に特大サイズで表示！
                         ctx.textBaseline = 'middle';
+                        textX = V_WIDTH / 2;
                         textY = V_HEIGHT / 2;
                         fontSize = 120; 
                     } else {
+                        // ★ 2秒経過後：左上に寄せるように定位置に移動
                         ctx.textBaseline = 'alphabetic';
+                        textX = V_WIDTH / 2 - 220; // 右にランキングを入れるために少し左へ
                         textY = V_HEIGHT / 2 - 100;
                         fontSize = 80;
                     }
 
                     ctx.fillStyle = '#e67e22'; 
                     ctx.font = `bold ${fontSize}px sans-serif`;
-                    ctx.fillText('完 食', V_WIDTH / 2, textY);
+                    ctx.fillText('完 食', textX, textY);
                     ctx.restore();
                     
+                    // ★ 2秒経過後に左側リザルトと、右側縦並びランキングを同時に出す
                     if (gameOverTimer === 0) {
+                        ctx.save();
+                        // --- 左側：今回のスコアエリア ---
+                        ctx.textAlign = 'center';
+                        const leftCenterX = V_WIDTH / 2 - 220; // 左半分の中心点
+                        
                         ctx.fillStyle = 'white'; ctx.font = '45px sans-serif';
-                        ctx.fillText(`記録: ${displayScore} 秒`, V_WIDTH / 2, V_HEIGHT / 2 + 10);
+                        ctx.fillText(`記録: ${displayScore} 秒`, leftCenterX, V_HEIGHT / 2 + 10);
                         
                         ctx.font = '30px sans-serif';
-                        ctx.fillText(`最高記録: ${Math.floor(highScore)} 秒`, V_WIDTH / 2, V_HEIGHT / 2 + 65);
+                        ctx.fillText(`最高記録: ${Math.floor(highScore)} 秒`, leftCenterX, V_HEIGHT / 2 + 65);
                         
                         ctx.fillStyle = 'white';
                         if (displayScore >= Math.floor(score)) {
-                            ctx.fillText('スペースキー または タップでリトライ！', V_WIDTH / 2, V_HEIGHT / 2 + 160);
+                            ctx.fillText('スペースキー または タップでリトライ！', leftCenterX, V_HEIGHT / 2 + 160);
                         } else {
                             ctx.fillStyle = '#7f8c8d';
                             ctx.font = '24px sans-serif';
-                            ctx.fillText('画面タップで演出をスキップ', V_WIDTH / 2, V_HEIGHT / 2 + 160);
+                            ctx.fillText('画面タップで演出をスキップ', leftCenterX, V_HEIGHT / 2 + 160);
                         }
+
+                        // --- 右側：過去3つの最高得点（ランキング）エリア ---
+                        const rightCenterX = V_WIDTH / 2 + 260; // 右半分の中心点
+                        const rankYStart = V_HEIGHT / 2 - 130;  // ランキングの書き始めの高さ
+                        
+                        // 背景枠
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+                        ctx.fillRect(rightCenterX - 200, rankYStart - 60, 400, 310);
+                        
+                        // 見出し
+                        ctx.fillStyle = '#f1c40f';
+                        ctx.font = 'bold 32px sans-serif';
+                        ctx.fillText('歴代最高記録 TOP3', rightCenterX, rankYStart - 15);
+                        
+                        // 3つのスコアをループで描画
+                        const medals = ['🥇 1st', '🥈 2nd', '🥉 3rd'];
+                        const medalColors = ['#f1c40f', '#e67e22', '#bdc3c7']; // 金・銅・銀
+                        
+                        for (let i = 0; i < 3; i++) {
+                            const currentY = rankYStart + 55 + (i * 65);
+                            
+                            // 順位ラベル
+                            ctx.textAlign = 'left';
+                            ctx.fillStyle = medalColors[i];
+                            ctx.font = 'bold 30px sans-serif';
+                            ctx.fillText(medals[i], rightCenterX - 150, currentY);
+                            
+                            // スコア値
+                            ctx.textAlign = 'right';
+                            ctx.fillStyle = 'white';
+                            ctx.font = 'bold 32px font-serif';
+                            ctx.fillText(`${topScores[i]} 秒`, rightCenterX + 150, currentY);
+                        }
+                        ctx.restore();
                     }
                 }
             }
