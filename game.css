@@ -1,0 +1,292 @@
+/* ==========================================================================
+   1. 全体のベース（和紙 background）
+   ========================================================================== */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #f7f3e9; /* メーナのページと同じ和紙の色 */
+    color: #2b2b2b;
+    font-family: "Hiragino Mincho ProN", serif;
+    min-height: 100vh;
+}
+
+/* --- ホームへ戻るボタン --- */
+.header-nav {
+    padding: 20px;
+}
+
+.home-btn {
+    display: inline-block;
+    background: #800000;
+    color: #ffffff !important;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: 2px solid #2b2b2b;
+    box-shadow: 4px 4px 0px #2b2b2b;
+    transition: all 0.2s;
+}
+
+.home-btn:hover {
+    box-shadow: none;
+    transform: translate(4px, 4px);
+    background: #2b2b2b;
+}
+
+/* ==========================================================================
+   2. レイアウト構造（ラフ案の再現）
+   ========================================================================== */
+.game-container {
+    max-width: 900px;
+    margin: 20px auto 60px auto;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+/* --- 上段エリア（キャラ選択＋ゲーム名） --- */
+.game-top-row {
+    display: flex;
+    gap: 25px;
+    align-items: stretch; /* 高さを揃える */
+    flex-wrap: wrap;
+}
+
+/* 縦長のキャラ選択ボタン */
+.game-chara-select-btn {
+    width: 140px;
+    background: #fff;
+    border: 3px solid #2b2b2b;
+    box-shadow: 8px 8px 0px #800000; /* 赤い太影 */
+    text-decoration: none;
+    color: #2b2b2b;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 10px;
+    transition: all 0.2s;
+}
+
+.game-chara-select-btn:hover {
+    box-shadow: none;
+    transform: translate(8px, 8px);
+    background: #fdfaf2;
+}
+
+.btn-main-text {
+    font-size: 1.8rem;
+    font-weight: 900;
+    line-height: 1.3;
+    text-align: center;
+    color: #2b2b2b;
+}
+
+.btn-sub {
+    font-size: 0.85rem;
+    color: #800000;
+    margin-bottom: 8px;
+    letter-spacing: 0.1em;
+    font-weight: bold;
+}
+
+/* 横長のゲーム名看板 */
+.game-title-kanban {
+    flex: 1; /* 残りの横幅をすべて使う */
+    min-width: 300px;
+    background: #800000; /* 豪華な赤看板 */
+    border: 3px solid #2b2b2b;
+    box-shadow: 12px 12px 0px #2b2b2b; /* 黒い太影 */
+    padding: 25px 30px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.kanban-sub {
+    color: #f1c40f; /* ゴールド */
+    font-size: 0.9rem;
+    font-weight: bold;
+    letter-spacing: 0.1em;
+}
+
+.game-main-name {
+    font-size: 2.4rem;
+    margin: 8px 0;
+    color: #ffffff;
+    font-weight: 900;
+    text-shadow: 2px 2px 0px #2b2b2b;
+}
+
+.game-desc {
+    margin: 5px 0 0 0;
+    font-size: 0.95rem;
+    color: #f7f3e9;
+    line-height: 1.4;
+}
+
+/* ==========================================================================
+   3. 下段エリア：難易度選択（3つのカード並び）
+   ========================================================================== */
+.difficulty-section {
+    background: #fff;
+    border: 3px solid #2b2b2b;
+    box-shadow: 12px 12px 0px #800000; /* 全体を包む大きな赤影カード */
+    padding: 35px 25px;
+}
+
+.section-title {
+    font-size: 1.4rem;
+    color: #800000;
+    margin-top: 0;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #2b2b2b;
+    padding-bottom: 8px;
+    display: inline-block;
+}
+
+/* 3つ並べるグリッド */
+.difficulty-grid {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+/* 木札ボタンの共通の型 */
+.diff-card {
+    flex: 1;
+    min-width: 180px;
+    background: #ffffff;
+    border: 2px solid #2b2b2b;
+    text-decoration: none;
+    color: #2b2b2b;
+    padding: 25px 15px;
+    text-align: center;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.diff-eng {
+    font-size: 1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.diff-jp {
+    font-size: 2rem;
+    margin: 0 0 10px 0;
+    font-weight: 900;
+}
+
+.diff-note {
+    font-size: 0.85rem;
+    color: #666;
+    margin: 0;
+    line-height: 1.4;
+}
+/* ==========================================================================
+   追加：参戦キャラクター紹介用のデザイン（木札風）
+   ========================================================================== */
+.game-chara-section {
+    background: #fff;
+    border: 3px solid #2b2b2b;
+    box-shadow: 12px 12px 0px #800000; /* 全体を包む大きな赤影カード */
+    padding: 35px 25px;
+}
+
+/* 4人を横並びにするグリッド */
+.game-chara-grid {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap; /* スマホで自動折り返し */
+}
+
+/* 小さな木札風キャラクターカード */
+.game-chara-card {
+    flex: 1;
+    min-width: 160px; /* スマホで2列を維持しやすいサイズ */
+    background: #ffffff;
+    border: 2px solid #2b2b2b;
+    box-shadow: 5px 5px 0px #e67e22; /* ラーメンオレンジの影（レイヤー下） */
+    padding: 20px 10px;
+    text-align: center;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* イラストを丸窓またはスクエアに収める枠 */
+.mini-img-wrap {
+    width: 100px;
+    height: 100px;
+    border: 1px solid #ccc;
+    background: #fafafa;
+    border-radius: 50%; /* 💡ここを50%にすると、ゲームの選択画面っぽく可愛い「丸窓」になります！四角に戻したければ消してね！ */
+    overflow: hidden;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mini-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 縦横比を崩さず枠に収める */
+}
+
+/* キャラクター名 */
+.mini-name {
+    font-size: 1.3rem;
+    color: #800000;
+    margin: 0 0 8px 0;
+    font-weight: 900;
+}
+
+/* キャラの一言 */
+.mini-word {
+    font-size: 0.85rem;
+    color: #555;
+    margin: 0;
+    line-height: 1.4;
+    font-style: italic; /* ちょっとセリフっぽく斜体に */
+}
+
+/* スマホ等で綺麗に2列×2行にするための微調整 */
+@media (max-width: 550px) {
+    .game-chara-card {
+        flex: calc(50% - 10px); /* 画面幅の半分でピッタリきれいに2分割並びにする */
+    }
+}
+/* --- 辛さに合わせたそれぞれの影色（レイヤー下） --- */
+/* easy：甘口（マイルドな黄色い影） */
+.card-easy { box-shadow: 6px 6px 0px #f1c40f; }
+.card-easy .diff-eng { color: #f1c40f; }
+.card-easy:hover { box-shadow: none; transform: translate(6px, 6px); background: #fffdf5; }
+
+/* normal：中辛（いつものオレンジ影） */
+.card-normal { box-shadow: 6px 6px 0px #e67e22; }
+.card-normal .diff-eng { color: #e67e22; }
+.card-normal:hover { box-shadow: none; transform: translate(6px, 6px); background: #fffaf5; }
+
+/* hard：激辛（燃え上がる赤枠・赤影） */
+.card-hard { box-shadow: 6px 6px 0px #800000; border-color: #800000; }
+.card-hard .diff-eng { color: #800000; }
+.card-hard:hover { box-shadow: none; transform: translate(6px, 6px); background: #fff555; background: #fff5f5; }
+
+/* --- フッター --- */
+.shop-footer {
+    text-align: center;
+    padding: 30px 0;
+    margin-top: 60px;
+    border-top: 1px double #2b2b2b;
+    font-size: 0.85rem;
+    color: #666;
+}
