@@ -112,8 +112,10 @@
         // 現在選択中のキャラ（デフォルトは hajime）
         let tempSelectedChar = localStorage.getItem("selectedChar") || "hajime";
         
-        // 解放済みのキャラリスト（デフォルトは初期キャラの hajime だけ）
-        const unlocked = JSON.parse(localStorage.getItem("unlockedChars")) || ["hajime"];
+        // 一度記憶を読み込む
+let unlocked = JSON.parse(localStorage.getItem("unlockedChars")) || [];
+// もし記憶の中にハジメ（hajime）が入っていなければ、ここで強制的に追加する！
+if (!unlocked.includes("hajime")) { unlocked.push("hajime"); }
 
         // バグ防止：もし選択中キャラがマスターデータにないIDだったらhajimeに戻す
         if (!CHAR_DATA[tempSelectedChar]) {
