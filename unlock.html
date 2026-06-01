@@ -47,7 +47,7 @@
         const msgEl = document.getElementById("statusMsg");
 
         if (charId && CHAR_NAMES[charId]) {
-            let unlocked = JSON.parse(localStorage.getItem("unlockedChars")) || ["girl"];
+            let unlocked = JSON.parse(localStorage.getItem("unlockedChars")) || ["hajime"];
 
             if (!unlocked.includes(charId)) {
                 unlocked.push(charId);
