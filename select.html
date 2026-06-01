@@ -83,81 +83,100 @@
         </div>
     </div>
 
-    <script>
+   <script>
+        // ★全てのキャラクターのマスターデータ
+        //（ファイル名はすべて同じ階層にある想定のため、フォルダ名は書いていません）
         const CHAR_DATA = {
-            hajime:     { name: "ハジメ",     imgL: "../キャラ/hajimel.png" },
-            meana:      { name: "メーナ",     imgL: "../キャラ/meanal.png" },
-            aniki:    { name: "チャーシュー兄", imgL: "../キャラ/aniki_l.png" },
-            naruto:   { name: "ナルトちゃん",   imgL: "../キャラ/naruto_l.png" },
-            // キャラが増えたらここに追加
+            hajime: { name: "ハジメ",     imgL: "meanal.png" }, // 初期キャラ
+            meana:  { name: "メーナ",     imgL: "meana.png" },  // A店限定キャラ
+            boy:    { name: "中華ボーイ",   imgL: "boy_l.png" },  // B店限定キャラ
+            aniki:  { name: "チャーシュー兄", imgL: "aniki_l.png" }, // C店限定キャラ
+            naruto: { name: "ナルトちゃん", imgL: "naruto_l.png" }  // D店限定キャラ
         };
 
-        const TOTAL_CELLS = 12; // 4列 × 3行 = 12
-
+        // 1. ローカルストレージからデータを読み込む
+        // 現在選択中のキャラ（デフォルトは hajime）
         let tempSelectedChar = localStorage.getItem("selectedChar") || "hajime";
+        
+        // 解放済みのキャラリスト（デフォルトは初期キャラの hajime だけ）
+        const unlocked = JSON.parse(localStorage.getItem("unlockedChars")) || ["hajime"];
 
+        // バグ防止：もし選択中キャラがマスターデータにないIDだったらhajimeに戻す
+        if (!CHAR_DATA[tempSelectedChar]) {
+            tempSelectedChar = "hajime";
+        }
+
+        // 2. 12マスのグリッド画面を生成する関数
         function renderGrid() {
-            const unlocked = JSON.parse(localStorage.getItem("unlockedChars")) || ["hajime"];
             const container = document.getElementById("gridContainer");
-            container.innerHTML = "";
+            container.innerHTML = ""; // 一度中身を空にする
 
-            const charIds = Object.keys(CHAR_DATA);
+            // 各キャラの配置されるマス目の位置を完全に固定する配列（3行×4列のインデックス対応）
+            // これにより、未解放キャラや翻訳機能で位置が絶対にズレなくなります
+            const positions = [
+                { col: 1, row: 1 }, // hajime (1人目)
+                { col: 2, row: 1 }, // meana  (2人目)
+                { col: 3, row: 1 }, // boy    (3人目)
+                { col: 4, row: 1 }, // aniki  (4人目)
+                { col: 1, row: 2 }  // naruto (5人目)
+            ];
 
-            for (let i = 0; i < TOTAL_CELLS; i++) {
-                // 12番目（4列目の3行目：一番右下）を選択完了ボタンにする
-                if (i === TOTAL_CELLS - 1) {
-                    const btnContainer = document.createElement("div");
-                    btnContainer.className = "confirm-btn-container";
-                    btnContainer.innerHTML = `<button class="confirm-btn" id="saveSelectionBtn">選択完了</button>`;
-                    container.appendChild(btnContainer);
-                    continue;
-                }
+            // キャラクターデータをループしてマス目を作っていく
+            Object.keys(CHAR_DATA).forEach((id, index) => {
+                const char = CHAR_DATA[id];
+                const isUnlocked = unlocked.includes(id); // 解放されているか判定
+                const pos = positions[index] || { col: (index % 4) + 1, row: Math.floor(index / 4) + 1 };
 
-                const charId = charIds[i];
-                const cell = document.createElement("div");
+                const card = document.createElement('div');
+                // 解放状態、選択状態に合わせてクラスを付与
+                card.className = `char-card ${isUnlocked ? 'unlocked' : 'locked'} ${tempSelectedChar === id ? 'selected' : ''}`;
+                
+                // イラスト通りの位置にガチッと固定
+                card.style.gridColumn = pos.col;
+                card.style.gridRow = pos.row;
 
-                if (charId) {
-                    const isUnlocked = unlocked.includes(charId);
-                    const isSelected = (charId === tempSelectedChar);
-
-                    if (isUnlocked) {
-                        cell.className = `char-cell ${isSelected ? 'selected' : ''}`;
-                        cell.innerHTML = `
-                            <img src="${CHAR_DATA[charId].imgL}" alt="${CHAR_DATA[charId].name}">
-                            <p>${CHAR_DATA[charId].name}</p>
-                        `;
-                        cell.addEventListener("click", () => {
-                            tempSelectedChar = charId;
-                            renderGrid(); 
-                        });
-                    } else {
-                        cell.className = "char-cell locked";
-                        cell.innerHTML = `
-                            <img src="../キャラ/question.png" alt="未解放">
-                            <p>？？？？</p>
-                        `;
-                        cell.addEventListener("click", () => {
-                            alert(`「${CHAR_DATA[charId].name}」は、お店のQRコードからゲットできるよ！`);
-                        });
-                    }
+                // マス目の中身のHTMLを組み立てる
+                if (isUnlocked) {
+                    // 【解放済みの場合】名前とキャラ画像を表示
+                    card.innerHTML = `
+                        <img src="${char.imgL}" alt="${char.name}">
+                        <div class="char-name">${char.name}</div>
+                    `;
+                    // クリックしたら選択できるようにする
+                    card.addEventListener('click', () => {
+                        document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
+                        card.classList.add('selected');
+                        tempSelectedChar = id; // 一時的に選択
+                    });
                 } else {
-                    cell.className = "char-cell locked";
-                    cell.innerHTML = `
-                        <img src="../キャラ/question.png" alt="未解放">
-                        <p>？？？？</p>
+                    // 【未解放の場合】???? と「puestion.png（ハテナ画像）」を表示
+                    card.innerHTML = `
+                        <img src="puestion.png" alt="未解放" class="locked-img">
+                        <div class="char-name">????</div>
                     `;
                 }
 
-                container.appendChild(cell);
-            }
-
-            // ボタンを押したら、データを保存してホームページ（game.html）に戻る
-            document.getElementById("saveSelectionBtn").addEventListener("click", () => {
-                localStorage.setItem("selectedChar", tempSelectedChar);
-                window.location.href = "game.html"; // ホームに戻る
+                container.appendChild(card);
             });
+
+            // 3. 右下の12マス目に「選択完了ボタン」を強制配置する
+            const btnContainer = document.createElement('div');
+            btnContainer.className = "confirm-btn-container";
+            btnContainer.style.gridColumn = "4"; // 4列目
+            btnContainer.style.gridRow = "3";    // 3行目（右下の一番隅っこ）
+            
+            btnContainer.innerHTML = `<button class="confirm-btn" onclick="saveSelection()">選択完了</button>`;
+            container.appendChild(btnContainer);
         }
 
+        // 4. 選択完了ボタンを押した時の処理
+        function saveSelection() {
+            localStorage.setItem("selectedChar", tempSelectedChar);
+            // ホーム画面（game.html）に戻る
+            window.location.href = "game.html";
+        }
+
+        // 画面を開いた時にグリッドを実行する
         renderGrid();
     </script>
 </body>
