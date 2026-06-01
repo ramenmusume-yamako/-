@@ -59,11 +59,6 @@
 
         const isPC = window.innerWidth >= 960;
 
-        // ★★★ 難易度の設定 ★★★
-        // このファイルの難易度を指定します ('easy' / 'normal' / 'hard')
-        // ※ファイルごとにここを書き換えてください。
-        const DIFFICULTY = 'easy'; 
-
         // --- オーディオ設定 ---
         const bgm = new Audio('CHINA_BOY.mp3'); 
         bgm.loop = true;                  
@@ -113,8 +108,8 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
         const p_sz = isPC ? 220 : 260; 
         const GROUND_Y = V_HEIGHT - 60; 
 
-        const BASE_GRAVITY = isPC ? 1.0 : 1.6; 
-        const BASE_JUMP = isPC ? -29.0 : -38.0; 
+        const BASE_GRAVITY = isPC ? 1.2 : 1.8; 
+        const BASE_JUMP = isPC ? -26.0 : -35.0; 
 
         let gameState = 'START';
         let score = 0;
@@ -128,8 +123,8 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
         // LINEバグ（時間ワープ）対策用のタイムスタンプ変数
         let lastTime = performance.now();
 
-        // ★ 難易度(DIFFICULTY) と デバイス(isPC) を組み合わせて完全に保存先を分ける
-        // 例: 'dinoBestTime_easy_PC' や 'dinoBestTime_easy_SP' になります
+        // ★★★ 難易度の設定＆スコア分離 ★★★
+        const DIFFICULTY = 'normal'; 
         const deviceType = isPC ? 'PC' : 'SP';
         const bestKey = `dinoBestTime_${DIFFICULTY}_${deviceType}`;
         const scoreKey = `dinoTopScores_${DIFFICULTY}_${deviceType}`;
@@ -137,11 +132,11 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
         let highScore = localStorage.getItem(bestKey) || 0;
         let topScores = JSON.parse(localStorage.getItem(scoreKey)) || [0, 0, 0];
 
-        const initialBaseSpeed = isPC ? 6.0 : 11.0; 
+        const initialBaseSpeed = isPC ? 8.0 : 13.0; 
         let currentSpeed = initialBaseSpeed;
 
-        // 滑らかな速度ループ用のタイマー（秒単位で計測）
-        let speedLoopTimer = 0;      
+        let speedPhaseTimer = 0;      
+        let nextResetThreshold = 0;   
 
         const player = { 
             x: 100, y: GROUND_Y - p_sz, width: p_sz, height: p_sz, 
@@ -170,6 +165,13 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
             setTimeout(resize, 500);
         });
         resize();
+
+        function setRandomResetThreshold() {
+            const minFrames = 40 * 60;
+            const maxFrames = 60 * 60;
+            nextResetThreshold = minFrames + Math.random() * (maxFrames - minFrames);
+            speedPhaseTimer = 0; 
+        }
 
         function saveScore(currentScore) {
             const finalScore = Math.floor(currentScore);
@@ -241,7 +243,6 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
             startCallTimer = 0; 
             gameOverTimer = 0; 
             currentSpeed = initialBaseSpeed;
-            speedLoopTimer = 0; 
             obstacles = []; spawnTimer = 0; nextSpawnThreshold = 60;
             player.y = GROUND_Y - player.height; 
             player.vy = 0; 
@@ -249,6 +250,7 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
             player.isJumping = false;
             
             lastTime = performance.now(); 
+            setRandomResetThreshold(); 
         }
 
         function update(currentTime) {
@@ -280,16 +282,17 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
                         bgm.play().catch(o => {});
                     }
                 } else {
+                    // ★ 速度変化の処理はすべて元の「直線加速＆ランダムリセット」に戻しました
+                    currentSpeed += (isPC ? 0.004 : 0.007) * dtRatio; 
                     score += (1 / 60) * dtRatio; 
                     
-                    speedLoopTimer += (1 / 60) * dtRatio; 
-                    
-                    const wave = (1 - Math.cos((2 * Math.PI * speedLoopTimer) / 100)) / 2;
-                    
-                    const maxSpeedBonus = isPC ? 5.0 : 8.0; 
-                    currentSpeed = initialBaseSpeed + (maxSpeedBonus * wave);
-                    
                     bgScroll += (currentSpeed * 0.7) * dtRatio; 
+
+                    speedPhaseTimer += dtRatio;
+                    if (speedPhaseTimer >= nextResetThreshold) {
+                        currentSpeed = initialBaseSpeed; 
+                        setRandomResetThreshold();       
+                    }
 
                     const speedRatio = currentSpeed / initialBaseSpeed;
                     const gentleGravityRatio = 1.0 + (Math.sqrt(speedRatio) - 1.0) * 0.5;

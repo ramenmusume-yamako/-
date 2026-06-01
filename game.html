@@ -16,7 +16,7 @@
         
         <div class="game-top-row">
             
-            <a href="character.html" class="game-chara-select-btn">
+            <a href="select.html" class="game-chara-select-btn">
                 <span class="btn-sub">選ぶ</span>
                 <div class="btn-main-text">キャラ<br>選択</div>
             </a>
@@ -34,7 +34,7 @@
             
             <div class="difficulty-grid">
                 
-                <a href="game_easy.html" class="diff-card card-easy">
+                <a href="../ミニゲーム/easy.html" class="diff-card card-easy">
                     <div class="card-inner">
                         <span class="diff-eng">easy</span>
                         <h3 class="diff-jp">初見</h3>
@@ -42,7 +42,7 @@
                     </div>
                 </a>
 
-                <a href="game_normal.html" class="diff-card card-normal">
+                <a href="../ミニゲーム/nomal.html" class="diff-card card-normal">
                     <div class="card-inner">
                         <span class="diff-eng">normal</span>
                         <h3 class="diff-jp">一般客</h3>
@@ -50,7 +50,7 @@
                     </div>
                 </a>
 
-                <a href="game_hard.html" class="diff-card card-hard">
+                <a href="../ミニゲーム/hard.html" class="diff-card card-hard">
                     <div class="card-inner">
                         <span class="diff-eng">hard</span>
                         <h3 class="diff-jp">常連</h3>
@@ -104,6 +104,32 @@
     <footer class="shop-footer">
         <p>&copy; 2026 ramengirls</p>
     </footer>
+
+    <script>
+        // ★キャラクターマスターデータ（「キャラ」フォルダの画像を指定）
+        const CHAR_DATA = {
+            hajime:     { name: "ハジメ",     imgL: "../キャラ/hajimel.png" },
+            meana:      { name: "メーナ",     imgL: "../キャラ/meanal.png" },
+            aniki:    { name: "チャーシュー兄", imgL: "../キャラ/aniki_l.png" },
+            naruto:   { name: "ナルトちゃん",   imgL: "../キャラ/naruto_l.png" }
+        };
+
+        // ホーム画面のボタン（選択中キャラ）の見た目を最新の状態に更新する関数
+        function updateHomeButton() {
+            const selected = localStorage.getItem("selectedChar") || "hajime";
+            // 登録外のIDだった場合のバグ防止安全処理
+            const char = CHAR_DATA[selected] || CHAR_DATA["hajime"];
+            
+            document.getElementById("currentCharImg").src = char.imgL;
+            document.getElementById("currentCharName").textContent = char.name;
+        }
+
+        // キャラ選択ページから戻ってきた時に、最新の選択キャラが即座に反映されるようにする設定
+        window.addEventListener('pageshow', updateHomeButton);
+        
+        // 初回読み込み時にも実行
+        updateHomeButton();
+    </script>
 
 </body>
 </html>
