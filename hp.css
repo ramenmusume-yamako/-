@@ -284,3 +284,73 @@ body {
     font-size: 0.85rem;
     color: #666;
 }
+/* ==========================================================================
+   5. スマホ・タブレット用の自動レイアウト調整（レスポンシブ）
+   ========================================================================== */
+@media (max-width: 768px) {
+    
+    /* --- メイン看板の調整 --- */
+    .shop-kanban {
+        height: 250px; /* スマホの画面に合わせて看板の高さを少しスリムに */
+    }
+    
+    .shop-title {
+        font-size: 2.5rem; /* 4remだと文字がはみ出すのでスマホ用に縮小 */
+    }
+    
+    .shop-subtitle {
+        font-size: 1rem;
+        margin: 10px 0 0 0;
+    }
+
+    /* --- 全体の余白調整 --- */
+    .main-container {
+        margin: 20px auto;
+        gap: 25px; /* カード同士の間隔を少し詰める */
+    }
+
+    .menu-card-home {
+        padding: 30px 20px; /* カードの内側の余白を狭くして、画面を広く使う */
+    }
+
+    /* --- キャラクター一覧（ここが一番大事！） --- */
+    .character-grid {
+        gap: 20px; /* 木札同士の隙間を微調整 */
+    }
+
+    .chara-fuda {
+        /* 💡画面幅に合わせて、2本の木札が綺麗に「横並び（2列）」で収まるように計算 */
+        width: calc(50% - 10px); 
+        min-width: 140px; /* これ以上縮むと文字が潰れる限界値 */
+        padding: 12px;
+        box-sizing: border-box;
+    }
+
+    /* スマホ用に木札の中のサイズ感も調整 */
+    .fuda-img-wrap {
+        margin-bottom: 10px;
+        padding: 5px;
+    }
+
+    .fuda-name {
+        font-size: 1.1rem;
+        margin: 5px 0;
+    }
+
+    .fuda-desc {
+        font-size: 0.8rem;
+        margin: 0 0 10px 0;
+    }
+
+    .fuda-btn {
+        font-size: 0.85rem;
+        padding: 6px 0;
+    }
+}
+
+/* 💡超スリムなスマホ（iPhone SEなど）用の最終調整 */
+@media (max-width: 380px) {
+    .chara-fuda {
+        width: 100%; /* 画面幅が狭すぎる場合は自動で「縦1列」にして見やすく */
+    }
+}
