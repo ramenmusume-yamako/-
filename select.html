@@ -84,6 +84,36 @@
     height: 80%;
     object-fit: contain;
 }
+
+/* マウスを合わせた時（ホバー）と、選択された時のカードの見た目 */
+.char-card {
+    cursor: pointer; /* PCでマウスを乗せた時に指マークにする */
+    transition: all 0.2s ease; /* 動きをなめらかにする */
+    border: 3px solid transparent; /* 最初は透明な枠線を作っておく */
+    border-radius: 10px;
+}
+
+/* ★PCでマウスカーソルを合わせた時に白く光らせる */
+.char-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+/* ★現在選択されているキャラに「緑の太枠」をつける！ */
+.char-card.selected {
+    border-color: #00ffcc !important; /* ネオン調の綺麗な緑色 */
+    background: rgba(0, 255, 204, 0.1) !important;
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.4) !important;
+}
+
+/* 未解放キャラのマスは、マウスを乗せても指マークにしない */
+.char-card.locked {
+    cursor: default;
+}
+.char-card.locked:hover {
+    background: transparent;
+    box-shadow: none;
+}
     </style>
 </head>
 <body>
@@ -194,6 +224,110 @@ if (!unlocked.includes("hajime")) { unlocked.push("hajime"); }
 
         // 画面を開いた時にグリッドを実行する
         renderGrid();
+
+        // 3. グリッド画面を生成する関数
+        function renderGrid() {
+            const container = document.getElementById("gridContainer");
+            container.innerHTML = ""; // 一度リセット
+
+            const positions = [
+                { col: 1, row: 1 }, // hajime
+                { col: 2, row: 1 }, // meana
+                { col: 3, row: 1 }, // boy
+                { col: 4, row: 1 }, // aniki
+                { col: 1, row: 2 }  // naruto
+            ];
+
+            Object.keys(CHAR_DATA).forEach((id, index) => {
+                const char = CHAR_DATA[id];
+                const isUnlocked = unlocked.includes(id);
+                const pos = positions[index] || { col: (index % 4) + 1, row: Math.floor(index / 4) + 1 };
+
+                const card = document.createElement('div');
+                // 初期表示で選択されているキャラ（デフォルトは hajime）に 'selected' クラスをつける
+                card.className = `char-card ${isUnlocked ? 'unlocked' : 'locked'} ${tempSelectedChar === id ? 'selected' : ''}`;
+                card.dataset.id = id; // キーボード操作用にIDを覚えさせる
+                
+                card.style.gridColumn = pos.col;
+                card.style.gridRow = pos.row;
+
+                if (isUnlocked) {
+                    card.innerHTML = `
+                        <img src="${char.imgL}" alt="${char.name}">
+                        <div class="char-name">${char.name}</div>
+                    `;
+                    
+                    // 【スマホのタップ ＆ PCのマウスクリック共通】
+                    card.addEventListener('click', () => {
+                        selectCharacter(id);
+                    });
+                } else {
+                    card.innerHTML = `
+                        <img src="question.png" alt="未解放" class="locked-img">
+                        <div class="char-name">????</div>
+                    `;
+                }
+
+                container.appendChild(card);
+            });
+
+            // 選択完了ボタンの配置
+            const btnContainer = document.createElement('div');
+            btnContainer.className = "confirm-btn-container";
+            btnContainer.style.gridColumn = "4"; 
+            btnContainer.style.gridRow = "3";    
+            btnContainer.innerHTML = `<button class="confirm-btn" onclick="saveSelection()">選択完了</button>`;
+            container.appendChild(btnContainer);
+        }
+
+        // ★ キャラクターを選択した時に緑枠を切り替える共通関数
+        function selectCharacter(id) {
+            // 解放されているキャラしか選べないようにする安全装置
+            if (!unlocked.includes(id)) return;
+
+            tempSelectedChar = id;
+            
+            // いったん全員の緑枠（selected）を消す
+            document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
+            
+            // 今選んだキャラのマスだけに緑枠（selected）をつける
+            const selectedCard = document.querySelector(`.char-card[data-id="${id}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+        }
+
+        // ★【PC専用】矢印キー（← → ↑ ↓）でキャラクターを選べるようにする処理
+        // 解放されているキャラ（現在は hajime と meana）の間をトグル移動します
+        document.addEventListener('keydown', (event) => {
+            const charKeys = Object.keys(CHAR_DATA);
+            // 解放されているキャラのIDだけを抜き出したリスト（例: ['hajime', 'meana']）
+            const unlockedList = charKeys.filter(id => unlocked.includes(id));
+            
+            let currentIndex = unlockedList.indexOf(tempSelectedChar);
+
+            if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+                // 右または下キーで次の解放キャラへ
+                currentIndex = (currentIndex + 1) % unlockedList.length;
+                selectCharacter(unlockedList[currentIndex]);
+                event.preventDefault(); // 画面がガタガタスクロールするのを防ぐ
+            } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+                // 左または上キーで前の解放キャラへ
+                currentIndex = (currentIndex - 1 + unlockedList.length) % unlockedList.length;
+                selectCharacter(unlockedList[currentIndex]);
+                event.preventDefault();
+            }
+        });
+
+        // 選択完了ボタンの処理
+        function saveSelection() {
+            localStorage.setItem("selectedChar", tempSelectedChar);
+            window.location.href = "game.html";
+        }
+
+        // 画面実行
+        renderGrid();
+    </script>
     </script>
 </body>
 </html>
