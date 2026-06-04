@@ -26,11 +26,8 @@
         
         <div class="game-top-row">
             
+　　　　　　　
             <a href="select.html" class="char-select-btn">
-    <div class="btn-text-wrapper">
-        <span class="btn-sub-text">選ぶ</span>
-        <span class="btn-main-text">キャラ選択</span>
-    </div>
     <div class="btn-char-container">
         <img id="btnCharImg" src="" alt="">
     </div>
@@ -122,13 +119,13 @@
 
    <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // ★実際のフォルダ内にあるファイル名（.png）に完全に合わせました
+            // ★実際のフォルダ内にあるファイル名に完全に一致させました！
             const CHAR_IMAGES = {
-                hajime: "hajime.png",
-                meana:  "meana.png",
-                boy:    "boy.png",
-                aniki:  "aniki.png",
-                naruto: "naruto.png"
+                hajime: "right.png",    /* 初期キャラ・ハジメの画像 */
+                meana:  "meanal.png",   /* メーナの画像 */
+                boy:    "boy_l.png",    /* 中華ボーイの画像 */
+                aniki:  "aniki_l.png",  /* チャーシュー兄の画像 */
+                naruto: "naruto_l.png"  /* ナルトちゃんの画像 */
             };
 
             // 現在選択されているキャラクターのIDをストレージから取得

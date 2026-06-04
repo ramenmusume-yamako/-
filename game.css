@@ -134,21 +134,20 @@ body {
     flex-wrap: wrap;
 }
 
-/* キャラ選択ボタン全体のスタイル */
+/* キャラ選択ボタン全体のスタイル（文字なし・画像最大化） */
 .char-select-btn {
     display: flex;
-    flex-direction: row; /* 横並びに変更してゆとりを持たせる */
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     text-decoration: none;
     background: #ffffff;
     border: 3px solid #000000;
     border-radius: 8px;
-    padding: 10px 15px;
+    padding: 5px; /* 余白を狭くして画像を大きく */
     box-shadow: 4px 4px 0px #9c1c11;
     position: relative;
-    width: 150px; /* 横幅を150pxに広げて文字潰れを防止！ */
-    height: 80px;  /* 高さをすっきりしたサイズに */
+    width: 100px;  /* 元のちょうどいいサイズ感に固定 */
+    height: 120px;
     box-sizing: border-box;
     transition: transform 0.1s;
     overflow: hidden;
@@ -159,125 +158,32 @@ body {
     box-shadow: 2px 2px 0px #9c1c11;
 }
 
-/* ボタン内の文字エリア */
-.btn-text-wrapper {
-    text-align: left;
-    z-index: 2;
-    flex: 1;
-}
-.btn-sub-text {
-    display: block;
-    font-size: 11px;
-    color: #9c1c11;
-    font-weight: bold;
-    line-height: 1.2;
-}
-.btn-main-text {
-    display: block;
-    font-size: 16px;
-    color: #000000;
-    font-weight: bold;
-    line-height: 1.3;
-}
-
-/* キャラクター画像を配置するエリア */
-.btn-char-container {
-    width: 50px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1;
-}
-
-/* キャラクターのピョコピョコ動くアニメーション */
-#btnCharImg {
-    height: 90%;
-    max-width: 100%;
-    object-fit: contain;
-    animation: pyokoPyoko 0.6s infinite alternate ease-in-out;
-}
-
-@keyframes pyokoPyoko {
-    0% {
-        transform: translateY(0);
-    }
-    100% {
-        transform: translateY(-6px); /* 上下に優しく跳ねる運動 */
-    }
-}
-
-.char-select-btn:active {
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0px #9c1c11;
-}
-
-/* ボタン内の文字用 */
-.btn-text-wrapper {
-    text-align: center;
-    z-index: 2; /* 文字を画像より手前に */
-}
-.btn-sub-text {
-    display: block;
-    font-size: 11px;
-    color: #9c1c11;
-    font-weight: bold;
-}
-.btn-main-text {
-    display: block;
-    font-size: 16px;
-    color: #000000;
-    font-weight: bold;
-}
-
-/* ★キャラクター画像を配置するコンテナ */
+/* キャラクター画像を配置するコンテナ */
 .btn-char-container {
     width: 100%;
-    height: 60px;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: 5px;
-    z-index: 1;
 }
 
-/* ★キャラクターにジャンプ（上下に跳ねる）運動をつけるアニメーション */
+/* キャラクター画像：四角い枠いっぱいに大きく表示 */
 #btnCharImg {
-    height: 100%;
-    object-fit: contain;
-    animation: pyokoPyoko 0.6s infinite alternate ease-in-out;
+    width: 95%;
+    height: 95%;
+    object-fit: contain; /* 縦横比を崩さずに限界まで大きく */
+    image-rendering: pixelated; /* ドット絵がボケずにクッキリきれいに映る魔法 */
+    animation: pyokoPyoko 0.5s infinite alternate ease-in-out;
 }
 
-/* ピョコピョコ動く上下のアニメーション設定 */
+/* ピョコピョコ跳ねるアニメーション */
 @keyframes pyokoPyoko {
     0% {
-        transform: translateY(0) scaleY(1);
+        transform: translateY(2px);
     }
     100% {
-        transform: translateY(-8px) scaleY(1.05); /* 上に跳ねつつ少しだけ縦に伸びる */
+        transform: translateY(-8px); /* 元気に上下に跳ねる運動 */
     }
-}
-
-.game-chara-select-btn:hover {
-    box-shadow: none;
-    transform: translate(8px, 8px);
-    background: #fdfaf2;
-}
-
-.btn-main-text {
-    font-size: 1.8rem;
-    font-weight: 900;
-    line-height: 1.3;
-    text-align: center;
-    color: #2b2b2b;
-}
-
-.btn-sub {
-    font-size: 0.85rem;
-    color: #800000;
-    margin-bottom: 8px;
-    letter-spacing: 0.1em;
-    font-weight: bold;
 }
 
 /* 横長のゲーム名看板 */
