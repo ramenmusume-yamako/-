@@ -29,7 +29,7 @@
 　　　　　　　
            <a href="select.html" class="char-select-btn">
     <div class="btn-char-container">
-        <img id="btnCharImg" src="" alt="">
+        <img id="btnCharImg" src="" alt="走るキャラ">
     </div>
     <div class="btn-text-wrapper">
         <span class="btn-main-text">キャラ選択</span>
@@ -121,20 +121,33 @@
 
    <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // 実際のフォルダ内にあるファイル名とキャラIDを完全に紐付け
-            const CHAR_IMAGES = {
-                hajime: "right.png",    /* 初期キャラ・ハジメの画像 */
-                meana:  "meanal.png",   /* メーナの画像 */
-                boy:    "boy_l.png",    /* 中華ボーイの画像 */
-                aniki:  "aniki_l.png",  /* チャーシュー兄の画像 */
-                naruto: "naruto_l.png"  /* ナルトちゃんの画像 */
+            // ★ 各キャラがトコトコ走るための左右2枚の画像ペアを設定
+            const RUN_ANIMATIONS = {
+                hajime: { img1: "hajimel.png", img2: "hajimer.png" },
+                meana:  { img1: "meanal.png",  img2: "meanar.png" },
+                boy:    { img1: "boy_l.png",   img2: "boy_r.png" },
+                aniki:  { img1: "aniki_l.png",  img2: "aniki_r.png" },
+                naruto: { img1: "naruto_l.png", img2: "naruto_r.png" }
             };
 
+            // ローカルストレージから選択中のキャラIDを取得（なければハジメ）
             const currentSelected = localStorage.getItem("selectedChar") || "hajime";
             const btnCharImg = document.getElementById("btnCharImg");
 
-            if (btnCharImg && CHAR_IMAGES[currentSelected]) {
-                btnCharImg.src = CHAR_IMAGES[currentSelected];
+            // 画像の切り替えアニメーション処理
+            if (btnCharImg && RUN_ANIMATIONS[currentSelected]) {
+                const charPics = RUN_ANIMATIONS[currentSelected];
+                let isFirstImage = true;
+
+                // 💡 0.15秒ごとに画像を交互に入れ替えて「走らせる」！
+                setInterval(() => {
+                    if (isFirstImage) {
+                        btnCharImg.src = charPics.img1;
+                    } else {
+                        btnCharImg.src = charPics.img2;
+                    }
+                    isFirstImage = !isFirstImage; // 次はもう一枚の画像へ
+                }, 150);
             }
         });
     </script>
