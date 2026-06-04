@@ -149,8 +149,8 @@ body {
     padding: 12px 5px 8px 5px !important;
     box-shadow: 4px 4px 0px #9c1c11 !important;
     position: relative !important;
-    width: 120px !important;  /* 他のCSS指定を無視して120pxを強制 */
-    height: 145px !important; /* 他のCSS指定を無視して145pxを強制 */
+    width: 185px !important;  /* 他のCSS指定を無視して120pxを強制 */
+    height: 200px !important; /* 他のCSS指定を無視して145pxを強制 */
     box-sizing: border-box !important;
     transition: transform 0.1s !important;
     overflow: hidden !important;
