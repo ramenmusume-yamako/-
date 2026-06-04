@@ -32,7 +32,7 @@
         <span class="btn-main-text">キャラ選択</span>
     </div>
     <div class="btn-char-container">
-        <img id="btnCharImg" src="" alt="選択中キャラ">
+        <img id="btnCharImg" src="" alt="">
     </div>
 </a>
 
@@ -120,53 +120,25 @@
         <p>&copy; 2026 ramengirls</p>
     </footer>
 
-    <script>
-        // ★キャラクターマスターデータ（「キャラ」フォルダの画像を指定）
-        const CHAR_DATA = {
-            hajime:     { name: "ハジメ",     imgL: "hajimel.png" },
-            meana:      { name: "メーナ",     imgL: "meanal.png" },
-            aniki:    { name: "チャーシュー兄", imgL: "aniki_l.png" },
-            naruto:   { name: "ナルトちゃん",   imgL: "naruto_l.png" }
-        };
-
-        // ホーム画面のボタン（選択中キャラ）の見た目を最新の状態に更新する関数
-        function updateHomeButton() {
-            const selected = localStorage.getItem("selectedChar") || "hajime";
-            // 登録外のIDだった場合のバグ防止安全処理
-            const char = CHAR_DATA[selected] || CHAR_DATA["hajime"];
-            
-            document.getElementById("currentCharImg").src = char.imgL;
-            document.getElementById("currentCharName").textContent = char.name;
-        }
-
-        // キャラ選択ページから戻ってきた時に、最新の選択キャラが即座に反映されるようにする設定
-        window.addEventListener('pageshow', updateHomeButton);
-        
-        // 初回読み込み時にも実行
-        updateHomeButton();
-
+   <script>
         document.addEventListener("DOMContentLoaded", () => {
-    // 1. 全キャラクターの画像データ（select.html と共通のもの）
-    const CHAR_IMAGES = {
-        hajime: "hajimel.png",
-        meana:  "meanal.png",
-        boy:    "boy_l.png",
-        aniki:  "aniki_l.png",
-        naruto: "naruto_l.png"
-    };
+            // ★実際のフォルダ内にあるファイル名（.png）に完全に合わせました
+            const CHAR_IMAGES = {
+                hajime: "hajime.png",
+                meana:  "meana.png",
+                boy:    "boy.png",
+                aniki:  "aniki.png",
+                naruto: "naruto.png"
+            };
 
-    // 2. 現在選択されているキャラクターのIDをストレージから取得（なければ初期値はハジメ）
-    const currentSelected = localStorage.getItem("selectedChar") || "hajime";
+            // 現在選択されているキャラクターのIDをストレージから取得
+            const currentSelected = localStorage.getItem("selectedChar") || "hajime";
+            const btnCharImg = document.getElementById("btnCharImg");
 
-    // 3. ボタンの中の画像要素を取得
-    const btnCharImg = document.getElementById("btnCharImg");
-
-    if (btnCharImg && CHAR_IMAGES[currentSelected]) {
-        // 4. 選択されているキャラの画像をボタン内にセット！
-        btnCharImg.src = CHAR_IMAGES[currentSelected];
-    }
-});
+            if (btnCharImg && CHAR_IMAGES[currentSelected]) {
+                btnCharImg.src = CHAR_IMAGES[currentSelected];
+            }
+        });
     </script>
-
 </body>
 </html>

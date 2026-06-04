@@ -134,24 +134,77 @@ body {
     flex-wrap: wrap;
 }
 
-/* キャラ選択ボタン全体のスタイル調整 */
+/* キャラ選択ボタン全体のスタイル */
 .char-select-btn {
     display: flex;
-    flex-direction: column;
+    flex-direction: row; /* 横並びに変更してゆとりを持たせる */
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     text-decoration: none;
     background: #ffffff;
     border: 3px solid #000000;
     border-radius: 8px;
-    padding: 10px;
-    box-shadow: 4px 4px 0px #9c1c11; /* 写真とお揃いの赤茶影 */
+    padding: 10px 15px;
+    box-shadow: 4px 4px 0px #9c1c11;
     position: relative;
-    width: 120px; /* お使いの環境に合わせてサイズは微調整してください */
-    height: 140px;
+    width: 150px; /* 横幅を150pxに広げて文字潰れを防止！ */
+    height: 80px;  /* 高さをすっきりしたサイズに */
     box-sizing: border-box;
     transition: transform 0.1s;
     overflow: hidden;
+}
+
+.char-select-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px #9c1c11;
+}
+
+/* ボタン内の文字エリア */
+.btn-text-wrapper {
+    text-align: left;
+    z-index: 2;
+    flex: 1;
+}
+.btn-sub-text {
+    display: block;
+    font-size: 11px;
+    color: #9c1c11;
+    font-weight: bold;
+    line-height: 1.2;
+}
+.btn-main-text {
+    display: block;
+    font-size: 16px;
+    color: #000000;
+    font-weight: bold;
+    line-height: 1.3;
+}
+
+/* キャラクター画像を配置するエリア */
+.btn-char-container {
+    width: 50px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+/* キャラクターのピョコピョコ動くアニメーション */
+#btnCharImg {
+    height: 90%;
+    max-width: 100%;
+    object-fit: contain;
+    animation: pyokoPyoko 0.6s infinite alternate ease-in-out;
+}
+
+@keyframes pyokoPyoko {
+    0% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(-6px); /* 上下に優しく跳ねる運動 */
+    }
 }
 
 .char-select-btn:active {
