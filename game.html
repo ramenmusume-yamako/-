@@ -27,12 +27,14 @@
         <div class="game-top-row">
             
 　　　　　　　
-            <a href="select.html" class="char-select-btn">
+           <a href="select.html" class="char-select-btn">
     <div class="btn-char-container">
         <img id="btnCharImg" src="" alt="">
     </div>
+    <div class="btn-text-wrapper">
+        <span class="btn-main-text">キャラ選択</span>
+    </div>
 </a>
-
             <div class="game-title-kanban">
                 <span class="kanban-sub">ミニゲーム</span>
                 <h1 class="game-main-name">走れ！ラーメン娘！！</h1>
@@ -119,7 +121,7 @@
 
    <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // ★実際のフォルダ内にあるファイル名に完全に一致させました！
+            // 実際のフォルダ内にあるファイル名とキャラIDを完全に紐付け
             const CHAR_IMAGES = {
                 hajime: "right.png",    /* 初期キャラ・ハジメの画像 */
                 meana:  "meanal.png",   /* メーナの画像 */
@@ -128,7 +130,6 @@
                 naruto: "naruto_l.png"  /* ナルトちゃんの画像 */
             };
 
-            // 現在選択されているキャラクターのIDをストレージから取得
             const currentSelected = localStorage.getItem("selectedChar") || "hajime";
             const btnCharImg = document.getElementById("btnCharImg");
 
