@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>キャラクター選択</title>
     <style>
-        /* 全体の背景：温かみのあるクリーム色 */
+        /* 全体の背景：写真と同じ温かみのあるクリーム色 */
         body {
             margin: 0; padding: 0; 
             background: #f7f4e9; 
@@ -15,20 +15,21 @@
             perspective: 1000px;
         }
 
-        /* メインコンテナ：黒太枠 ＆ カチッとした赤茶色のシャドウ */
+        /* メインコンテナ：画面から絶対にはみ出さないよう box-sizing を徹底 */
         .game-selection-container {
             display: flex; flex-direction: column;
             width: 95vw; height: 90dvh; max-width: 1100px; max-height: 620px;
             background: #ffffff; 
             border: 3px solid #000000; 
-            border-radius: 16px; padding: 25px; box-sizing: border-box;
+            border-radius: 16px; padding: 20px; box-sizing: border-box;
             box-shadow: 8px 8px 0px #9c1c11; 
-            gap: 15px;
+            gap: 10px;
+            position: relative;
         }
 
         /* ヘッダーの文字色：深みのある中華赤 */
         h2 { 
-            font-size: 24px; margin: 0; text-align: center; 
+            font-size: 22px; margin: 0; text-align: center; 
             color: #9c1c11; 
             font-weight: bold;
             letter-spacing: 2px;
@@ -36,50 +37,59 @@
 
         /* 湾曲した格子を再現するコンテナ */
         .grid-panel {
-            flex: 1; width: 100%; height: 100%;
+            flex: 1; width: 100%; height: calc(100% - 40px);
             display: flex; align-items: center; justify-content: center;
+            box-sizing: border-box;
         }
 
-        /* 横4列×縦3行の格子状配置（3Dの傾きを完全維持） */
+        /* 横4列×縦3行の格子状配置（大暴走を防ぐため、はみ出しをカットする設定を追加） */
         .char-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr); 
             grid-template-rows: repeat(3, 1fr);    
-            gap: 15px; width: 100%; height: 100%;
-            transform: rotateY(-6px) rotateX(4px); /* 緩やかな湾曲・傾き感 */
+            gap: 12px; width: 100%; height: 100%;
+            box-sizing: border-box;
+            transform: rotateY(-6px) rotateX(4px); /* 緩やかな湾曲・傾き構造を100%維持 */
         }
 
-        /* 1つ1つのマス（ポラロイド風の白背景×グレー枠） */
+        /* 1つ1つのマス（画像が下にはみ出さないようレイアウトを最適化） */
         .char-card {
             background: #ffffff; 
             border: 2px solid #cdcdcd; 
             border-radius: 8px; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; position: relative;
-            transition: all 0.2s ease; padding: 10px; box-sizing: border-box;
+            align-items: center; justify-content: space-between; position: relative;
+            transition: all 0.2s ease; padding: 8px; box-sizing: border-box;
             box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.03);
             width: 100%; height: 100%;
+            overflow: hidden; /* マス目の中身が外に飛び出すのを防ぐ安全装置 */
         }
 
-        /* キャラクター画像 */
+        /* キャラクター画像（縦幅を65%に抑えて、名前スペースを安全に確保） */
         .char-card img { 
             width: 100%; 
-            height: 75%; 
+            height: 65%; 
             object-fit: contain; 
             background: #fafafa;
             border: 1px solid #eeeeee;
             border-radius: 4px;
+            box-sizing: border-box;
         }
         
         /* キャラクター名 */
         .char-card .char-name { 
-            margin: 8px 0 0; font-size: 14px; font-weight: bold; 
+            margin: 4px 0 0; font-size: 13px; font-weight: bold; 
             color: #333333; 
+            text-align: center;
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        /* ★【選択中】緑の太枠 */
+        /* ★【選択中】緑の太枠（立体感を邪魔しないシャドウに調整） */
         .char-card.selected {
             border: 3px solid #2ecc71 !important;
-            box-shadow: 6px 6px 0px #2ecc71 !important;
+            box-shadow: 4px 4px 0px #2ecc71 !important;
             background: rgba(46, 204, 113, 0.03) !important;
         }
 
@@ -117,10 +127,11 @@
         .confirm-btn {
             width: 100%; height: 100%; 
             background: #9c1c11; 
-            border: 2px solid #000000; border-radius: 8px; color: white; font-size: 18px;
+            border: 2px solid #000000; border-radius: 8px; color: white; font-size: 16px;
             font-weight: bold; cursor: pointer; transition: 0.2s;
             box-shadow: 4px 4px 0px #f7c11e; 
             letter-spacing: 2px;
+            box-sizing: border-box;
         }
         .confirm-btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #f7c11e; }
         .confirm-btn:active { transform: scale(0.98); }
@@ -146,7 +157,6 @@
             naruto: { name: "ナルトちゃん", imgL: "naruto_l.png" }  
         };
 
-        // 配列化してインデックスで扱いやすくする
         const CHAR_KEYS = Object.keys(CHAR_DATA);
 
         let tempSelectedChar = localStorage.getItem("selectedChar") || "hajime";
