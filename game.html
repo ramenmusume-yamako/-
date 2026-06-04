@@ -121,7 +121,7 @@
 
    <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // ★ 各キャラがトコトコ走るための左右2枚の画像ペアを設定
+            // 各キャラのパラパラアニメ用画像ペア
             const RUN_ANIMATIONS = {
                 hajime: { img1: "hajimel.png", img2: "hajimer.png" },
                 meana:  { img1: "meanal.png",  img2: "meanar.png" },
@@ -130,24 +130,22 @@
                 naruto: { img1: "naruto_l.png", img2: "naruto_r.png" }
             };
 
-            // ローカルストレージから選択中のキャラIDを取得（なければハジメ）
             const currentSelected = localStorage.getItem("selectedChar") || "hajime";
             const btnCharImg = document.getElementById("btnCharImg");
 
-            // 画像の切り替えアニメーション処理
             if (btnCharImg && RUN_ANIMATIONS[currentSelected]) {
                 const charPics = RUN_ANIMATIONS[currentSelected];
                 let isFirstImage = true;
 
-                // 💡 0.15秒ごとに画像を交互に入れ替えて「走らせる」！
+                // 💡 1秒（1000ミリ秒）ごとに画像を交互に切り替える（のんびり走るペースに！）
                 setInterval(() => {
                     if (isFirstImage) {
                         btnCharImg.src = charPics.img1;
                     } else {
                         btnCharImg.src = charPics.img2;
                     }
-                    isFirstImage = !isFirstImage; // 次はもう一枚の画像へ
-                }, 150);
+                    isFirstImage = !isFirstImage;
+                }, 1000); // 1000に変更してスピードを落としました
             }
         });
     </script>
