@@ -154,7 +154,7 @@ body {
     box-sizing: border-box !important;
     transition: transform 0.1s !important;
     overflow: hidden !important;
-    margin-left: -60px !important;
+    margin-left: -10px !important;
 }
 
 .char-select-btn:active {
