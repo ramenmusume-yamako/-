@@ -15,7 +15,7 @@
             perspective: 1000px;
         }
 
-        /* メインコンテナ：画面から絶対にはみ出さないよう box-sizing を徹底 */
+        /* メインコンテナ：画面から絶対にはみ出さない設定 */
         .game-selection-container {
             display: flex; flex-direction: column;
             width: 95vw; height: 90dvh; max-width: 1100px; max-height: 620px;
@@ -42,17 +42,17 @@
             box-sizing: border-box;
         }
 
-        /* 横4列×縦3行の格子状配置（大暴走を防ぐため、はみ出しをカットする設定を追加） */
+        /* ★【変更】横6列 × 縦2行（計12マス）の格子状配置 */
         .char-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr); 
-            grid-template-rows: repeat(3, 1fr);    
+            grid-template-columns: repeat(6, 1fr); /* 横に6列 */
+            grid-template-rows: repeat(2, 1fr);    /* 縦は2段 */
             gap: 12px; width: 100%; height: 100%;
             box-sizing: border-box;
-            transform: rotateY(-6px) rotateX(4px); /* 緩やかな湾曲・傾き構造を100%維持 */
+            transform: rotateY(-6px) rotateX(4px); /* 緩やかな湾曲・傾き構造を維持 */
         }
 
-        /* 1つ1つのマス（画像が下にはみ出さないようレイアウトを最適化） */
+        /* 1つ1つのマス */
         .char-card {
             background: #ffffff; 
             border: 2px solid #cdcdcd; 
@@ -61,10 +61,10 @@
             transition: all 0.2s ease; padding: 8px; box-sizing: border-box;
             box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.03);
             width: 100%; height: 100%;
-            overflow: hidden; /* マス目の中身が外に飛び出すのを防ぐ安全装置 */
+            overflow: hidden;
         }
 
-        /* キャラクター画像（縦幅を65%に抑えて、名前スペースを安全に確保） */
+        /* キャラクター画像 */
         .char-card img { 
             width: 100%; 
             height: 65%; 
@@ -86,14 +86,14 @@
             text-overflow: ellipsis;
         }
 
-        /* ★【選択中】緑の太枠（立体感を邪魔しないシャドウに調整） */
+        /* 【選択中】緑の太枠 */
         .char-card.selected {
             border: 3px solid #2ecc71 !important;
             box-shadow: 4px 4px 0px #2ecc71 !important;
             background: rgba(46, 204, 113, 0.03) !important;
         }
 
-        /* PCでマウスカーソルを合わせた時のホバー反応 */
+        /* ホバー反応 */
         .char-card.unlocked {
             cursor: pointer;
         }
@@ -102,7 +102,7 @@
             box-shadow: 4px 4px 0px rgba(156, 28, 17, 0.2);
         }
 
-        /* 未解放（「？」マス）のスタイル */
+        /* 未解放（「？」マス） */
         .char-card.locked { 
             cursor: default; 
             background: #f7f7f7; 
@@ -116,7 +116,7 @@
             color: #999999;
         }
 
-        /* 右下に配置する選択完了ボタンのエリア */
+        /* 右下の選択完了ボタンエリア */
         .confirm-btn-container {
             width: 100%; height: 100%; 
             display: flex; align-items: center; justify-content: center;
@@ -177,18 +177,18 @@
             tempSelectedChar = "hajime";
         }
 
-        // グリッド画面を生成（1マス目〜12マス目までを完全にループ埋め）
+        // グリッド画面を生成（横6×縦2＝全12マスを完全にループ埋め）
         function renderGrid() {
             const container = document.getElementById("gridContainer");
             container.innerHTML = ""; 
 
-            // 3行×4列＝全12マスの配置を上から順にループ処理
+            // 2行×6列＝全12マスの配置をループ処理
             for (let i = 0; i < 12; i++) {
-                const row = Math.floor(i / 4) + 1;
-                const col = (i % 4) + 1;
+                const row = Math.floor(i / 6) + 1; // ★6列で割ることで2段にする
+                const col = (i % 6) + 1;
 
-                // 12マス目（最後の右下）なら「選択完了ボタン」を入れる
-                if (row === 3 && col === 4) {
+                // 12マス目（2段目の右端）なら「選択完了ボタン」を入れる
+                if (row === 2 && col === 6) {
                     const btnContainer = document.createElement('div');
                     btnContainer.className = "confirm-btn-container";
                     btnContainer.style.gridColumn = col;
@@ -198,7 +198,6 @@
                     continue;
                 }
 
-                // 1〜11マス目の処理
                 const card = document.createElement('div');
                 card.style.gridColumn = col;
                 card.style.gridRow = row;
@@ -227,7 +226,7 @@
                         `;
                     }
                 } else {
-                    // データがない空きマス（6〜11マス目）には自動で「未解放ハテナ」を敷き詰める！
+                    // 空きマス（6〜11マス目）には自動で「未解放ハテナ」を敷き詰める
                     card.className = `char-card locked`;
                     card.innerHTML = `
                         <img src="question.png" alt="未解放">
@@ -239,7 +238,7 @@
             }
         }
 
-        // キャラクターを選択した時に緑枠を切り替える共通関数
+        // キャラクター選択関数
         function selectCharacter(id) {
             if (!unlocked.includes(id)) return;
             tempSelectedChar = id;
