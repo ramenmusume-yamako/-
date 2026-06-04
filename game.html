@@ -26,10 +26,15 @@
         
         <div class="game-top-row">
             
-            <a href="select.html" class="game-chara-select-btn">
-                <span class="btn-sub">選ぶ</span>
-                <div class="btn-main-text">キャラ<br>選択</div>
-            </a>
+            <a href="select.html" class="char-select-btn">
+    <div class="btn-text-wrapper">
+        <span class="btn-sub-text">選ぶ</span>
+        <span class="btn-main-text">キャラ選択</span>
+    </div>
+    <div class="btn-char-container">
+        <img id="btnCharImg" src="" alt="選択中キャラ">
+    </div>
+</a>
 
             <div class="game-title-kanban">
                 <span class="kanban-sub">ミニゲーム</span>
@@ -139,6 +144,28 @@
         
         // 初回読み込み時にも実行
         updateHomeButton();
+
+        document.addEventListener("DOMContentLoaded", () => {
+    // 1. 全キャラクターの画像データ（select.html と共通のもの）
+    const CHAR_IMAGES = {
+        hajime: "hajimel.png",
+        meana:  "meanal.png",
+        boy:    "boy_l.png",
+        aniki:  "aniki_l.png",
+        naruto: "naruto_l.png"
+    };
+
+    // 2. 現在選択されているキャラクターのIDをストレージから取得（なければ初期値はハジメ）
+    const currentSelected = localStorage.getItem("selectedChar") || "hajime";
+
+    // 3. ボタンの中の画像要素を取得
+    const btnCharImg = document.getElementById("btnCharImg");
+
+    if (btnCharImg && CHAR_IMAGES[currentSelected]) {
+        // 4. 選択されているキャラの画像をボタン内にセット！
+        btnCharImg.src = CHAR_IMAGES[currentSelected];
+    }
+});
     </script>
 
 </body>
