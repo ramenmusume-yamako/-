@@ -5,115 +5,125 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>キャラクター選択</title>
     <style>
+        /* 全体の背景：温かみのあるクリーム色 */
         body {
-            margin: 0; padding: 0; background: #111a24; color: white;
+            margin: 0; padding: 0; 
+            background: #f7f4e9; 
+            color: #333333; 
             font-family: sans-serif; display: flex; align-items: center; justify-content: center;
             width: 100vw; height: 100dvh; overflow: hidden;
             perspective: 1000px;
         }
 
+        /* メインコンテナ：黒太枠 ＆ カチッとした赤茶色のシャドウ */
         .game-selection-container {
             display: flex; flex-direction: column;
             width: 95vw; height: 90dvh; max-width: 1100px; max-height: 620px;
-            background: rgba(20, 30, 45, 0.85); border: 2px solid #34495e;
+            background: #ffffff; 
+            border: 3px solid #000000; 
             border-radius: 16px; padding: 25px; box-sizing: border-box;
-            box-shadow: 0 0 40px rgba(0,0,0,0.8); gap: 15px;
+            box-shadow: 8px 8px 0px #9c1c11; 
+            gap: 15px;
         }
 
-        h2 { font-size: 24px; margin: 0; text-align: center; color: #f1c40f; }
+        /* ヘッダーの文字色：深みのある中華赤 */
+        h2 { 
+            font-size: 24px; margin: 0; text-align: center; 
+            color: #9c1c11; 
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
 
-        /* 手描きの湾曲した格子を再現するコンテナ */
+        /* 湾曲した格子を再現するコンテナ */
         .grid-panel {
             flex: 1; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
         }
 
-        /* 横4列×縦3行の格子状配置 */
+        /* 横4列×縦3行の格子状配置（3Dの傾きを完全維持） */
         .char-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr); /* 横に4人表示 */
-            grid-template-rows: repeat(3, 1fr);    /* 縦に3行表示 */
+            grid-template-columns: repeat(4, 1fr); 
+            grid-template-rows: repeat(3, 1fr);    
             gap: 15px; width: 100%; height: 100%;
             transform: rotateY(-6px) rotateX(4px); /* 緩やかな湾曲・傾き感 */
         }
 
-        /* 1つ1つのマス */
-        .char-cell {
-            background: rgba(0,0,0,0.4); border: 2px solid #2c3e50;
+        /* 1つ1つのマス（ポラロイド風の白背景×グレー枠） */
+        .char-card {
+            background: #ffffff; 
+            border: 2px solid #cdcdcd; 
             border-radius: 8px; display: flex; flex-direction: column;
             align-items: center; justify-content: center; position: relative;
-            cursor: pointer; transition: all 0.2s ease; padding: 5px; box-sizing: border-box;
+            transition: all 0.2s ease; padding: 10px; box-sizing: border-box;
+            box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.03);
+            width: 100%; height: 100%;
         }
-        /* 選択中の緑枠エフェクト */
-        .char-cell.selected {
-            border-color: #2ecc71;
-            box-shadow: inset 0 0 15px rgba(46, 204, 113, 0.4), 0 0 15px rgba(46, 204, 113, 0.4);
-            background: rgba(46, 204, 113, 0.05);
+
+        /* キャラクター画像 */
+        .char-card img { 
+            width: 100%; 
+            height: 75%; 
+            object-fit: contain; 
+            background: #fafafa;
+            border: 1px solid #eeeeee;
+            border-radius: 4px;
         }
-        .char-cell img { width: 85px; height: 85px; object-fit: contain; }
-        .char-cell p { margin: 6px 0 0; font-size: 12px; font-weight: bold; color: #bdc3c7; }
+        
+        /* キャラクター名 */
+        .char-card .char-name { 
+            margin: 8px 0 0; font-size: 14px; font-weight: bold; 
+            color: #333333; 
+        }
+
+        /* ★【選択中】緑の太枠 */
+        .char-card.selected {
+            border: 3px solid #2ecc71 !important;
+            box-shadow: 6px 6px 0px #2ecc71 !important;
+            background: rgba(46, 204, 113, 0.03) !important;
+        }
+
+        /* PCでマウスカーソルを合わせた時のホバー反応 */
+        .char-card.unlocked {
+            cursor: pointer;
+        }
+        .char-card.unlocked:hover:not(.selected) {
+            border-color: #9c1c11; 
+            box-shadow: 4px 4px 0px rgba(156, 28, 17, 0.2);
+        }
 
         /* 未解放（「？」マス）のスタイル */
-        .char-cell.locked { cursor: not-allowed; opacity: 0.6; }
-        .char-cell.locked:hover { background: rgba(231, 76, 60, 0.05); border-color: #e74c3c; }
+        .char-card.locked { 
+            cursor: default; 
+            background: #f7f7f7; 
+            opacity: 0.7; 
+        }
+        .char-card.locked img {
+            filter: grayscale(100%);
+            opacity: 0.5;
+        }
+        .char-card.locked .char-name {
+            color: #999999;
+        }
 
         /* 右下に配置する選択完了ボタンのエリア */
         .confirm-btn-container {
-            grid-column: 4; grid-row: 3; /* 4列目の3行目（右下）に強制配置 */
+            width: 100%; height: 100%; 
             display: flex; align-items: center; justify-content: center;
+            box-sizing: border-box;
         }
+        
+        /* 選択完了ボタン：赤×金色のカチッとした影 */
         .confirm-btn {
-            width: 100%; height: 100%; background: #e67e22;
-            border: none; border-radius: 8px; color: white; font-size: 18px;
+            width: 100%; height: 100%; 
+            background: #9c1c11; 
+            border: 2px solid #000000; border-radius: 8px; color: white; font-size: 18px;
             font-weight: bold; cursor: pointer; transition: 0.2s;
-            box-shadow: 0 4px 10px rgba(230, 126, 34, 0.3);
+            box-shadow: 4px 4px 0px #f7c11e; 
+            letter-spacing: 2px;
         }
-        .confirm-btn:hover { background: #d35400; transform: scale(1.02); }
+        .confirm-btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #f7c11e; }
         .confirm-btn:active { transform: scale(0.98); }
-
-        /* 未解放マスク（ハテナ画像）のサイズをマス目に合わせる設定 */
-.char-card img {
-    width: 100%;
-    height: 80%; /* 名前の表示スペースを残すために少し縦を縮める */
-    object-fit: contain; /* 画像の比率を崩さずにマス目に収める */
-}
-
-/* もしハテナ画像専用のクラス名を使う場合 */
-.locked-img {
-    width: 100%;
-    height: 80%;
-    object-fit: contain;
-}
-
-/* マウスを合わせた時（ホバー）と、選択された時のカードの見た目 */
-.char-card {
-    cursor: pointer; /* PCでマウスを乗せた時に指マークにする */
-    transition: all 0.2s ease; /* 動きをなめらかにする */
-    border: 3px solid transparent; /* 最初は透明な枠線を作っておく */
-    border-radius: 10px;
-}
-
-/* ★PCでマウスカーソルを合わせた時に白く光らせる */
-.char-card:hover {
-    background: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
-}
-
-/* ★現在選択されているキャラに「緑の太枠」をつける！ */
-.char-card.selected {
-    border-color: #00ffcc !important; /* ネオン調の綺麗な緑色 */
-    background: rgba(0, 255, 204, 0.1) !important;
-    box-shadow: 0 0 20px rgba(0, 255, 204, 0.4) !important;
-}
-
-/* 未解放キャラのマスは、マウスを乗せても指マークにしない */
-.char-card.locked {
-    cursor: default;
-}
-.char-card.locked:hover {
-    background: transparent;
-    box-shadow: none;
-}
     </style>
 </head>
 <body>
@@ -122,212 +132,137 @@
         <h2 id="selectTitle">キャラクターを選択してください</h2>
         
         <div class="grid-panel">
-            <div class="char-grid" id="gridContainer">
-                </div>
+            <div class="char-grid" id="gridContainer"></div>
         </div>
     </div>
 
-   <script>
-        // ★全てのキャラクターのマスターデータ
-        //（ファイル名はすべて同じ階層にある想定のため、フォルダ名は書いていません）
+    <script>
+        // 全体のキャラクターデータ（5人）
         const CHAR_DATA = {
-            hajime: { name: "ハジメ",     imgL: "hajimel.png" }, // 初期キャラ
-            meana:  { name: "メーナ",     imgL: "meanal.png" },  // A店限定キャラ
-            boy:    { name: "中華ボーイ",   imgL: "boy_l.png" },  // B店限定キャラ
-            aniki:  { name: "チャーシュー兄", imgL: "aniki_l.png" }, // C店限定キャラ
-            naruto: { name: "ナルトちゃん", imgL: "naruto_l.png" }  // D店限定キャラ
+            hajime: { name: "ハジメ",     imgL: "hajimel.png" }, 
+            meana:  { name: "メーナ",     imgL: "meanal.png" },  
+            boy:    { name: "中華ボーイ",   imgL: "boy_l.png" },  
+            aniki:  { name: "チャーシュー兄", imgL: "aniki_l.png" }, 
+            naruto: { name: "ナルトちゃん", imgL: "naruto_l.png" }  
         };
 
-        // 1. ローカルストレージからデータを読み込む
-        // 現在選択中のキャラ（デフォルトは hajime）
+        // 配列化してインデックスで扱いやすくする
+        const CHAR_KEYS = Object.keys(CHAR_DATA);
+
         let tempSelectedChar = localStorage.getItem("selectedChar") || "hajime";
         
-        // 一度記憶を読み込む
-let unlocked = JSON.parse(localStorage.getItem("unlockedChars")) || [];
-// もし記憶の中にハジメ（hajime）が入っていなければ、ここで強制的に追加する！
-if (!unlocked.includes("hajime")) { unlocked.push("hajime"); }
+        let unlocked = [];
+        try {
+            unlocked = JSON.parse(localStorage.getItem("unlockedChars")) || [];
+        } catch(e) {
+            unlocked = [];
+        }
 
-        // バグ防止：もし選択中キャラがマスターデータにないIDだったらhajimeに戻す
+        if (!unlocked.includes("hajime")) { 
+            unlocked.push("hajime"); 
+            localStorage.setItem("unlockedChars", JSON.stringify(unlocked));
+        }
+
         if (!CHAR_DATA[tempSelectedChar]) {
             tempSelectedChar = "hajime";
         }
 
-        // 2. 12マスのグリッド画面を生成する関数
+        // グリッド画面を生成（1マス目〜12マス目までを完全にループ埋め）
         function renderGrid() {
             const container = document.getElementById("gridContainer");
-            container.innerHTML = ""; // 一度中身を空にする
+            container.innerHTML = ""; 
 
-            // 各キャラの配置されるマス目の位置を完全に固定する配列（3行×4列のインデックス対応）
-            // これにより、未解放キャラや翻訳機能で位置が絶対にズレなくなります
-            const positions = [
-                { col: 1, row: 1 }, // hajime (1人目)
-                { col: 2, row: 1 }, // meana  (2人目)
-                { col: 3, row: 1 }, // boy    (3人目)
-                { col: 4, row: 1 }, // aniki  (4人目)
-                { col: 1, row: 2 }  // naruto (5人目)
-            ];
+            // 3行×4列＝全12マスの配置を上から順にループ処理
+            for (let i = 0; i < 12; i++) {
+                const row = Math.floor(i / 4) + 1;
+                const col = (i % 4) + 1;
 
-            // キャラクターデータをループしてマス目を作っていく
-            Object.keys(CHAR_DATA).forEach((id, index) => {
-                const char = CHAR_DATA[id];
-                const isUnlocked = unlocked.includes(id); // 解放されているか判定
-                const pos = positions[index] || { col: (index % 4) + 1, row: Math.floor(index / 4) + 1 };
+                // 12マス目（最後の右下）なら「選択完了ボタン」を入れる
+                if (row === 3 && col === 4) {
+                    const btnContainer = document.createElement('div');
+                    btnContainer.className = "confirm-btn-container";
+                    btnContainer.style.gridColumn = col;
+                    btnContainer.style.gridRow = row;
+                    btnContainer.innerHTML = `<button class="confirm-btn" onclick="saveSelection()">選択完了</button>`;
+                    container.appendChild(btnContainer);
+                    continue;
+                }
 
+                // 1〜11マス目の処理
                 const card = document.createElement('div');
-                // 解放状態、選択状態に合わせてクラスを付与
-                card.className = `char-card ${isUnlocked ? 'unlocked' : 'locked'} ${tempSelectedChar === id ? 'selected' : ''}`;
-                
-                // イラスト通りの位置にガチッと固定
-                card.style.gridColumn = pos.col;
-                card.style.gridRow = pos.row;
+                card.style.gridColumn = col;
+                card.style.gridRow = row;
 
-                // マス目の中身のHTMLを組み立てる
-                if (isUnlocked) {
-                    // 【解放済みの場合】名前とキャラ画像を表示
-                    card.innerHTML = `
-                        <img src="${char.imgL}" alt="${char.name}">
-                        <div class="char-name">${char.name}</div>
-                    `;
-                    // クリックしたら選択できるようにする
-                    card.addEventListener('click', () => {
-                        document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
-                        card.classList.add('selected');
-                        tempSelectedChar = id; // 一時的に選択
-                    });
+                if (i < CHAR_KEYS.length) {
+                    // データがあるキャラ（1〜5マス目）
+                    const id = CHAR_KEYS[i];
+                    const char = CHAR_DATA[id];
+                    const isUnlocked = unlocked.includes(id);
+
+                    card.className = `char-card ${isUnlocked ? 'unlocked' : 'locked'} ${tempSelectedChar === id ? 'selected' : ''}`;
+                    card.dataset.id = id;
+
+                    if (isUnlocked) {
+                        card.innerHTML = `
+                            <img src="${char.imgL}" alt="${char.name}">
+                            <div class="char-name">${char.name}</div>
+                        `;
+                        card.addEventListener('click', () => {
+                            selectCharacter(id);
+                        });
+                    } else {
+                        card.innerHTML = `
+                            <img src="question.png" alt="未解放">
+                            <div class="char-name">????</div>
+                        `;
+                    }
                 } else {
-                    // 【未解放の場合】???? と「puestion.png（ハテナ画像）」を表示
+                    // データがない空きマス（6〜11マス目）には自動で「未解放ハテナ」を敷き詰める！
+                    card.className = `char-card locked`;
                     card.innerHTML = `
-                        <img src="question.png" alt="未解放" class="locked-img">
+                        <img src="question.png" alt="未解放">
                         <div class="char-name">????</div>
                     `;
                 }
 
                 container.appendChild(card);
-            });
-
-            // 3. 右下の12マス目に「選択完了ボタン」を強制配置する
-            const btnContainer = document.createElement('div');
-            btnContainer.className = "confirm-btn-container";
-            btnContainer.style.gridColumn = "4"; // 4列目
-            btnContainer.style.gridRow = "3";    // 3行目（右下の一番隅っこ）
-            
-            btnContainer.innerHTML = `<button class="confirm-btn" onclick="saveSelection()">選択完了</button>`;
-            container.appendChild(btnContainer);
+            }
         }
 
-        // 4. 選択完了ボタンを押した時の処理
-        function saveSelection() {
-            localStorage.setItem("selectedChar", tempSelectedChar);
-            // ホーム画面（game.html）に戻る
-            window.location.href = "game.html";
-        }
-
-        // 画面を開いた時にグリッドを実行する
-        renderGrid();
-
-        // 3. グリッド画面を生成する関数
-        function renderGrid() {
-            const container = document.getElementById("gridContainer");
-            container.innerHTML = ""; // 一度リセット
-
-            const positions = [
-                { col: 1, row: 1 }, // hajime
-                { col: 2, row: 1 }, // meana
-                { col: 3, row: 1 }, // boy
-                { col: 4, row: 1 }, // aniki
-                { col: 1, row: 2 }  // naruto
-            ];
-
-            Object.keys(CHAR_DATA).forEach((id, index) => {
-                const char = CHAR_DATA[id];
-                const isUnlocked = unlocked.includes(id);
-                const pos = positions[index] || { col: (index % 4) + 1, row: Math.floor(index / 4) + 1 };
-
-                const card = document.createElement('div');
-                // 初期表示で選択されているキャラ（デフォルトは hajime）に 'selected' クラスをつける
-                card.className = `char-card ${isUnlocked ? 'unlocked' : 'locked'} ${tempSelectedChar === id ? 'selected' : ''}`;
-                card.dataset.id = id; // キーボード操作用にIDを覚えさせる
-                
-                card.style.gridColumn = pos.col;
-                card.style.gridRow = pos.row;
-
-                if (isUnlocked) {
-                    card.innerHTML = `
-                        <img src="${char.imgL}" alt="${char.name}">
-                        <div class="char-name">${char.name}</div>
-                    `;
-                    
-                    // 【スマホのタップ ＆ PCのマウスクリック共通】
-                    card.addEventListener('click', () => {
-                        selectCharacter(id);
-                    });
-                } else {
-                    card.innerHTML = `
-                        <img src="question.png" alt="未解放" class="locked-img">
-                        <div class="char-name">????</div>
-                    `;
-                }
-
-                container.appendChild(card);
-            });
-
-            // 選択完了ボタンの配置
-            const btnContainer = document.createElement('div');
-            btnContainer.className = "confirm-btn-container";
-            btnContainer.style.gridColumn = "4"; 
-            btnContainer.style.gridRow = "3";    
-            btnContainer.innerHTML = `<button class="confirm-btn" onclick="saveSelection()">選択完了</button>`;
-            container.appendChild(btnContainer);
-        }
-
-        // ★ キャラクターを選択した時に緑枠を切り替える共通関数
+        // キャラクターを選択した時に緑枠を切り替える共通関数
         function selectCharacter(id) {
-            // 解放されているキャラしか選べないようにする安全装置
             if (!unlocked.includes(id)) return;
-
             tempSelectedChar = id;
-            
-            // いったん全員の緑枠（selected）を消す
             document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
-            
-            // 今選んだキャラのマスだけに緑枠（selected）をつける
             const selectedCard = document.querySelector(`.char-card[data-id="${id}"]`);
             if (selectedCard) {
                 selectedCard.classList.add('selected');
             }
         }
 
-        // ★【PC専用】矢印キー（← → ↑ ↓）でキャラクターを選べるようにする処理
-        // 解放されているキャラ（現在は hajime と meana）の間をトグル移動します
+        // PC専用：矢印キー
         document.addEventListener('keydown', (event) => {
-            const charKeys = Object.keys(CHAR_DATA);
-            // 解放されているキャラのIDだけを抜き出したリスト（例: ['hajime', 'meana']）
-            const unlockedList = charKeys.filter(id => unlocked.includes(id));
-            
+            const unlockedList = CHAR_KEYS.filter(id => unlocked.includes(id));
             let currentIndex = unlockedList.indexOf(tempSelectedChar);
 
             if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-                // 右または下キーで次の解放キャラへ
                 currentIndex = (currentIndex + 1) % unlockedList.length;
                 selectCharacter(unlockedList[currentIndex]);
-                event.preventDefault(); // 画面がガタガタスクロールするのを防ぐ
+                event.preventDefault(); 
             } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-                // 左または上キーで前の解放キャラへ
                 currentIndex = (currentIndex - 1 + unlockedList.length) % unlockedList.length;
                 selectCharacter(unlockedList[currentIndex]);
                 event.preventDefault();
             }
         });
 
-        // 選択完了ボタンの処理
+        // 選択完了処理
         function saveSelection() {
             localStorage.setItem("selectedChar", tempSelectedChar);
             window.location.href = "game.html";
         }
 
-        // 画面実行
         renderGrid();
-    </script>
     </script>
 </body>
 </html>

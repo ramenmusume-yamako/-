@@ -11,29 +11,111 @@ body {
     box-sizing: border-box;
 }
 
-/* --- ホームへ戻るボタン（壁に貼られたお札メニュー風） --- */
-.header-nav {
-    padding: 20px;
+
+#menu-btn-check {
+    display: none;
 }
 
-.home-btn {
-    display: inline-block;
-    background: #800000;
-    color: #ffffff !important;
+.menu-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    height: 60px;
+    width: 60px;
+    justify-content: center;
+    align-items: center;
+    z-index: 100; /* メニューボタンは一番手前 */
+    background-color: #2b2b2b; 
+    border: 2px solid #800000;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.menu-btn span,
+.menu-btn span:before,
+.menu-btn span:after {
+    content: '';
+    display: block;
+    height: 3px;
+    width: 25px;
+    border-radius: 3px;
+    background-color: #ffffff;
+    position: absolute;
+    transition: all 0.3s;
+}
+
+.menu-btn span:before { bottom: 8px; }
+.menu-btn span:after { top: 8px; }
+
+#menu-btn-check:checked ~ .menu-btn span {
+    background-color: rgba(255, 255, 255, 0);
+}
+#menu-btn-check:checked ~ .menu-btn span::before {
+    bottom: 0;
+    transform: rotate(45deg);
+}
+#menu-btn-check:checked ~ .menu-btn span::after {
+    top: 0;
+    transform: rotate(-45deg);
+}
+
+.menu-content {
+    width: 250px;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 95;
+    background-color: #2b2b2b; 
+    border-left: 3px solid #800000;
+    transform: translateX(100%); 
+    transition: transform 0.4s;
+}
+
+#menu-btn-check:checked ~ .menu-content {
+    transform: translateX(0);
+}
+
+.menu-content ul {
+    padding: 80px 0 0 0;
+    margin: 0;
+    list-style: none;
+}
+
+.menu-content ul li {
+    border-bottom: solid 1px rgba(255, 255, 255, 0.1);
+}
+
+.menu-content ul li a {
+    display: block;
+    width: 100%;
+    font-size: 16px;
+    box-sizing: border-box;
+    color: #ffffff;
     text-decoration: none;
+    padding: 15px 20px;
+    position: relative;
     font-weight: bold;
-    padding: 10px 20px;
-    border: 2px solid #2b2b2b;
-    box-shadow: 4px 4px 0px #2b2b2b;
-    transition: all 0.2s;
 }
 
-
-.home-btn:hover {
-    box-shadow: none;
-    transform: translate(4px, 4px);
-    background: #2b2b2b;
+.menu-content ul li a::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-top: solid 2px #f1c40f; 
+    border-right: solid 2px #f1c40f;
+    transform: rotate(45deg);
+    position: absolute;
+    right: 20px;
+    top: 22px;
 }
+
+.menu-content ul li a:hover {
+    background-color: rgba(128, 0, 0, 0.3); 
+    color: #f1c40f;
+}
+
 
 /* ==========================================================================
    2. キャラクターウィンドウ（メインの黒太枠＋赤影カード）
@@ -174,3 +256,74 @@ input[name="chara-slider"] {
 
 /* 2枚目（たつ子）のとき：for-c2の矢印だけを表示 */
 #chara2:checked ~ .chara-arrows .for-c2 { display: block; }
+
+/* ==========================================================================
+   4. スマホ・タブレット用の自動スライダー調整（レスポンシブ）
+   ========================================================================== */
+@media (max-width: 600px) {
+    
+    /* --- メインウィンドウ（全体の黒枠）の調整 --- */
+    .chara-window {
+        width: 92%;
+        margin: 20px auto;
+        padding: 20px 15px; /* スマホ用に左右の余白を少しスリムに */
+        box-shadow: 10px 10px 0px #800000; /* 影の飛び出し量を少しコンパクトに */
+    }
+
+    .page-title {
+        font-size: 1.25rem;
+        margin-bottom: 15px;
+    }
+
+    /* --- キャラクターカード内の調整 --- */
+    .chara-card {
+        padding: 0 5px; /* 隙間を微調整 */
+    }
+
+    .card-link {
+        padding: 15px 10px; /* カードの内側の余白を削って画面を広く使う */
+        box-shadow: 4px 4px 0px #e67e22;
+    }
+
+    /* イラストを包む枠の調整（ここで画像のはみ出しを防ぎます） */
+    .card-img-wrap {
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .card-img-wrap img {
+        max-height: 200px; /* 縦長画面でも窮屈にならないよう、画像の最大高さを制限 */
+    }
+
+    .card-info h2 {
+        font-size: 1.6rem; /* スマホ用に名前のフォントサイズを縮小 */
+    }
+
+    .card-sub {
+        font-size: 0.8rem;
+    }
+
+    /* --- 矢印ボタンのスマホ最適化（超重要！） --- */
+    .arrow-btn {
+        width: 38px;      /* ボタンを一回り小さくしてキャラに被りにくく */
+        height: 38px;
+        line-height: 34px;
+        font-size: 1rem;
+        z-index: 20;       /* 確実に最前面に出す */
+    }
+
+    /* 💡スマホの時は、矢印の位置を少し外側（画面の端ギリギリ）に寄せる */
+    .arrow-left { 
+        left: 5px; 
+    }
+    .arrow-right { 
+        right: 5px; 
+    }
+}
+
+/* 画面の高さが極端に低いスマホ用の調整（横画面対応など） */
+@media (max-height: 650px) and (max-width: 600px) {
+    .card-img-wrap img {
+        max-height: 140px; 
+    }
+}
