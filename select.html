@@ -42,10 +42,10 @@
             box-sizing: border-box;
         }
 
-        /* ★【変更】横6列 × 縦2行（計12マス）の格子状配置 */
+        /* ★【変更】横5列 × 縦2行（計10マス）の格子状配置 */
         .char-grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr); /* 横に6列 */
+            grid-template-columns: repeat(5, 1fr); /* 横に5列 */
             grid-template-rows: repeat(2, 1fr);    /* 縦は2段 */
             gap: 12px; width: 100%; height: 100%;
             box-sizing: border-box;
@@ -177,18 +177,18 @@
             tempSelectedChar = "hajime";
         }
 
-        // グリッド画面を生成（横6×縦2＝全12マスを完全にループ埋め）
+        // グリッド画面を生成（横5×縦2＝全10マスを完全にループ埋め）
         function renderGrid() {
             const container = document.getElementById("gridContainer");
             container.innerHTML = ""; 
 
-            // 2行×6列＝全12マスの配置をループ処理
-            for (let i = 0; i < 12; i++) {
-                const row = Math.floor(i / 6) + 1; // ★6列で割ることで2段にする
-                const col = (i % 6) + 1;
+            // 2行×5列＝全10マスの配置をループ処理
+            for (let i = 0; i < 10; i++) {
+                const row = Math.floor(i / 5) + 1; // ★5列で割ることで2段にする
+                const col = (i % 5) + 1;
 
-                // 12マス目（2段目の右端）なら「選択完了ボタン」を入れる
-                if (row === 2 && col === 6) {
+                // 10マス目（2段目の右端、5列目）なら「選択完了ボタン」を入れる
+                if (row === 2 && col === 5) {
                     const btnContainer = document.createElement('div');
                     btnContainer.className = "confirm-btn-container";
                     btnContainer.style.gridColumn = col;
@@ -203,7 +203,7 @@
                 card.style.gridRow = row;
 
                 if (i < CHAR_KEYS.length) {
-                    // データがあるキャラ（1〜5マス目）
+                    // データがあるキャラ（1〜5マス目＝つまり1段目がきれいに埋まる）
                     const id = CHAR_KEYS[i];
                     const char = CHAR_DATA[id];
                     const isUnlocked = unlocked.includes(id);
@@ -226,7 +226,7 @@
                         `;
                     }
                 } else {
-                    // 空きマス（6〜11マス目）には自動で「未解放ハテナ」を敷き詰める
+                    // 空きマス（6〜9マス目）には自動で「未解放ハテナ」を敷き詰める
                     card.className = `char-card locked`;
                     card.innerHTML = `
                         <img src="question.png" alt="未解放">
