@@ -154,7 +154,6 @@ body {
     box-sizing: border-box !important;
     transition: transform 0.1s !important;
     overflow: hidden !important;
-    margin-left: 50px !important;
 }
 
 .char-select-btn:active {
@@ -165,7 +164,7 @@ body {
 /* 上側のキャラクター画像用フレーム */
 .btn-char-container {
     width: 100% !important;
-    height: 180px !important; /* キャラクターが大きく映る高さを確保 */
+    height: 140px !important; /* キャラクターが大きく映る高さを確保 */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
