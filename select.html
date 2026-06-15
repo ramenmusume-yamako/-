@@ -25,6 +25,7 @@
             box-shadow: 8px 8px 0px #9c1c11; 
             gap: 10px;
             position: relative;
+            transition: transform 0.2s ease;
         }
 
         /* ヘッダーの文字色：深みのある中華赤 */
@@ -135,6 +136,75 @@
         }
         .confirm-btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #f7c11e; }
         .confirm-btn:active { transform: scale(0.98); }
+
+
+        /* ==========================================================================
+           🛠 変更・追加ポイント：スマホ（縦長画面）用のレスポンシブ最適化
+           ========================================================================== */
+        @media (max-width: 768px) and (orientation: portrait) {
+            /* 1. コンテナをスマホの「横向き比率」に合わせて縮小・回転トランスフォーム */
+            .game-selection-container {
+                width: 92vh; /* 縦画面の高さに対して横幅を決めることで比率を固定 */
+                height: 95vw; /* 縦画面の横幅に対して高さを決める */
+                max-width: 600px;
+                max-height: 360px;
+                padding: 12px;
+                
+                /* 画面を時計回りに90度回転させて、擬似的に「横持ちゲーム画面」にする */
+                transform: rotate(90deg);
+                box-shadow: 6px 6px 0px #9c1c11;
+                gap: 6px;
+            }
+
+            /* 2. スマホ画面サイズに合わせて文字やマスの間隔を微微調整 */
+            h2 {
+                font-size: 15px;
+                letter-spacing: 1px;
+            }
+
+            .char-grid {
+                gap: 6px; /* マス同士が詰まっても綺麗に見えるように調整 */
+            }
+
+            .char-card {
+                padding: 4px;
+                border-width: 1.5px;
+            }
+
+            .char-card .char-name {
+                font-size: 10px;
+                margin-top: 2px;
+            }
+
+            .confirm-btn {
+                font-size: 13px;
+                letter-spacing: 1px;
+                box-shadow: 3px 3px 0px #f7c11e;
+            }
+            .confirm-btn:hover {
+                transform: translate(1px, 1px);
+                box-shadow: 2px 2px 0px #f7c11e;
+            }
+
+            /* 選択中の影も少し小さくしてシャープに */
+            .char-card.selected {
+                border-width: 2px !important;
+                box-shadow: 3px 3px 0px #2ecc71 !important;
+            }
+        }
+
+        /* 横向きのスマホ（iPhoneを横にした時など）への配慮 */
+        @media (max-width: 920px) and (orientation: landscape) {
+            .game-selection-container {
+                height: 95vh;
+                padding: 10px;
+            }
+            h2 { font-size: 16px; }
+            .char-grid { gap: 6px; }
+            .char-card { padding: 4px; }
+            .char-card .char-name { font-size: 10px; }
+            .confirm-btn { font-size: 14px; }
+        }
     </style>
 </head>
 <body>
