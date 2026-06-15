@@ -25,27 +25,26 @@
     <main class="game-container">
         
         <div class="game-top-row">
-            
             <div class="game-title-kanban">
                 <span class="kanban-sub">ミニゲーム</span>
                 <h1 class="game-main-name">走れ！ラーメン娘！！</h1>
                 <p class="game-desc">障害物を避けてなるべく長く走り続けよう！</p>
             </div>
-
         </div>
 
-        <div style="position: relative; width: 100%; max-width: 900px; margin: 0 auto; height: 0;">
-            <a href="select.html" class="char-select-btn" style="position: absolute; left: 0; bottom: 180px;">
-                <div class="btn-char-container">
-                    <img id="btnCharImg" src="" alt="走るキャラ">
-                </div>
-                <div class="btn-text-wrapper">
-                    <span class="btn-main-text">キャラ選択</span>
-                </div>
-            </a>
-        </div>
+        <div class="difficulty-section" style="position: relative;">
 
-        <div class="difficulty-section">
+            <div style="position: absolute; left: 0; top: -190px; width: 100%;">
+                <a href="select.html" class="char-select-btn" style="position: absolute; left: 0; top: 0;">
+                    <div class="btn-char-container">
+                        <img id="btnCharImg" src="" alt="走るキャラ">
+                    </div>
+                    <div class="btn-text-wrapper">
+                        <span class="btn-main-text">キャラ選択</span>
+                    </div>
+                </a>
+            </div>
+
             <h2 class="section-title">難易度を選択してゲームスタート！</h2>
             
             <div class="difficulty-grid">
@@ -76,7 +75,8 @@
 
             </div>
         </div>
-<div class="game-chara-section">
+
+        <div class="game-chara-section">
             <h2 class="section-title">障害具材</h2>
             
             <div class="game-chara-grid">
@@ -122,9 +122,8 @@
         <p>&copy; 2026 ramengirls</p>
     </footer>
 
-   <script>
+    <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // 各キャラのパラパラアニメ用画像ペア
             const RUN_ANIMATIONS = {
                 hajime: { img1: "hajimel.png", img2: "hajimer.png" },
                 meana:  { img1: "meanal.png",  img2: "meanar.png" },
@@ -140,7 +139,6 @@
                 const charPics = RUN_ANIMATIONS[currentSelected];
                 let isFirstImage = true;
 
-                // 💡 1秒（1000ミリ秒）ごとに画像を交互に切り替える（のんびり走るペースに！）
                 setInterval(() => {
                     if (isFirstImage) {
                         btnCharImg.src = charPics.img1;
@@ -148,7 +146,7 @@
                         btnCharImg.src = charPics.img2;
                     }
                     isFirstImage = !isFirstImage;
-                }, 1000); // 1000に変更してスピードを落としました
+                }, 1000);
             }
         });
     </script>
