@@ -163,7 +163,7 @@ body {
 /* 中のキャラ画像の大きさ調整 */
 .btn-char-container {
     width: 100% !important;
-    height: 110px !important; 
+    height: 140px !important; 
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -402,9 +402,9 @@ body {
 .char-info-blank-box {
     flex-grow: 1;
     background: #ffffff !important;
-    border: 3px solid #000000 !important;
+    border: 5px solid #000000 !important;
     border-radius: 8px !important;
-    box-shadow: 6px 6px 0px #800000 !important; /* 難易度（一般客）と全く同じオレンジの太影 */
+    box-shadow: 6px 6px 0px #800000 !important; 
     height: 200px !important; /* ボタンの高さと完全同期 */
     display: flex !important;
     box-sizing: border-box !important;
