@@ -124,6 +124,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 40px;
+    box-sizing: border-box;
 }
 
 /* --- 上段エリア --- */
@@ -167,7 +168,7 @@ body {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    z-index: 1 !important;
+    z-index: 100 !important; /* ドット絵が他の要素に隠れないよう前面に */
 }
 
 #btnCharImg {
@@ -206,6 +207,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    box-sizing: border-box;
 }
 
 .kanban-sub {
@@ -238,6 +240,7 @@ body {
     border: 3px solid #2b2b2b;
     box-shadow: 12px 12px 0px #800000; /* 全体を包む大きな赤影カード */
     padding: 35px 25px;
+    box-sizing: border-box;
 }
 
 .section-title {
@@ -271,6 +274,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    box-sizing: border-box;
 }
 
 .diff-eng {
@@ -302,6 +306,7 @@ body {
     border: 3px solid #2b2b2b;
     box-shadow: 12px 12px 0px #800000; /* 全体を包む大きな赤影カード */
     padding: 35px 25px;
+    box-sizing: border-box;
 }
 
 /* 4人を横並びにするグリッド */
@@ -363,25 +368,15 @@ body {
     font-style: italic; /* ちょっとセリフっぽく斜体に */
 }
 
-/* スマホ等で綺麗に2列×2行にするための微調整 */
-@media (max-width: 550px) {
-    .game-chara-card {
-        flex: calc(50% - 10px); /* 画面幅の半分でピッタリきれいに2分割並びにする */
-    }
-}
-
 /* --- 辛さに合わせたそれぞれの影色（レイヤー下） --- */
-/* easy：甘口（マイルドな黄色い影） */
 .card-easy { box-shadow: 6px 6px 0px #f1c40f; }
 .card-easy .diff-eng { color: #f1c40f; }
 .card-easy:hover { box-shadow: none; transform: translate(6px, 6px); background: #fffdf5; }
 
-/* normal：中辛（いつものオレンジ影） */
 .card-normal { box-shadow: 6px 6px 0px #e67e22; }
 .card-normal .diff-eng { color: #e67e22; }
 .card-normal:hover { box-shadow: none; transform: translate(6px, 6px); background: #fffaf5; }
 
-/* hard：激辛（燃え上がる赤枠・赤影） */
 .card-hard { box-shadow: 6px 6px 0px #800000; border-color: #800000; }
 .card-hard .diff-eng { color: #800000; }
 .card-hard:hover { box-shadow: none; transform: translate(6px, 6px); background: #fff5f5; }
@@ -408,4 +403,130 @@ body {
     height: 200px !important; /* ボタンの高さと完全同期 */
     display: flex !important;
     box-sizing: border-box !important;
+}
+
+
+/* ==========================================================================
+   5. スマホ・タブレット用のレスポンシブ大改修（ここを追加！）
+   ========================================================================== */
+@media (max-width: 768px) {
+    .game-container {
+        margin: 15px auto 40px auto;
+        padding: 0 12px;
+        gap: 25px;
+    }
+
+    /* ゲーム名看板のサイズ最適化 */
+    .game-title-kanban {
+        padding: 20px;
+        min-width: 100%;
+        box-shadow: 8px 8px 0px #2b2b2b;
+    }
+
+    .game-main-name {
+        font-size: 1.8rem; /* スマホで文字が飛び出さない太さに */
+    }
+
+    /* 💡【超重要】キャラ選択と遊び方枠を包む親要素のスタイルをCSSから上書き！ */
+    .game-container > div[style*="display: flex"] {
+        flex-direction: column !important; /* 横並びから『縦並び』にスイッチ！ */
+        padding: 0 !important;
+        gap: 15px !important;
+    }
+
+    /* キャラ選択ボタンをスマホ横幅いっぱいに */
+    .char-select-btn {
+        width: 100% !important;
+        height: 160px !important; /* 縦長になりすぎないスマートな高さに変更 */
+        flex-direction: row !important; /* スマホでは左にキャラ、右に文字の横長ボタンにする */
+        padding: 10px 20px !important;
+    }
+
+    .btn-char-container {
+        width: 100px !important;
+        height: 100% !important;
+    }
+
+    .btn-text-wrapper {
+        flex-grow: 1;
+        text-align: left !important;
+        padding-left: 20px;
+    }
+
+    .btn-main-text {
+        font-size: 1.3rem !important; /* スマホでも押しやすい大きさに */
+    }
+
+    /* 遊び方説明枠を縦並びに合わせて完全フィットさせる */
+    .char-info-blank-box {
+        width: 100% !important;
+        height: auto !important; /* テキストが絶対にはみ出さないよう自動伸縮に */
+        padding: 20px !important;
+        box-shadow: 5px 5px 0px #800000 !important;
+    }
+
+    .char-info-blank-box h3 {
+        font-size: 1.1rem !important;
+        margin-bottom: 8px !important;
+    }
+
+    .char-info-blank-box p {
+        font-size: 0.85rem !important; /* スマホの画面幅で綺麗に収まる細字フォントサイズ */
+        line-height: 1.5 !important;
+    }
+
+    /* 難易度選択エリアの調整 */
+    .difficulty-section {
+        padding: 25px 15px;
+        box-shadow: 8px 8px 0px #800000;
+    }
+
+    .section-title {
+        font-size: 1.15rem;
+        margin-bottom: 20px;
+    }
+
+    .difficulty-grid {
+        gap: 12px;
+    }
+
+    .diff-card {
+        min-width: 100%; /* 縦に1列で綺麗に並ぶように調整 */
+        padding: 15px;
+    }
+
+    .diff-jp {
+        font-size: 1.6rem;
+        margin-bottom: 4px;
+    }
+
+    /* 障害物（具材）紹介エリアの調整 */
+    .game-chara-section {
+        padding: 25px 15px;
+        box-shadow: 8px 8px 0px #800000;
+    }
+
+    .game-chara-grid {
+        gap: 12px;
+    }
+
+    .game-chara-card {
+        flex: calc(50% - 6px) !important; /* スマホ画面で綺麗に『2列×2行』に整列 */
+        min-width: calc(50% - 6px);
+        padding: 15px 8px;
+    }
+
+    .mini-img-wrap {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 8px;
+    }
+
+    .mini-name {
+        font-size: 1.05rem;
+    }
+
+    .mini-word {
+        font-size: 0.75rem;
+    }
 }
