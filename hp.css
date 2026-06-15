@@ -182,6 +182,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 40px;
+    box-sizing: border-box; /* はみ出し防止 */
 }
 
 .menu-card-home {
@@ -189,6 +190,7 @@ body {
     border: 3px solid #2b2b2b;
     box-shadow: 12px 12px 0px #800000;
     padding: 40px 30px;
+    box-sizing: border-box; /* はみ出し防止 */
 }
 
 .section-title {
@@ -284,6 +286,7 @@ body {
     font-size: 0.85rem;
     color: #666;
 }
+
 /* ==========================================================================
    5. スマホ・タブレット用の自動レイアウト調整（レスポンシブ）
    ========================================================================== */
@@ -291,7 +294,7 @@ body {
     
     /* --- メイン看板の調整 --- */
     .shop-kanban {
-        height: 150px; /* スマホの画面に合わせて看板の高さを少しスリムに */
+        height: 200px; /* 150pxだと潰れすぎたため、波雲が綺麗に見える200pxに微調整！ */
     }
     
     .shop-title {
@@ -299,30 +302,39 @@ body {
     }
     
     .shop-subtitle {
-        font-size: 1rem;
+        font-size: 0.95rem;
         margin: 10px 0 0 0;
+        white-space: nowrap; /* スマホで1行にすっきり収める */
     }
 
     /* --- 全体の余白調整 --- */
     .main-container {
         margin: 20px auto;
+        padding: 0 15px; /* スマホ画面の端にぴったり寄りすぎない余白 */
         gap: 25px; /* カード同士の間隔を少し詰める */
     }
 
     .menu-card-home {
-        padding: 30px 20px; /* カードの内側の余白を狭くして、画面を広く使う */
+        padding: 25px 20px; /* カードの内側の余白を狭くして、画面を広く使う */
+        box-shadow: 8px 8px 0px #800000; /* 影の太さもスマホに合わせてバランス調整 */
+    }
+
+    .intro-text {
+        font-size: 0.95rem; /* スマホで文字がギチギチにならないよう最適なサイズに */
+        line-height: 1.7;
     }
 
     /* --- キャラクター一覧（ここが一番大事！） --- */
     .character-grid {
-        gap: 20px; /* 木札同士の隙間を微調整 */
+        gap: 15px; /* 木札同士の隙間を微調整 */
     }
 
     .chara-fuda {
         /* 💡画面幅に合わせて、2本の木札が綺麗に「横並び（2列）」で収まるように計算 */
-        width: calc(50% - 10px); 
+        width: calc(50% - 8px); 
         min-width: 140px; /* これ以上縮むと文字が潰れる限界値 */
         padding: 12px;
+        box-shadow: 4px 4px 0px #e67e22; /* スマホ用に影を少しスマートに */
         box-sizing: border-box;
     }
 
@@ -333,8 +345,9 @@ body {
     }
 
     .fuda-name {
-        font-size: 1.1rem;
+        font-size: 1.05rem;
         margin: 5px 0;
+        font-weight: bold;
     }
 
     .fuda-desc {
@@ -349,8 +362,14 @@ body {
 }
 
 /* 💡超スリムなスマホ（iPhone SEなど）用の最終調整 */
-@media (max-width: 380px) {
+@media (max-width: 400px) {
+    .character-grid {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
     .chara-fuda {
-        width: 100%; /* 画面幅が狭すぎる場合は自動で「縦1列」にして見やすく */
+        width: 100%; /* 画面幅が300px台のときは、2列だと見づらいので「縦1列」でどーんと綺麗に見せます */
+        max-width: 260px;
     }
 }
