@@ -25,15 +25,17 @@
     <main class="game-container">
         
         <div class="game-top-row">
+            
             <div class="game-title-kanban">
                 <span class="kanban-sub">ミニゲーム</span>
                 <h1 class="game-main-name">走れ！ラーメン娘！！</h1>
                 <p class="game-desc">障害物を避けてなるべく長く走り続けよう！</p>
             </div>
+
         </div>
 
         <div style="position: relative; width: 100%; max-width: 900px; margin: 0 auto; height: 0;">
-            <a href="select.html" class="char-select-btn" style="position: absolute; left: 0; bottom: 20px;">
+            <a href="select.html" class="char-select-btn" style="position: absolute; left: 0; bottom: 180px;">
                 <div class="btn-char-container">
                     <img id="btnCharImg" src="" alt="走るキャラ">
                 </div>
@@ -74,8 +76,7 @@
 
             </div>
         </div>
-
-        <div class="game-chara-section">
+<div class="game-chara-section">
             <h2 class="section-title">障害具材</h2>
             
             <div class="game-chara-grid">
@@ -121,7 +122,7 @@
         <p>&copy; 2026 ramengirls</p>
     </footer>
 
-    <script>
+   <script>
         document.addEventListener("DOMContentLoaded", () => {
             // 各キャラのパラパラアニメ用画像ペア
             const RUN_ANIMATIONS = {
@@ -147,7 +148,7 @@
                         btnCharImg.src = charPics.img2;
                     }
                     isFirstImage = !isFirstImage;
-                }, 1000);
+                }, 1000); // 1000に変更してスピードを落としました
             }
         });
     </script>
