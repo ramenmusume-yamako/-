@@ -135,25 +135,31 @@ body {
 }
 
 /* ===================================================
-   ★ キャラ選択ボタン（最優先で以前の特大サイズを強制！）
+   ★ キャラ選択ボタン（サイズと位置を自由に調整できる決定版）
 ====================================================== */
 .char-select-btn {
     display: flex !important;
-    flex-direction: column !important; /* 確実に上下の縦並びにする */
+    flex-direction: column !important; /* 上下に縦並び */
     align-items: center !important;
     justify-content: space-between !important;
     text-decoration: none !important;
     background: #ffffff !important;
     border: 3px solid #000000 !important;
     border-radius: 8px !important;
-    padding: 12px 5px 8px 5px !important;
+    padding: 15px 10px 10px 10px !important;
     box-shadow: 4px 4px 0px #9c1c11 !important;
-    position: relative !important;
-    width: 185px !important;  /* 他のCSS指定を無視して120pxを強制 */
-    height: 200px !important; /* 他のCSS指定を無視して145pxを強制 */
+    
+    /* 🔴【位置の調整】これを入れることで、下のボックスの左端と完全に揃います */
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+
+    /* 🔴【ボタン全体の大きさ】ここでお好みのサイズに自由に変更してください！ */
+    width: 140px !important;  /* 👈 横幅（図のように大きくするには140px〜160pxがおすすめ） */
+    height: 170px !important; /* 👈 縦幅（キャラが大きくなるよう縦も高めに設定） */
+    
     box-sizing: border-box !important;
     transition: transform 0.1s !important;
-    overflow: hidden !important;
 }
 
 .char-select-btn:active {
@@ -161,41 +167,38 @@ body {
     box-shadow: 2px 2px 0px #9c1c11 !important;
 }
 
-/* 上側のキャラクター画像用フレーム */
+/* 🔴【中のキャラ画像の大きさ調整】 */
 .btn-char-container {
     width: 100% !important;
-    height: 140px !important; /* キャラクターが大きく映る高さを確保 */
+    height: 110px !important; /* 👈 ここの数値を増やすほど、中のキャラが縦にドカンと大きくなります！ */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     z-index: 1 !important;
 }
 
-/* 枠いっぱいに拡大するキャラクター画像 */
 #btnCharImg {
     width: auto !important;
-    height: 100% !important; /* 高さいっぱいに拡大 */
+    height: 100% !important; /* 上のheight（110px）いっぱいに拡大 */
     max-width: 100% !important;
     object-fit: contain !important;
-    image-rendering: pixelated !important; /* ドット絵がボケないようにする */
+    image-rendering: pixelated !important; /* ドット絵クッキリ */
 }
 
-/* 下側の一行文字エリア */
+/* 下側の文字エリア */
 .btn-text-wrapper {
     width: 100% !important;
     text-align: center !important;
-    margin-top: 2px !important;
+    margin-top: 5px !important;
     z-index: 2 !important;
 }
 
-/* 「キャラ選択」の文字スタイル */
 .btn-main-text {
     display: block !important;
-    font-size: 15px !important; /* 1行で綺麗に収まるサイズ */
+    font-size: 16px !important; /* 文字の大きさ */
     color: #000000 !important;
     font-weight: bold !important;
-    white-space: nowrap !important; /* 絶対に途中で改行させない */
-    letter-spacing: 0.5px !important;
+    white-space: nowrap !important;
 }
 
 /* 横長のゲーム名看板 */
