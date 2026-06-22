@@ -129,6 +129,7 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const ui = document.getElementById('ui');
+        const menuOverlay = document.getElementById('game-menu-overlay');
 
         const isPC = window.innerWidth >= 960;
 
@@ -256,15 +257,42 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
         let isPageVisible = true;
         let lastTime = performance.now();
 
-        const DIFFICULTY = 'normal'; 
+        let DIFFICULTY = 'hard'; 
         const deviceType = isPC ? 'PC' : 'SP';
-        const bestKey = `dinoBestTime_${DIFFICULTY}_${deviceType}`;
-        const scoreKey = `dinoTopScores_${DIFFICULTY}_${deviceType}`;
+
+        function getBestKey() { return `dinoBestTime_${DIFFICULTY}_${deviceType}`; }
+        function getScoreKey() { return `dinoTopScores_${DIFFICULTY}_${deviceType}`; }
 
         let highScore = localStorage.getItem(bestKey) || 0;
         let topScores = JSON.parse(localStorage.getItem(scoreKey)) || [0, 0, 0];
 
-        const initialBaseSpeed = isPC ? 10.0 : 15.0; 
+        // 💡 キーボード選択用インデックス管理
+        let currentMenuIndex = 0;
+        const menuButtons = [
+            document.getElementById('link-restart'),
+            document.getElementById('link-easy'),
+            document.getElementById('link-hard'),
+            document.getElementById('link-home')
+        ];
+
+        // 💡 フォーカス表示を更新する関数
+        function updateMenuFocus() {
+            menuButtons.forEach((btn, idx) => {
+                if (idx === currentMenuIndex) {
+                    btn.classList.add('keyboard-focus');
+                } else {
+                    btn.classList.remove('keyboard-focus');
+                }
+            });
+        }
+
+        function getInitialSpeed() {
+            if (DIFFICULTY === 'easy') return isPC ? 6.0 : 10.0;
+            if (DIFFICULTY === 'hard') return isPC ? 11.0 : 16.0;
+            return isPC ? 8.0 : 13.0; 
+        }
+
+        let initialBaseSpeed = isPC ? 10.0 : 15.0; 
         let currentSpeed = initialBaseSpeed;
 
         let speedPhaseTimer = 0;      
@@ -332,6 +360,9 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
 
         function saveScore(currentScore) {
             const finalScore = Math.floor(currentScore);
+            const bKey = getBestKey();
+            const sKey = getScoreKey();
+
             if (finalScore > highScore) {
                 highScore = finalScore;
                 localStorage.setItem(bestKey, highScore);
@@ -342,6 +373,30 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
             localStorage.setItem(scoreKey, JSON.stringify(topScores)); 
         }
 
+        // 💡 キーボード用の独立したイベントリスナー
+        window.addEventListener('keydown', (e) => {
+            // メニューが開いている時だけの専用操作
+            if (menuOverlay.style.display === 'flex') {
+                if (e.code === 'ArrowDown' || e.code === 'ArrowRight') {
+                    e.preventDefault();
+                    currentMenuIndex = (currentMenuIndex + 1) % menuButtons.length;
+                    updateMenuFocus();
+                } else if (e.code === 'ArrowUp' || e.code === 'ArrowLeft') {
+                    e.preventDefault();
+                    currentMenuIndex = (currentMenuIndex - 1 + menuButtons.length) % menuButtons.length;
+                    updateMenuFocus();
+                } else if (e.code === 'Enter' || e.code === 'Space') {
+                    e.preventDefault();
+                    menuButtons[currentMenuIndex].click(); // 現在選択中のリンクを踏む
+                }
+                return;
+            }
+
+            // メニューが開いていない時は、通常通りの共通入力ロジックを呼ぶ
+            if (['Space', 'ArrowUp'].includes(e.code)) {
+                handleInput(e);
+            }
+        });
         const handleInput = (e) => {
             if (e.type === 'mousedown' && e.button === 0) return;
             if (e.code && !['Space', 'ArrowUp'].includes(e.code)) return;
@@ -374,6 +429,13 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
                 ui.style.display = 'block';
                 return;
             }
+                // 2ステップ目：カウントアップ終了後に押されたら、リンクメニューを表示
+                if (menuOverlay.style.display !== 'flex') {
+                    currentMenuIndex = 0; // 初期選択をリトライにリセット
+                    updateMenuFocus();
+                    menuOverlay.style.display = 'flex';
+                }
+                return;
 
             if (gameState === 'PLAYING' && startCallTimer <= 0 && !player.isJumping) {
                 player.isJumping = true;
@@ -382,6 +444,18 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
                 player.vy = BASE_JUMP * _mildRatio;
             }
         };
+
+        // マウスホバー時にキーボードフォーカスのインデックスを同期させる（直感的な操作のため）
+        menuButtons.forEach((btn, idx) => {
+            btn.addEventListener('mouseenter', () => {
+                if (menuOverlay.style.display === 'flex') {
+                    currentMenuIndex = idx;
+                    updateMenuFocus();
+                }
+            });
+            btn.addEventListener('click', (e) => { e.stopPropagation(); });
+            btn.addEventListener('touchstart', (e) => { e.stopPropagation(); });
+        });
 
         window.addEventListener('mousedown', handleInput);
         window.addEventListener('keydown', handleInput);
@@ -399,10 +473,18 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
         });
 
         function resetGame() {
-            score = 0; displayScore = 0; countTimer = 0; startCallTimer = 0; gameOverTimer = 0; 
+            score = 0; 
+            displayScore = 0; 
+            countTimer = 0; 
+            startCallTimer = 0; 
+            gameOverTimer = 0; 
             currentSpeed = initialBaseSpeed;
-            obstacles.length = 0; spawnTimer = 0; nextSpawnThreshold = 60; blindTimer = 0; 
-            player.y = GROUND_Y - player.height; player.vy = 0; player.gravity = BASE_GRAVITY; player.isJumping = false;
+            obstacles.length = 0; 
+            spawnTimer = 0; 
+            nextSpawnThreshold = 60; 
+            blindTimer = 0; 
+            player.y = GROUND_Y - player.height; player.vy = 0; 
+            player.gravity = BASE_GRAVITY; player.isJumping = false;
             lastTime = performance.now(); 
             setRandomResetThreshold(); 
         }
