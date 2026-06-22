@@ -380,24 +380,21 @@ body {
         width: 100%; /* 画面幅が300px台のときは、2列だと見づらいので「縦1列」でどーんと綺麗に見せます */
         max-width: 260px;
     }
-    /* ==========================================================================
-       【追記】スマホ版の時だけハンバーガーメニューを小さくする設定
-       ========================================================================== */
-    .menu-btn {
-        top: 15px;      /* スマホ画面に合わせて位置も少し上に微調整 */
-        right: 15px;    /* スマホ画面に合わせて位置も少し右に微調整 */
-        height: 45px;   /* ボタンの大きさを 60px → 45px に */
-        width: 45px;
+   .menu-btn {
+        top: 15px;      /* ボタンの位置を少し上に上げて文字との被りを解消 */
+        right: 15px;    /* ボタンの位置を少し右に寄せる */
+        height: 44px;   /* 四角いボタンの大きさを 60px → 44px に縮小 */
+        width: 44px;
     }
 
     .menu-btn span,
     .menu-btn span:before,
     .menu-btn span:after {
         height: 2px;    /* 線の太さを 3px → 2px に */
-        width: 20px;    /* 線の幅を 25px → 20px に */
+        width: 18px;    /* 線の長さを 25px → 18px に */
         border-radius: 2px;
     }
 
-    .menu-btn span:before { bottom: 6px; } /* 三本線のすき間を狭く */
+    .menu-btn span:before { bottom: 6px; } /* 三本線の上下のすき間を狭く */
     .menu-btn span:after { top: 6px; }
 }
