@@ -305,4 +305,24 @@ body {
     .page-title {
         font-size: 1.8rem;
     }
+    /* ==========================================================================
+       【追記】スマホ版の時だけハンバーガーメニューを小さくする設定
+       ========================================================================== */
+    .menu-btn {
+        top: 15px;      /* スマホ画面に合わせて位置も少し上に微調整 */
+        right: 15px;    /* スマホ画面に合わせて位置も少し右に微調整 */
+        height: 45px;   /* ボタンの大きさを 60px → 45px に */
+        width: 45px;
+    }
+
+    .menu-btn span,
+    .menu-btn span:before,
+    .menu-btn span:after {
+        height: 2px;    /* 線の太さを 3px → 2px に */
+        width: 20px;    /* 線の幅を 25px → 20px に */
+        border-radius: 2px;
+    }
+
+    .menu-btn span:before { bottom: 6px; } /* 三本線のすき間を狭く */
+    .menu-btn span:after { top: 6px; }
 }
