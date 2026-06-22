@@ -266,10 +266,30 @@ input[name="chara-slider"] {
    ========================================================================== */
 @media (max-width: 600px) {
     
+    /* 💡【追記】スマホのときはいつでもハンバーガーメニューをスマートに縮小 */
+    .menu-btn {
+        top: 15px;      /* ボタンの位置を少し上に上げて文字との被りを解消 */
+        right: 15px;    /* ボタンの位置を少し右に寄せる */
+        height: 44px;   /* 四角いボタンの大きさを 60px → 44px に縮小 */
+        width: 44px;
+    }
+
+    .menu-btn span,
+    .menu-btn span:before,
+    .menu-btn span:after {
+        height: 2px;    /* 線の太さを 3px → 2px に */
+        width: 18px;    /* 線の長さを 25px → 18px に */
+        border-radius: 2px;
+    }
+
+    .menu-btn span:before { bottom: 6px; } /* 三本線の上下のすき間を狭く */
+    .menu-btn span:after { top: 6px; }
+
     /* --- メインウィンドウ（全体の黒枠）の調整 --- */
     .chara-window {
         width: 92%;
-        margin: 20px auto;
+        /* 💡上側の余白（margin-top）を 20px から 60px に増やして、全体を下に下げました！ */
+        margin: 60px auto 20px auto; 
         padding: 20px 10px; /* 左右の余白を少しだけ狭めてスマホの画面幅を最大活用 */
         box-shadow: 10px 10px 0px #800000; /* 影の飛び出し量を少しコンパクトに */
     }
@@ -289,7 +309,7 @@ input[name="chara-slider"] {
         box-shadow: 5px 5px 0px #e67e22;
     }
 
-    /* イラストを包む枠の調整（ここで画像のはみ出しや縦潰れを防ぎます） */
+    /* イラストを包む枠の調整 */
     .card-img-wrap {
         padding: 8px;
         margin-bottom: 12px;
@@ -313,7 +333,7 @@ input[name="chara-slider"] {
         margin-top: 8px;
     }
 
-    /* --- 矢印ボタンのスマホ最適化（超重要！） --- */
+    /* --- 矢印ボタンのスマホ最適化 --- */
     .arrow-btn {
         width: 40px;      /* ボタンを一回り小さくしてキャラの邪魔をしないように */
         height: 40px;
@@ -323,7 +343,7 @@ input[name="chara-slider"] {
         top: 35%;          /* ちょうど画像枠の真横あたりに配置し、下の文字エリアと被らせない */
     }
 
-    /* 💡スマホの時は、矢印の位置をカードの外側ギリギリに寄せる */
+    /* スマホの時は、矢印の位置をカードの外側ギリギリに寄せる */
     .arrow-left { 
         left: 3px; 
     }
@@ -337,21 +357,5 @@ input[name="chara-slider"] {
     .card-img-wrap img {
         max-height: 150px; 
     }
-    .menu-btn {
-        top: 15px;      /* ボタンの位置を少し上に上げて文字との被りを解消 */
-        right: 15px;    /* ボタンの位置を少し右に寄せる */
-        height: 44px;   /* 四角いボタンの大きさを 60px → 44px に縮小 */
-        width: 44px;
-    }
-
-    .menu-btn span,
-    .menu-btn span:before,
-    .menu-btn span:after {
-        height: 2px;    /* 線の太さを 3px → 2px に */
-        width: 18px;    /* 線の長さを 25px → 18px に */
-        border-radius: 2px;
-    }
-
-    .menu-btn span:before { bottom: 6px; } /* 三本線の上下のすき間を狭く */
-    .menu-btn span:after { top: 6px; }
+    /* 💡重複していたメニュー縮小コードは上に統合したため、ここからは綺麗に削除しました */
 }
