@@ -15,6 +15,7 @@
             font-family: sans-serif;
             box-sizing: border-box;
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            position: relative;
         }
         canvas { 
             background: #ecf0f1; 
@@ -38,8 +39,76 @@
             border-radius: 5px;
             display: none;
         }
+
+        /* 結果発表のあとに表示するナビゲーションメニュー */
+        #game-menu-overlay {
+            position: absolute;
+            z-index: 999; 
+            display: none; 
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.9); 
+            padding: 30px 40px;
+            border-radius: 12px;
+            border: 3px solid #e67e22;
+            box-shadow: 0 0 35px rgba(0,0,0,0.8);
+            max-width: 90%;
+            box-sizing: border-box;
+        }
+        .menu-title {
+            color: #f1c40f;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            letter-spacing: 0.1em;
+        }
+        .menu-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            min-width: 240px;
+        }
+        .custom-menu-btn {
+            background: #2c3e50;
+            color: white;
+            border: 2px solid #ffffff;
+            padding: 12px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+            outline: none; /* デフォルトのフォーカス枠を消す */
+        }
+        
+        /* 💡マウスホバー、またはキーボードでフォーカス（選択）された時のスタイル */
+        .custom-menu-btn:hover, .custom-menu-btn.keyboard-focus {
+            background: #e67e22;
+            border-color: #f1c40f;
+            transform: scale(1.03);
+        }
+        
+        .custom-menu-btn.primary-btn {
+            background: #800000;
+            border-color: #f1c40f;
+        }
+        .custom-menu-btn.primary-btn:hover, .custom-menu-btn.primary-btn.keyboard-focus {
+            background: #b30000;
+        }
+
         @media (max-width: 959px) {
             #ui { font-size: 12px; padding: 3px 6px; }
+            #game-menu-overlay { padding: 20px; gap: 10px; }
+            .menu-title { font-size: 18px; margin-bottom: 5px; }
+            .menu-btn-group { min-width: 180px; gap: 8px; }
+            .custom-menu-btn { padding: 8px 15px; font-size: 14px; }
         }
     </style>
 </head>
@@ -47,10 +116,21 @@
     <div id="ui">BEST: 0<br>SCORE: 0</div>
     <canvas id="gameCanvas"></canvas>
 
+    <div id="game-menu-overlay">
+        <div class="menu-title">メニュー</div>
+        <div class="menu-btn-group">
+            <a href="index.html" class="custom-menu-btn primary-btn" id="link-restart">もう一度（リトライ）</a>
+            <a href="easy.html" class="custom-menu-btn" id="link-easy">EASY モードで遊ぶ</a>
+            <a href="hard.html" class="custom-menu-btn" id="link-hard">HARD モードで遊ぶ</a>
+            <a href="game.html" class="custom-menu-btn" style="background: #7f8c8d;" id="link-home">ホームページに戻る</a>
+        </div>
+    </div>
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const ui = document.getElementById('ui');
+        const menuOverlay = document.getElementById('game-menu-overlay');
 
         const V_WIDTH = 1280;
         const V_HEIGHT = 720;
@@ -67,27 +147,23 @@
         const seStart = new Audio('dora.mp3'); 
         seStart.volume = 1.0; 
 
-        // ==========================================
-// ★ 修正：キャラクター画像の動的・フォルダ対応読み込み
-// ==========================================
-const charAssets = {
-    meana:   { left: 'meanal.png',   right: 'meanar.png' },
-    hajime:    { left: 'hajimel.png',    right: 'hajimer.png' },
-    aniki:  { left: 'aniki_l.png',  right: 'aniki_r.png' },
-    naruto: { left: 'naruto_l.png', right: 'naruto_r.png' }
-};
+        // キャラクター画像の動的読み込み
+        const charAssets = {
+            meana:   { left: 'meanal.png',   right: 'meanar.png' },
+            hajime:  { left: 'hajimel.png',  right: 'hajimer.png' },
+            aniki:   { left: 'aniki_l.png',  right: 'aniki_r.png' },
+            naruto:  { left: 'naruto_l.png', right: 'naruto_r.png' }
+        };
 
-// ホーム画面で選ばれたキャラIDを取得（なければデフォルトはラーメン娘）
-const currentSelectedCharId = localStorage.getItem('selectedChar') || 'hajime';
-const activeChar = charAssets[currentSelectedCharId] || charAssets['hajime'];
+        const currentSelectedCharId = localStorage.getItem('selectedChar') || 'hajime';
+        const activeChar = charAssets[currentSelectedCharId] || charAssets['hajime'];
 
-const pImgL = new Image(); const pImgR = new Image();
-pImgL.src = activeChar.left;
-pImgR.src = activeChar.right;
+        const pImgL = new Image(); const pImgR = new Image();
+        pImgL.src = activeChar.left;
+        pImgR.src = activeChar.right;
 
-let pReadyCount = 0; 
-pImgL.onload = pImgR.onload = () => { pReadyCount++; };
-// ==========================================
+        let pReadyCount = 0; 
+        pImgL.onload = pImgR.onload = () => { pReadyCount++; };
 
         const bgImages = [];
         const bgSrcs = ['bg1.jpg', 'bg2.jpg', 'bg3.jpg'];
@@ -119,20 +195,43 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
         let gameOverTimer = 0; 
         
         let isPageVisible = true;
-        
-        // LINEバグ（時間ワープ）対策用のタイムスタンプ変数
         let lastTime = performance.now();
 
-        // ★★★ 難易度の設定＆スコア分離 ★★★
-        const DIFFICULTY = 'normal'; 
+        let DIFFICULTY = 'normal'; 
         const deviceType = isPC ? 'PC' : 'SP';
-        const bestKey = `dinoBestTime_${DIFFICULTY}_${deviceType}`;
-        const scoreKey = `dinoTopScores_${DIFFICULTY}_${deviceType}`;
+        
+        function getBestKey() { return `dinoBestTime_${DIFFICULTY}_${deviceType}`; }
+        function getScoreKey() { return `dinoTopScores_${DIFFICULTY}_${deviceType}`; }
 
-        let highScore = localStorage.getItem(bestKey) || 0;
-        let topScores = JSON.parse(localStorage.getItem(scoreKey)) || [0, 0, 0];
+        let highScore = localStorage.getItem(getBestKey()) || 0;
+        let topScores = JSON.parse(localStorage.getItem(getScoreKey())) || [0, 0, 0];
 
-        const initialBaseSpeed = isPC ? 8.0 : 13.0; 
+        // 💡 キーボード選択用インデックス管理
+        let currentMenuIndex = 0;
+        const menuButtons = [
+            document.getElementById('link-restart'),
+            document.getElementById('link-easy'),
+            document.getElementById('link-hard'),
+            document.getElementById('link-home')
+        ];
+
+        // 💡 フォーカス表示を更新する関数
+        function updateMenuFocus() {
+            menuButtons.forEach((btn, idx) => {
+                if (idx === currentMenuIndex) {
+                    btn.classList.add('keyboard-focus');
+                } else {
+                    btn.classList.remove('keyboard-focus');
+                }
+            });
+        }
+
+        function getInitialSpeed() {
+            if (DIFFICULTY === 'easy') return isPC ? 6.0 : 10.0;
+            if (DIFFICULTY === 'hard') return isPC ? 11.0 : 16.0;
+            return isPC ? 8.0 : 13.0; 
+        }
+        let initialBaseSpeed = getInitialSpeed();
         let currentSpeed = initialBaseSpeed;
 
         let speedPhaseTimer = 0;      
@@ -175,20 +274,51 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
 
         function saveScore(currentScore) {
             const finalScore = Math.floor(currentScore);
+            const bKey = getBestKey();
+            const sKey = getScoreKey();
+
             if (finalScore > highScore) {
                 highScore = finalScore;
-                localStorage.setItem(bestKey, highScore);
+                localStorage.setItem(bKey, highScore);
             }
             topScores.push(finalScore);              
             topScores.sort((a, b) => b - a);         
             topScores = topScores.slice(0, 3);       
-            localStorage.setItem(scoreKey, JSON.stringify(topScores)); 
+            localStorage.setItem(sKey, JSON.stringify(topScores)); 
         }
 
+        // 💡 キーボード用の独立したイベントリスナー
+        window.addEventListener('keydown', (e) => {
+            // メニューが開いている時だけの専用操作
+            if (menuOverlay.style.display === 'flex') {
+                if (e.code === 'ArrowDown' || e.code === 'ArrowRight') {
+                    e.preventDefault();
+                    currentMenuIndex = (currentMenuIndex + 1) % menuButtons.length;
+                    updateMenuFocus();
+                } else if (e.code === 'ArrowUp' || e.code === 'ArrowLeft') {
+                    e.preventDefault();
+                    currentMenuIndex = (currentMenuIndex - 1 + menuButtons.length) % menuButtons.length;
+                    updateMenuFocus();
+                } else if (e.code === 'Enter' || e.code === 'Space') {
+                    e.preventDefault();
+                    menuButtons[currentMenuIndex].click(); // 現在選択中のリンクを踏む
+                }
+                return;
+            }
+
+            // メニューが開いていない時は、通常通りの共通入力ロジックを呼ぶ
+            if (['Space', 'ArrowUp'].includes(e.code)) {
+                handleInput(e);
+            }
+        });
+
+        // マウス・タップ用の共通ロジック
         const handleInput = (e) => {
             if (e.type === 'mousedown' && e.button === 0) return;
-            if (e.code && !['Space', 'ArrowUp'].includes(e.code)) return;
             
+            // メニュー出現中はボタン側（リンク）のクリックイベントを優先
+            if (menuOverlay.style.display === 'flex') return;
+
             if (gameState === 'START') {
                 seStart.play().catch(o => {}); 
                 resetGame();
@@ -201,15 +331,18 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
             if (gameState === 'GAMEOVER') {
                 if (gameOverTimer > 0) return;
 
+                // 1ステップ目：カウントアップ中の場合、即座に最大値にして演出をスキップ
                 if (displayScore < Math.floor(score)) {
                     displayScore = Math.floor(score);
                     return;
                 }
-                seStart.play().catch(o => {}); 
-                resetGame();
-                gameState = 'PLAYING';
-                startCallTimer = 120; 
-                ui.style.display = 'block';
+
+                // 2ステップ目：カウントアップ終了後に押されたら、リンクメニューを表示
+                if (menuOverlay.style.display !== 'flex') {
+                    currentMenuIndex = 0; // 初期選択をリトライにリセット
+                    updateMenuFocus();
+                    menuOverlay.style.display = 'flex';
+                }
                 return;
             }
 
@@ -221,9 +354,24 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
             }
         };
 
+        // マウスホバー時にキーボードフォーカスのインデックスを同期させる（直感的な操作のため）
+        menuButtons.forEach((btn, idx) => {
+            btn.addEventListener('mouseenter', () => {
+                if (menuOverlay.style.display === 'flex') {
+                    currentMenuIndex = idx;
+                    updateMenuFocus();
+                }
+            });
+            btn.addEventListener('click', (e) => { e.stopPropagation(); });
+            btn.addEventListener('touchstart', (e) => { e.stopPropagation(); });
+        });
+
         window.addEventListener('mousedown', handleInput);
-        window.addEventListener('keydown', handleInput);
-        window.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(e); }, {passive: false});
+        window.addEventListener('touchstart', (e) => { 
+            if (menuOverlay.style.display === 'flex') return; 
+            e.preventDefault(); 
+            handleInput(e); 
+        }, {passive: false});
 
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
@@ -282,7 +430,6 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
                         bgm.play().catch(o => {});
                     }
                 } else {
-                    // ★ 速度変化の処理はすべて元の「直線加速＆ランダムリセット」に戻しました
                     currentSpeed += (isPC ? 0.004 : 0.007) * dtRatio; 
                     score += (1 / 60) * dtRatio; 
                     
@@ -335,7 +482,6 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
                             seStart.play().catch(o => {}); 
 
                             gameOverTimer = 120; 
-
                             saveScore(score);
                         }
                         if (o.x + o.w < -100) obstacles.splice(i, 1);
@@ -456,13 +602,15 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
                         ctx.font = '30px sans-serif';
                         ctx.fillText(`最高記録: ${Math.floor(highScore)} 秒`, leftCenterX, V_HEIGHT / 2 + 65);
                         
-                        ctx.fillStyle = 'white';
-                        if (displayScore >= Math.floor(score)) {
-                            ctx.fillText('スペースキー または タップでリトライ！', leftCenterX, V_HEIGHT / 2 + 160);
-                        } else {
-                            ctx.fillStyle = '#7f8c8d';
+                        // ナビ案内テキスト
+                        if (menuOverlay.style.display !== 'flex') {
+                            ctx.fillStyle = '#f1c40f';
                             ctx.font = '24px sans-serif';
-                            ctx.fillText('画面タップで演出をスキップ', leftCenterX, V_HEIGHT / 2 + 160);
+                            if (displayScore < Math.floor(score)) {
+                                ctx.fillText('【 スペース 】or【 タップ 】でスコアスキップ', leftCenterX, V_HEIGHT / 2 + 160);
+                            } else {
+                                ctx.fillText('【 スペース 】or【 タップ 】でメニューを開く ➔', leftCenterX, V_HEIGHT / 2 + 160);
+                            }
                         }
 
                         const rightCenterX = V_WIDTH / 2 + 260; 
