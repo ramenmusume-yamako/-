@@ -289,7 +289,7 @@ input[name="chara-slider"] {
     .chara-window {
         width: 92%;
         /* 💡上側の余白（margin-top）を 20px から 60px に増やして、全体を下に下げました！ */
-        margin: 90px auto 20px auto; 
+        margin: 100px auto 10px auto; 
         padding: 20px 10px; /* 左右の余白を少しだけ狭めてスマホの画面幅を最大活用 */
         box-shadow: 10px 10px 0px #800000; /* 影の飛び出し量を少しコンパクトに */
     }
