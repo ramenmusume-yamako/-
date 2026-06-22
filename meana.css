@@ -1,4 +1,4 @@
-//* ==========================================================================
+/* ==========================================================================
    1. 全体の配置（スクロールできるようにロックを解除！）
    ========================================================================== */
 body {
@@ -7,7 +7,6 @@ body {
     background-color: #f7f3e9; /* 和紙っぽい色 */
     font-family: "Hiragino Mincho ProN", serif;
     min-height: 100vh;
-    /* ❌ overflow: hidden と height: 100vh はスクロールできなくなるため削除しました */
 }
 
 /* のれん風ボタン */
@@ -198,18 +197,49 @@ body {
    4. スマホ・タブレット用の微調整（レスポンシブ）
    ========================================================================== */
 @media (max-width: 768px) {
+    /* のれん風ボタンが左に寄りすぎて窮屈になるのを防ぐ */
+    .home-btn {
+        left: 20px;
+        padding: 15px 8px;
+        font-size: 0.9rem;
+    }
+
+    /* 全体の横幅の決定。カゲ（8px）が右側にはみ出す余裕を考慮した計算 */
     .menu-container {
-        margin-top: 100px; /* のれんボタンと被らないように調整 */
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0 16px 0 8px;
+        margin-top: 110px; /* のれんボタンと被らないように調整 */
         gap: 20px;
     }
+
+    /* キャラクター画像の最小幅ロックを解除し、スマホ幅に適合させる */
+    .menu-visual {
+        min-width: 100%;
+    }
+    .chara-img {
+        max-height: 50vh;
+    }
+
+    /* お品書きカード：カゲを少しスマートにしてはみ出しを防ぐ */
     .menu-card {
+        min-width: 100%;
         padding: 30px 20px; /* スマホではカードの内側の余白を少し狭く */
+        box-shadow: 8px 8px 0px #800000;
+    }
+
+    /* 店舗情報エリア：カゲを8pxに調整して画面内に収める */
+    .google-map-chara-zone {
+        width: 100% !important;
+        padding: 0 16px 0 8px !important;
+        margin: 40px auto 60px auto !important;
     }
     .map-card-box {
         padding: 30px 20px !important;
+        box-shadow: 8px 8px 0px #800000 !important;
     }
+    
     .chara-name {
         font-size: 2.2rem;
     }
-}
 }

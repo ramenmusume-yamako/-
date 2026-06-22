@@ -292,8 +292,15 @@ body {
 }
 
 @media (max-width: 599px) {
+    /* スマホ画面の端にピタッとつきすぎないよう全体幅を調整 */
+    .news-container {
+        width: 100%;
+        padding: 0 16px 0 8px; /* 右側に15pxの赤カゲが飛び出る分のスペースを確保 */
+        margin-top: 90px;
+    }
     .news-card-box {
         padding: 35px 20px; /* スマホでは余白をスリムに */
+        box-shadow: 8px 8px 0px #800000; /* カゲの主張は残しつつ、はみ出さないサイズに */
     }
     .page-title {
         font-size: 1.8rem;
