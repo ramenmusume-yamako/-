@@ -292,22 +292,30 @@ body {
    ========================================================================== */
 @media (max-width: 768px) {
     
-    /* --- メイン看板の調整 --- */
+    /* --- メイン看板の調整（ここを書き換えます） --- */
     .shop-kanban {
-        height: 200px; /* 150pxだと潰れすぎたため、波雲が綺麗に見える200pxに微調整！ */
+        height: auto;               /* ❌高さを固定せず、中身に合わせる */
+        aspect-ratio: 1200 / 380;   /* 💡PC時の看板の比率（横幅:高さ）をスマホでも強制的に維持する */
+        min-height: 160px;          /* 文字が潰れないための最低限の高さ */
+    }
+    
+    .kanban-bg-img {
+        width: 100%;                /* 横幅いっぱいに広げる */
+        height: 100%;               /* 縦幅いっぱいに広げる */
+        object-fit: cover;          /* 比率を保ったまま切り抜く */
     }
     
     .shop-title {
-        font-size: 2.5rem; /* 4remだと文字がはみ出すのでスマホ用に縮小 */
+        font-size: 2.2rem;          /* 画面幅に合わせてさらに少しだけ小さく調整 */
     }
     
     .shop-subtitle {
-        font-size: 0.95rem;
-        margin: 10px 0 0 0;
-        white-space: nowrap; /* スマホで1行にすっきり収める */
+        font-size: 0.85rem;         /* 文字がはみ出さないようにスリムに */
+        margin: 8px 0 0 0;
+        white-space: nowrap; 
     }
 
-    /* --- 全体の余白調整 --- */
+    /* --- 以下の .main-container 以降の設定は変更なしでそのまま残してください --- */
     .main-container {
         margin: 20px auto;
         padding: 0 15px; /* スマホ画面の端にぴったり寄りすぎない余白 */
