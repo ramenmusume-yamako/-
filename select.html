@@ -142,43 +142,55 @@
            🛠 変更・追加ポイント：スマホ（縦長画面）用のレスポンシブ最適化
            ========================================================================== */
         @media (max-width: 768px) and (orientation: portrait) {
-            /* 1. コンテナをスマホの「横向き比率」に合わせて縮小・回転トランスフォーム */
+            /* 1. コンテナをスマホの画面内に絶対に「はみ出さず」収める比率計算 */
             .game-selection-container {
-                width: 92vh; /* 縦画面の高さに対して横幅を決めることで比率を固定 */
-                height: 95vw; /* 縦画面の横幅に対して高さを決める */
-                max-width: 600px;
-                max-height: 360px;
-                padding: 12px;
+                width: 86vh;   /* 回転後に縦からはみ出さない限界の幅 */
+                height: 92vw;  /* 回転後に横からはみ出さない限界の高さ */
+                max-width: 560px;
+                max-height: 320px;
+                padding: 10px;
                 
                 /* 画面を時計回りに90度回転させて、擬似的に「横持ちゲーム画面」にする */
                 transform: rotate(90deg);
-                box-shadow: 6px 6px 0px #9c1c11;
-                gap: 6px;
+                box-shadow: 5px 5px 0px #9c1c11;
+                gap: 5px;
             }
 
-            /* 2. スマホ画面サイズに合わせて文字やマスの間隔を微微調整 */
+            /* 2. スマホ画面サイズに合わせて文字やマスの間隔を最適化 */
             h2 {
-                font-size: 15px;
+                font-size: 14px;
                 letter-spacing: 1px;
             }
 
+            .grid-panel {
+                height: calc(100% - 25px);
+            }
+
             .char-grid {
-                gap: 6px; /* マス同士が詰まっても綺麗に見えるように調整 */
+                gap: 6px; /* 隙間を詰めてカード単体のエリアを広げる */
             }
 
             .char-card {
                 padding: 4px;
                 border-width: 1.5px;
+                border-radius: 6px;
+            }
+
+            .char-card img {
+                height: 60px; /* スマホ内で画像がつぶれるのを防止 */
             }
 
             .char-card .char-name {
                 font-size: 10px;
-                margin-top: 2px;
+                margin-top: 1px;
+                transform: scale(0.9); /* 文字が長いときのはみ出し対策 */
             }
 
             .confirm-btn {
-                font-size: 13px;
-                letter-spacing: 1px;
+                font-size: 12px;
+                letter-spacing: 0px;
+                border-width: 1.5px;
+                border-radius: 6px;
                 box-shadow: 3px 3px 0px #f7c11e;
             }
             .confirm-btn:hover {
@@ -202,6 +214,7 @@
             h2 { font-size: 16px; }
             .char-grid { gap: 6px; }
             .char-card { padding: 4px; }
+            .char-card img { height: 60%; }
             .char-card .char-name { font-size: 10px; }
             .confirm-btn { font-size: 14px; }
         }
