@@ -343,9 +343,8 @@
             if (gameState === 'PLAYING' && startCallTimer <= 0 && !player.isJumping) {
                 player.isJumping = true;
                 
-                // 💡 高さ（最高到達点）が変わらないように、初速もスピードに比例させる
-                const speedRatio = currentSpeed / initialBaseSpeed;
-                player.vy = BASE_JUMP * speedRatio;
+                // 💡 元の標準ジャンプ力をそのまま適用（高さブレを防ぎ、完全に固定します）
+                player.vy = BASE_JUMP;
             }
         };
 
@@ -435,9 +434,8 @@
                         setRandomResetThreshold();       
                     }
 
-                    // 💡 スピードに比例して重力を強く設定（初速の強化とセットで高さが維持されます）
-                    const speedRatio = currentSpeed / initialBaseSpeed;
-                    player.gravity = BASE_GRAVITY * speedRatio;
+                    // 💡 重力も固定値（BASE_GRAVITY）にすることで、浮遊しすぎを完全に防ぎます
+                    player.gravity = BASE_GRAVITY;
 
                     player.vy += player.gravity * dtRatio;
                     player.y += player.vy * dtRatio;
