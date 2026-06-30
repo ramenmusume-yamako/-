@@ -237,7 +237,7 @@
         let highScore = localStorage.getItem(bestKey) || 0;
         let topScores = JSON.parse(localStorage.getItem(scoreKey)) || [0, 0, 0];
 
-        // メメニューボタン制御
+        // メニューボタン制御
         let currentMenuIndex = 0;
         const menuButtons = [
             document.getElementById('link-restart'),
@@ -309,8 +309,14 @@
         }
 
         function startGameSequence() {
-            playSE('start'); resetGame(); gameState = 'PLAYING'; startCallTimer = 120;
-            ui.style.display = 'block'; menuOverlay.style.display = 'none';
+            resetGame(); 
+            gameState = 'PLAYING'; 
+            startCallTimer = 120;
+            ui.style.display = 'block'; 
+            menuOverlay.style.display = 'none';
+            
+            // 💡確実にオーディオ再生が許可された状態でドラを鳴らす
+            setTimeout(() => { playSE('start'); }, 10);
         }
 
         // キーボード操作
@@ -333,10 +339,14 @@
             if (e.type === 'mousedown' && e.button === 0) return;
             if (menuOverlay.style.display === 'flex') return;
 
+            // 💡最初のタップ等で即座にWeb Audioのロックを解除
             initAudio();
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
-            if (gameState === 'START') { startGameSequence(); return; }
+            if (gameState === 'START') { 
+                startGameSequence(); 
+                return; 
+            }
             if (gameState === 'GAMEOVER') {
                 if (gameOverTimer > 0) return;
                 if (displayScore < Math.floor(score)) { displayScore = Math.floor(score); return; }
@@ -347,12 +357,15 @@
             }
             if (gameState === 'PLAYING' && startCallTimer <= 0 && !player.isJumping) {
                 player.isJumping = true;
-                player.vy = BASE_JUMP; // 💡高さを常に一定（等倍）にするため、初速に倍率を掛けないように修正
+                player.vy = BASE_JUMP; 
             }
         };
 
         document.getElementById('link-restart').addEventListener('click', (e) => {
-            e.preventDefault(); e.stopPropagation(); startGameSequence();
+            e.preventDefault(); e.stopPropagation(); 
+            initAudio(); // 💡メニュークリック時も念のためロック解除
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            startGameSequence();
         });
 
         menuButtons.forEach((btn, idx) => {
@@ -410,12 +423,11 @@
                     speedPhaseTimer += _dtRatio;
                     if (speedPhaseTimer >= nextResetThreshold) { currentSpeed = initialBaseSpeed; setRandomResetThreshold(); }
 
-                    player.gravity = BASE_GRAVITY; // 💡重力は常に一定のベース値に固定
+                    player.gravity = BASE_GRAVITY; 
 
                     _speedRatio = currentSpeed / initialBaseSpeed;
-                    _mildRatio = 1.0 + (_speedRatio - 1.0) * 0.5; // 💡変化をなだらか（半分）にしたスピード倍率
+                    _mildRatio = 1.0 + (_speedRatio - 1.0) * 0.5; 
                     
-                    // ジャンプ中のみ、なだらかにした倍率（_mildRatio）で時間を早送りして滞空時間を縮める
                     const jumpDt = player.isJumping ? _dtRatio * _mildRatio : _dtRatio;
                     player.vy += player.gravity * jumpDt; 
                     player.y += player.vy * jumpDt;
