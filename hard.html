@@ -38,8 +38,64 @@
             border-radius: 5px;
             display: none;
         }
+
+        /* ★追加：カウントアップ終了後の追加入力で浮き出るメニューのCSS */
+        #game-menu-overlay {
+            display: none; /* 初期状態は非表示 */
+            position: absolute;
+            z-index: 200;
+            background: rgba(12, 12, 12, 0.9);
+            border: 3px solid #e67e22;
+            border-radius: 15px;
+            padding: 20px 30px;
+            width: 280px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+        .menu-title {
+            color: #f1c40f;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+        .menu-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .menu-btn {
+            display: block;
+            padding: 12px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 2px solid #555;
+            background: #34495e;
+            transition: background 0.2s, transform 0.1s;
+            cursor: pointer;
+        }
+        /* 「もう一度」ボタンは赤色 */
+        .menu-btn.primary {
+            background: #c0392b;
+            border-color: #e74c3c;
+        }
+        /* ホームボタンなどはグレー */
+        .menu-btn.secondary {
+            background: #7f8c8d;
+            border-color: #95a5a6;
+        }
+        .menu-btn:active {
+            transform: scale(0.95);
+        }
+
         @media (max-width: 959px) {
             #ui { font-size: 12px; padding: 3px 6px; }
+            #game-menu-overlay { width: 200px; padding: 15px; }
+            .menu-title { font-size: 16px; margin-bottom: 12px; }
+            .menu-btn { font-size: 12px; padding: 8px; }
         }
     </style>
 </head>
@@ -47,10 +103,22 @@
     <div id="ui">BEST: 0<br>SCORE: 0</div>
     <canvas id="gameCanvas"></canvas>
 
+    <div id="game-menu-overlay">
+        <div class="menu-title">メニュー</div>
+        <div class="menu-btn-group">
+            <a href="#" id="retryBtn" class="menu-btn primary">もう一度（リトライ）</a>
+            <a href="easy.html" class="menu-btn">EASY モードで遊ぶ</a>
+            <a href="nomal.html" class="menu-btn">NORMAL モードで遊ぶ</a>
+            <a href="game.html" class="menu-btn secondary">ホームページに戻る</a>
+        </div>
+    </div>
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const ui = document.getElementById('ui');
+        const menuOverlay = document.getElementById('game-menu-overlay');
+        const retryBtn = document.getElementById('retryBtn');
 
         const isPC = window.innerWidth >= 960;
 
@@ -120,15 +188,12 @@
             }
         }
 
-        // ==========================================
-        // ★ 修正：キャラクター画像の動的・フォルダ対応読み込み
-        // ==========================================
+        // キャラクター画像の動的・フォルダ対応読み込み
         const charAssets = {
-            meana:   { left: 'chara/meana/meanal.png',   right: 'chara/meana/meanar.png' },
-            hajime:  { left: 'chara/hajime/hajimel.png',  right: 'chara/hajime/hajimer.png' },
-            aniki:   { left: 'chara/aniki/aniki_l.png',   right: 'chara/aniki/aniki_r.png' },
-            naruto:  { left: 'chara/naruto/naruto_l.png', right: 'chara/naruto/naruto_r.png' },
-            negi:    { left: 'chara/negi/negil.png',      right: 'chara/negi/negir.png' }
+            meana:   { left: 'meanal.png',   right: 'meanar.png' },
+            hajime:  { left: 'hajimel.png',  right: 'hajimer.png' },
+            aniki:   { left: 'aniki_l.png',  right: 'aniki_r.png' },
+            naruto:  { left: 'naruto_l.png', right: 'naruto_r.png' }
         };
 
         // ホーム画面で選ばれたキャラIDを取得（なければデフォルトはラーメン娘）
@@ -141,7 +206,6 @@
 
         let pReadyCount = 0; 
         pImgL.onload = pImgR.onload = () => { pReadyCount++; };
-        // ==========================================
 
         const bgImages = [];
         const bgSrcs = ['bg1.jpg', 'bg2.jpg', 'bg3.jpg'];
@@ -162,7 +226,7 @@
         const imgStartCallBg = new Image(); 
         imgStartCallBg.src = 'start_bg.png';
 
-        // --- 設定値 ---
+        // --- 設定値（変更なし） ---
         const p_sz = isPC ? 220 : 260; 
         const GROUND_Y = V_HEIGHT - 60; 
 
@@ -175,11 +239,12 @@
         let countTimer = 0;   
         let startCallTimer = 0; 
         let gameOverTimer = 0; 
+        let isMenuShown = false; // ★追加：メニューウィンドウがすでに表示されているかのフラグ
         
         let isPageVisible = true;
         let lastTime = performance.now();
 
-        const DIFFICULTY = 'normal'; 
+        const DIFFICULTY = 'hard'; 
         const deviceType = isPC ? 'PC' : 'SP';
         const bestKey = `dinoBestTime_${DIFFICULTY}_${deviceType}`;
         const scoreKey = `dinoTopScores_${DIFFICULTY}_${deviceType}`;
@@ -232,12 +297,18 @@
             const offset = window.innerWidth >= 960 ? 20 : 10;
             ui.style.top = (rect.top + offset) + "px";
             ui.style.left = (rect.left + offset) + "px";
+
+            // ★追加：メニューポップアップをゲーム画面の中央に配置する計算
+            menuOverlay.style.top = (rect.top + (rect.height - menuOverlay.offsetHeight) / 2) + "px";
+            menuOverlay.style.left = (rect.left + (rect.width - menuOverlay.offsetWidth) / 2) + "px";
         }
         window.addEventListener('resize', resize);
         window.addEventListener('orientationchange', () => {
             setTimeout(resize, 200); setTimeout(resize, 500);
         });
-        resize();
+        
+        // メニューが崩れないよう少し遅らせて初期配置を計算
+        setTimeout(resize, 300);
 
         function resetChashuPhase() {
             chashuTimer = 0;
@@ -265,6 +336,17 @@
             localStorage.setItem(scoreKey, JSON.stringify(topScores)); 
         }
 
+        // ゲームリトライと開始処理の共通関数
+        function startGameSequence() {
+            playSE('start');
+            resetGame();
+            gameState = 'PLAYING';
+            startCallTimer = 120; 
+            ui.style.display = 'block';
+            menuOverlay.style.display = 'none'; // メニューを隠す
+            isMenuShown = false;
+        }
+
         const handleInput = (e) => {
             if (e.type === 'mousedown' && e.button === 0) return;
             if (e.code && !['Space', 'ArrowUp'].includes(e.code)) return;
@@ -276,25 +358,28 @@
             }
             
             if (gameState === 'START') {
-                playSE('start');
-                resetGame();
-                gameState = 'PLAYING';
-                startCallTimer = 120; 
-                ui.style.display = 'block';
+                startGameSequence();
                 return;
             }
             
             if (gameState === 'GAMEOVER') {
                 if (gameOverTimer > 0) return;
+                
+                // カウントアップ中の場合は演出をスキップして数字を最大にする
                 if (displayScore < Math.floor(score)) {
                     displayScore = Math.floor(score);
                     return;
                 }
-                playSE('start');
-                resetGame();
-                gameState = 'PLAYING';
-                startCallTimer = 120; 
-                ui.style.display = 'block';
+                
+                // ★修正：カウントアップ終了後にキー入力か画面タップされたらメニューを出現させる
+                if (!isMenuShown) {
+                    isMenuShown = true;
+                    menuOverlay.style.display = 'block';
+                    resize(); // 中央に再配置
+                    return;
+                }
+                
+                // メニューが表示されている間は外側の画面タップ等での自動リトライを無効化
                 return;
             }
 
@@ -306,9 +391,20 @@
             }
         };
 
+        // ★追加：HTMLメニューの「もう一度」ボタンをクリックしたときのイベント
+        retryBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            startGameSequence();
+        });
+
         window.addEventListener('mousedown', handleInput);
         window.addEventListener('keydown', handleInput);
-        window.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(e); }, {passive: false});
+        window.addEventListener('touchstart', (e) => { 
+            // メニューポップアップ内のボタンやリンクを触っているときはゲームのタップ判定を無視する
+            if (e.target.closest('#game-menu-overlay')) return;
+            e.preventDefault(); 
+            handleInput(e); 
+        }, {passive: false});
 
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
@@ -466,8 +562,6 @@
         let _bgBaseX = 0; let _drawX = 0;
 
         function draw() {
-            // ★描画軽量化：背景画像で画面が完全に塗りつぶされるため、重い ctx.clearRect をスキップ
-            
             // 背景描画（スケール対応）
             if (bgReadyCount > 0) {
                 _bgBaseX = -(bgScroll % (V_WIDTH * 3));
@@ -543,12 +637,17 @@
                         ctx.fillText(`記録: ${displayScore} 秒`, leftCenterX * scaleRatio, (V_HEIGHT / 2 + 10) * scaleRatio);
                         ctx.font = `${Math.floor(30 * scaleRatio)}px sans-serif`;
                         ctx.fillText(`最高記録: ${Math.floor(highScore)} 秒`, leftCenterX * scaleRatio, (V_HEIGHT / 2 + 65) * scaleRatio);
+                        
                         ctx.fillStyle = 'white';
-                        if (displayScore >= Math.floor(score)) {
-                            ctx.fillText('スペースキー または タップでリretry！', leftCenterX * scaleRatio, (V_HEIGHT / 2 + 160) * scaleRatio);
-                        } else {
+                        if (displayScore < Math.floor(score)) {
                             ctx.fillStyle = '#7f8c8d'; ctx.font = `${Math.floor(24 * scaleRatio)}px sans-serif`;
                             ctx.fillText('画面タップで演出をスキップ', leftCenterX * scaleRatio, (V_HEIGHT / 2 + 160) * scaleRatio);
+                        } else {
+                            // ★修正：カウントアップ終了後にまだメニューを出していない時のガイダンス表示
+                            if (!isMenuShown) {
+                                ctx.fillStyle = '#f1c40f'; ctx.font = `bold ${Math.floor(28 * scaleRatio)}px sans-serif`;
+                                ctx.fillText('スペースキー または タップでメニューを表示', leftCenterX * scaleRatio, (V_HEIGHT / 2 + 160) * scaleRatio);
+                            }
                         }
 
                         const rightCenterX = V_WIDTH / 2 + 260; const rankYStart = V_HEIGHT / 2 - 130;  
