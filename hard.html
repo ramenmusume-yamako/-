@@ -39,7 +39,7 @@
             display: none;
         }
 
-        /* ★追加：カウントアップ終了後の追加入力で浮き出るメニューのCSS */
+        /* ★カウントアップ終了後の追加入力で浮き出るメニューのCSS */
         #game-menu-overlay {
             display: none; /* 初期状態は非表示 */
             position: absolute;
@@ -74,7 +74,7 @@
             border-radius: 8px;
             border: 2px solid #555;
             background: #34495e;
-            transition: background 0.2s, transform 0.1s;
+            transition: background 0.2s, transform 0.1s, border-color 0.2s;
             cursor: pointer;
         }
         /* 「もう一度」ボタンは赤色 */
@@ -87,13 +87,24 @@
             background: #7f8c8d;
             border-color: #95a5a6;
         }
-        .menu-btn:active, .menu-btn.focused {
+        .menu-btn:active {
             transform: scale(0.95);
         }
-        /* キーボードフォーカス時のスタイル（他と競合しないよう追加） */
+
+        /* ========================================================
+           ★ ここを修正：選択（ホバー・キーボードフォーカス）時に
+             スクショ（13:29）のオレンジ色になるように変更
+           ======================================================== */
+        .menu-btn:hover, .menu-btn.focused {
+            background: #e67e22 !important; /* オレンジ色に変更 */
+            border-color: #ffffff !important; /* 枠線を白にして際立たせる */
+            color: #ffffff !important;
+        }
+
+        /* 矢印キー（focused）選択時に少し凹む演出を入れる場合（お好みで） */
         .menu-btn.focused {
-            border-color: #f1c40f !important;
-            box-shadow: 0 0 10px #f1c40f;
+            transform: scale(0.98);
+            box-shadow: 0 0 12px rgba(230, 126, 34, 0.8);
         }
 
         @media (max-width: 959px) {
@@ -245,7 +256,7 @@
         let countTimer = 0;   
         let startCallTimer = 0; 
         let gameOverTimer = 0; 
-        let isMenuShown = false; // ★追加：メニューウィンドウがすでに表示されているかのフラグ
+        let isMenuShown = false; // メニューウィンドウがすでに表示されているかのフラグ
         let currentMenuIndex = 0; // 矢印キー選択中のインデックス
         
         let isPageVisible = true;
@@ -305,7 +316,7 @@
             ui.style.top = (rect.top + offset) + "px";
             ui.style.left = (rect.left + offset) + "px";
 
-            // ★追加：メニューポップアップをゲーム画面の中央に配置する計算
+            // メニューポップアップをゲーム画面の中央に配置する計算
             menuOverlay.style.top = (rect.top + (rect.height - menuOverlay.offsetHeight) / 2) + "px";
             menuOverlay.style.left = (rect.left + (rect.width - menuOverlay.offsetWidth) / 2) + "px";
         }
@@ -412,7 +423,7 @@
                     return;
                 }
                 
-                // ★修正：カウントアップ終了後にキー入力か画面タップされたらメニューを出現させる
+                // カウントアップ終了後にキー入力か画面タップされたらメニューを出現させる
                 if (!isMenuShown) {
                     isMenuShown = true;
                     currentMenuIndex = 0; // 最初の項目（もう一度）を初期選択にする
@@ -434,7 +445,7 @@
             }
         };
 
-        // ★追加：HTMLメニューの「もう一度」ボタンをクリックしたときのイベント
+        // HTMLメニューの「もう一度」ボタンをクリックしたときのイベント
         retryBtn.addEventListener('click', (e) => {
             e.preventDefault();
             startGameSequence();
@@ -696,7 +707,6 @@
                             ctx.fillStyle = '#7f8c8d'; ctx.font = `${Math.floor(24 * scaleRatio)}px sans-serif`;
                             ctx.fillText('画面タップで演出をスキップ', leftCenterX * scaleRatio, (V_HEIGHT / 2 + 160) * scaleRatio);
                         } else {
-                            // ★修正：カウントアップ終了後にまだメニューを出していない時のガイダンス表示
                             if (!isMenuShown) {
                                 ctx.fillStyle = '#f1c40f'; ctx.font = `bold ${Math.floor(28 * scaleRatio)}px sans-serif`;
                                 ctx.fillText('スペースキー または タップでメニューを表示', leftCenterX * scaleRatio, (V_HEIGHT / 2 + 160) * scaleRatio);
