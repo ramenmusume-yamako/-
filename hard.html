@@ -342,8 +342,6 @@
 
             if (gameState === 'PLAYING' && startCallTimer <= 0 && !player.isJumping) {
                 player.isJumping = true;
-                
-                // ジャンプ時の初速は元の値で固定（ブレをなくします）
                 player.vy = BASE_JUMP;
             }
         };
@@ -436,9 +434,11 @@
 
                     player.gravity = BASE_GRAVITY;
 
-                    // 💡 ジャンプ中のみ、現在のスピード倍率を物理の経過時間（dt）に掛け算して早送りする
+                    // 💡 スピード倍率の変化率を 0.5（半分）に丸めることで、滞空時間の減少テンポを緩やかに落とす
                     const speedRatio = currentSpeed / initialBaseSpeed;
-                    const jumpDt = player.isJumping ? dtRatio * speedRatio : dtRatio;
+                    const gentleSpeedRatio = 1.0 + (speedRatio - 1.0) * 0.5;
+                    
+                    const jumpDt = player.isJumping ? dtRatio * gentleSpeedRatio : dtRatio;
 
                     player.vy += player.gravity * jumpDt;
                     player.y += player.vy * jumpDt;
