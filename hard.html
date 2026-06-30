@@ -343,7 +343,7 @@
             if (gameState === 'PLAYING' && startCallTimer <= 0 && !player.isJumping) {
                 player.isJumping = true;
                 
-                // 💡 元の標準ジャンプ力をそのまま適用（高さブレを防ぎ、完全に固定します）
+                // ジャンプ時の初速は元の値で固定（ブレをなくします）
                 player.vy = BASE_JUMP;
             }
         };
@@ -434,11 +434,14 @@
                         setRandomResetThreshold();       
                     }
 
-                    // 💡 重力も固定値（BASE_GRAVITY）にすることで、浮遊しすぎを完全に防ぎます
                     player.gravity = BASE_GRAVITY;
 
-                    player.vy += player.gravity * dtRatio;
-                    player.y += player.vy * dtRatio;
+                    // 💡 ジャンプ中のみ、現在のスピード倍率を物理の経過時間（dt）に掛け算して早送りする
+                    const speedRatio = currentSpeed / initialBaseSpeed;
+                    const jumpDt = player.isJumping ? dtRatio * speedRatio : dtRatio;
+
+                    player.vy += player.gravity * jumpDt;
+                    player.y += player.vy * jumpDt;
 
                     if (player.y > GROUND_Y - player.height) {
                         player.y = GROUND_Y - player.height;
