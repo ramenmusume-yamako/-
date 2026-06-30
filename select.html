@@ -43,14 +43,14 @@
             box-sizing: border-box;
         }
 
-        /* ★ 横5列 × 縦2行（計10マス）の格子状配置 */
+        /* 横5列 × 縦2行（計10マス）の格子状配置 */
         .char-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr); /* 横に5列 */
-            grid-template-rows: repeat(2, 1fr);    /* 縦は2段 */
+            grid-template-columns: repeat(5, 1fr); 
+            grid-template-rows: repeat(2, 1fr);    
             gap: 12px; width: 100%; height: 100%;
             box-sizing: border-box;
-            transform: rotateY(-6px) rotateX(4px); /* 緩やかな湾曲・傾き構造を維持 */
+            transform: rotateY(-6px) rotateX(4px); 
         }
 
         /* 1つ1つのマス */
@@ -124,7 +124,7 @@
             box-sizing: border-box;
         }
         
-        /* 選択完了ボタン：赤×金色のカチッとした影 */
+        /* 選択完了ボタン */
         .confirm-btn {
             width: 100%; height: 100%; 
             background: #9c1c11; 
@@ -137,76 +137,32 @@
         .confirm-btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #f7c11e; }
         .confirm-btn:active { transform: scale(0.98); }
 
-
-        /* ==========================================================================
-           🛠 修正ポイント：スマホ（縦長画面）でも回転せず、そのまま縦向きで綺麗に収める
-           ========================================================================== */
+        /* スマホ（縦長画面）用のレスポンシブ最適化（回転なし・正位置） */
         @media (max-width: 768px) and (orientation: portrait) {
             .game-selection-container {
-                width: 95vw;   /* 画面の横幅いっぱいに使う */
-                height: auto;  /* 高さは中身に合わせる（縦長画面に最適化） */
-                aspect-ratio: 5 / 3.5; /* マス目が綺麗に見える比率を維持 */
+                width: 95vw;   
+                height: auto;  
+                aspect-ratio: 5 / 3.5; 
                 max-width: 100%;
                 max-height: 80dvh;
                 padding: 12px;
-                transform: none; /* 回転を完全に削除 */
+                transform: none; 
                 box-shadow: 5px 5px 0px #9c1c11;
                 gap: 8px;
             }
-
-            h2 {
-                font-size: 15px;
-                letter-spacing: 1px;
-            }
-
-            .grid-panel {
-                height: auto;
-            }
-
-            .char-grid {
-                gap: 6px; /* 狭い画面に合わせてマス目の隙間を調整 */
-                transform: rotateY(-3px) rotateX(2px); /* 縦持ちでも違和感のない緩やかな傾きに調整 */
-            }
-
-            .char-card {
-                padding: 4px;
-                border-width: 1.5px;
-                border-radius: 6px;
-            }
-
-            .char-card img {
-                height: 60%; /* 画像が潰れたり見切れたりするのを防ぐ */
-            }
-
-            .char-card .char-name {
-                font-size: 9px;
-                margin-top: 2px;
-            }
-
-            .confirm-btn {
-                font-size: 11px;
-                letter-spacing: 0px;
-                border-width: 1.5px;
-                border-radius: 6px;
-                box-shadow: 2px 2px 0px #f7c11e;
-            }
-            .confirm-btn:hover {
-                transform: translate(1px, 1px);
-                box-shadow: 1px 1px 0px #f7c11e;
-            }
-
-            .char-card.selected {
-                border-width: 2px !important;
-                box-shadow: 2px 2px 0px #2ecc71 !important;
-            }
+            h2 { font-size: 15px; letter-spacing: 1px; }
+            .grid-panel { height: auto; }
+            .char-grid { gap: 6px; transform: rotateY(-3px) rotateX(2px); }
+            .char-card { padding: 4px; border-width: 1.5px; border-radius: 6px; }
+            .char-card img { height: 60%; }
+            .char-card .char-name { font-size: 9px; margin-top: 2px; }
+            .confirm-btn { font-size: 11px; letter-spacing: 0px; border-width: 1.5px; border-radius: 6px; box-shadow: 2px 2px 0px #f7c11e; }
+            .char-card.selected { border-width: 2px !important; box-shadow: 2px 2px 0px #2ecc71 !important; }
         }
 
         /* 横向きのスマホへの配慮 */
         @media (max-width: 920px) and (orientation: landscape) {
-            .game-selection-container {
-                height: 95vh;
-                padding: 10px;
-            }
+            .game-selection-container { height: 95vh; padding: 10px; }
             h2 { font-size: 16px; }
             .char-grid { gap: 6px; }
             .char-card { padding: 4px; }
@@ -227,7 +183,7 @@
     </div>
 
     <script>
-        // 全体のキャラクターデータ（5人）
+        // 全体のキャラクターデータ
         const CHAR_DATA = {
             hajime: { name: "ハジメ",     imgL: "hajimel.png" }, 
             meana:  { name: "メーナ",     imgL: "meanal.png" },  
@@ -242,11 +198,19 @@
         
         let unlocked = [];
         try {
-            unlocked = JSON.parse(localStorage.getItem("unlockedChars")) || [];
+            const saved = localStorage.getItem("unlockedChars");
+            // 💡【強力ガード】もしデータが空、または配列じゃなかったら強制的に初期化する
+            if (saved && saved !== "undefined" && saved !== "null") {
+                unlocked = JSON.parse(saved);
+            }
+            if (!Array.isArray(unlocked)) {
+                unlocked = [];
+            }
         } catch(e) {
             unlocked = [];
         }
 
+        // ハジメを確実に解放リストに入れる
         if (!unlocked.includes("hajime")) { 
             unlocked.push("hajime"); 
             localStorage.setItem("unlockedChars", JSON.stringify(unlocked));
@@ -255,17 +219,3 @@
         if (!CHAR_DATA[tempSelectedChar]) {
             tempSelectedChar = "hajime";
         }
-
-        // グリッド画面を生成（横5×縦2＝全10マスを完全にループ埋め）
-        function renderGrid() {
-            const container = document.getElementById("gridContainer");
-            container.innerHTML = ""; 
-
-            // 2行×5列＝全10マスの配置をループ処理
-            for (let i = 0; i < 10; i++) {
-                const row = Math.floor(i / 5) + 1; // ★5列で割ることで2段にする
-                const col = (i % 5) + 1;
-
-                // 10マス目（2段目の右端、5列目）なら「選択完了ボタン」を入れる
-                if (row === 2 && col === 5) {
-                    const btnっっs

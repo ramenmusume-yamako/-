@@ -491,28 +491,31 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
 
         function update(currentTime) {
             if (!currentTime) currentTime = performance.now();
-            _deltaTime = currentTime - lastTime;
+            let　deltaTime = currentTime - lastTime;
             lastTime = currentTime;
 
-            if (!isPageVisible) { requestAnimationFrame(update); return; }
-            if (_deltaTime > 100) _deltaTime = 16.666;
+            if (!isPageVisible) { 
+	             requestAnimationFrame(update); 
+	             return; 
+	         }
+            if (deltaTime > 100) _deltaTime = 16.666;
             _dtRatio = _deltaTime / (1000 / 60);
 
             if (gameState === 'PLAYING') {
                 player.animTimer += _dtRatio; 
 
                 if (blindTimer > 0) {
-                    blindTimer -= _dtRatio;
+                    blindTimer -= dtRatio;
                     if (blindTimer < 0) blindTimer = 0;
                 }
 
                 if (startCallTimer > 0) {
                     startCallTimer -= _dtRatio;
-                    bgScroll += (initialBaseSpeed * 0.7) * _dtRatio;
+                    bgScroll += (initialBaseSpeed * 0.7) * dtRatio;
 
                     if (startCallTimer <= 0) {
                         startCallTimer = 0;
-                        playBGM();
+                        bgm.play().catch(o => {});
                     }
                 } else {
                     currentSpeed += (isPC ? 0.006 : 0.009) * _dtRatio; 
@@ -538,15 +541,17 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
                         setRandomResetThreshold();       
                     }
 
-                    _speedRatio = currentSpeed / initialBaseSpeed;
-                    _mildRatio = 1.0 + (_speedRatio - 1.0) * 0.8; 
+                    const speedRatio = currentSpeed / initialBaseSpeed;
+                    const mildRatio = 1.0 + (_speedRatio - 1.0) * 0.8; 
                     player.gravity = BASE_GRAVITY * (_mildRatio * _mildRatio);
 
                     player.vy += player.gravity * _dtRatio;
-                    player.y += player.vy * _dtRatio;
+                    player.y += player.vy * dtRatio;
 
                     if (player.y > GROUND_Y - player.height) {
-                        player.y = GROUND_Y - player.height; player.vy = 0; player.isJumping = false;
+                        player.y = GROUND_Y - player.height; 
+                 		player.vy = 0; 
+                 		player.isJumping = false;
                     }
 
                     // --- 障害物出現計算 ---
@@ -576,10 +581,15 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
                         if (_pL < _oR && _pR > _oL && _pT < _oB && _pB > _oT) {
                             gameState = 'GAMEOVER';
                             ui.style.display = 'none';
-                            stopBGM();
-                            playSE('start'); 
+                            
+                            bgm.pause();
+                            bgm.currentTime = 0;
+                            
+                            seStart.currentTime = 0;
+                            seStart.play().catch(o => {}); 
 
-                            gameOverTimer = 120; saveScore(score);
+                            gameOverTimer = 120; 
+							saveScore(score);
                         }
                         if (_obs.x + _obs.w < -100) obstacles.splice(i, 1);
                     }
@@ -625,11 +635,9 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
         let _bgBaseX = 0; let _drawX = 0;
 
         function draw() {
-            // ★描画軽量化：背景画像で画面が完全に塗りつぶされるため、重い ctx.clearRect をスキップ
-            
-            // 背景描画（スケール対応）
+    　　　　　ctx.clearRect(0, 0, V_WIDTH, V_HEIGHT);
             if (bgReadyCount > 0) {
-                _bgBaseX = -(bgScroll % (V_WIDTH * 3));
+               let offsetX = -(bgScroll % (V_WIDTH * 3));
                 for (let j = 0; j < 2; j++) {
                     for (let i = 0; i < 3; i++) {
                         if (bgImages[i] && bgImages[i].complete) {
@@ -645,7 +653,8 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
             ctx.fillRect(0, GROUND_Y * scaleRatio, canvas.width, 4 * scaleRatio);
 
             if (pReadyCount === 2) {
-                ctx.drawImage((Math.floor(player.animTimer / 30) % 2 === 0) ? pImgL : pImgR, player.x * scaleRatio, player.y * scaleRatio, player.width * scaleRatio, player.height * scaleRatio);
+                const currentImg = (Math.floor(player.animTimer / 30) 　　　　　　　　　% 2 === 0) ? pImgL : pImgR;
+                ctx.drawImage(currentImg, player.x, player.y, player.width, player.height);
             }
 
             // 障害物描画
@@ -660,13 +669,20 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
 
             if (gameState === 'PLAYING' && startCallTimer > 0) {
                 ctx.save();
-                if (startCallTimer < 15) ctx.globalAlpha = startCallTimer / 15;
-                if (imgStartCallBg.complete && imgStartCallBg.width > 0) {
+                if (startCallTimer < 15){
+                    ctx.globalAlpha = startCallTimer / 15;
+                }
+
+                if (imgStartCallBg.complete && imgStartCallBg.width >                 0) {
                     ctx.drawImage(imgStartCallBg, (V_WIDTH / 2 - imgStartCallBg.width / 2) * scaleRatio, (V_HEIGHT / 2 - imgStartCallBg.height / 2) * scaleRatio, imgStartCallBg.width * scaleRatio, imgStartCallBg.height * scaleRatio);
                 }
-                ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#e74c3c'; 
+
+                ctx.textAlign = 'center'; 
+                ctx.textBaseline = 'middle'; 
+                ctx.fillStyle = '#e74c3c'; 
                 ctx.font = `bold ${Math.floor(90 * scaleRatio)}px sans-serif`;
-                ctx.shadowColor = 'rgba(255, 255, 255, 0.8)'; ctx.shadowBlur = 10 * scaleRatio;
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.8)'; 
+                ctx.shadowBlur = 10 * scaleRatio;
                 ctx.fillText('スタート！', (V_WIDTH / 2) * scaleRatio, (V_HEIGHT / 2) * scaleRatio);
                 ctx.restore();
             }
@@ -674,55 +690,85 @@ pImgL.onload = pImgR.onload = () => { pReadyCount++; };
             if (gameState === 'START' || gameState === 'GAMEOVER') {
                 ctx.fillStyle = 'rgba(0,0,0,0.8)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.textAlign = 'center'; ctx.shadowBlur = 0;              
+                ctx.textAlign = 'center'; 
+                ctx.shadowBlur = 0;              
                 
                 if (gameState === 'START') {
                     ctx.textBaseline = 'alphabetic';
-                    ctx.fillStyle = '#f1c40f'; ctx.font = `bold ${Math.floor(80 * scaleRatio)}px sans-serif`;
+                    ctx.fillStyle = '#f1c40f'; 
+                    ctx.font = `bold ${Math.floor(80 * scaleRatio)}px sans-serif`;
                     ctx.fillText('走れ！ラーメン娘！！', (V_WIDTH / 2) * scaleRatio, (V_HEIGHT / 2 - 100) * scaleRatio);
                     ctx.fillStyle = 'white'; ctx.font = `${Math.floor(30 * scaleRatio)}px sans-serif`;
                     ctx.fillText('スペースキー または タップでジャンプ！', (V_WIDTH / 2) * scaleRatio, (V_HEIGHT / 2 + 30) * scaleRatio);
-                    ctx.font = `bold ${Math.floor(36 * scaleRatio)}px sans-serif`; ctx.fillStyle = '#f1c40f';
+                    ctx.font = `bold ${Math.floor(36 * scaleRatio)}px sans-serif`; 
+                    ctx.fillStyle = '#f1c40f';
                     ctx.fillText('>> Press Space or Tap <<', (V_WIDTH / 2) * scaleRatio, (V_HEIGHT / 2 + 180) * scaleRatio);
                 } else {
                     ctx.save();
+
                     let textY, fontSize, textX;
                     if (gameOverTimer > 0) {
-                        ctx.textBaseline = 'middle'; textX = V_WIDTH / 2; textY = V_HEIGHT / 2; fontSize = 120; 
+                        ctx.textBaseline = 'middle'; 
+                        textX = V_WIDTH / 2; 
+                        textY = V_HEIGHT / 2; 
+                        fontSize = 120; 
                     } else {
-                        ctx.textBaseline = 'alphabetic'; textX = V_WIDTH / 2 - 220; textY = V_HEIGHT / 2 - 100; fontSize = 80;
+                        ctx.textBaseline = 'alphabetic'; 
+                        textX = V_WIDTH / 2 - 220; 
+                        textY = V_HEIGHT / 2 - 100; 
+                        fontSize = 80;
                     }
-                    ctx.fillStyle = '#e67e22'; ctx.font = `bold ${Math.floor(fontSize * scaleRatio)}px sans-serif`;
+
+                    ctx.fillStyle = '#e67e22'; 
+                    ctx.font = `bold ${Math.floor(fontSize * scaleRatio)}px sans-serif`;
                     ctx.fillText('完 食', textX * scaleRatio, textY * scaleRatio);
                     ctx.restore();
                     
                     if (gameOverTimer === 0) {
-                        ctx.save(); ctx.textAlign = 'center'; const leftCenterX = V_WIDTH / 2 - 220; 
+                        ctx.save(); 
+                        ctx.textAlign = 'center'; 
+                        const leftCenterX = V_WIDTH / 2 - 220; 
+
                         ctx.fillStyle = 'white'; ctx.font = `${Math.floor(45 * scaleRatio)}px sans-serif`;
                         ctx.fillText(`記録: ${displayScore} 秒`, leftCenterX * scaleRatio, (V_HEIGHT / 2 + 10) * scaleRatio);
+
                         ctx.font = `${Math.floor(30 * scaleRatio)}px sans-serif`;
                         ctx.fillText(`最高記録: ${Math.floor(highScore)} 秒`, leftCenterX * scaleRatio, (V_HEIGHT / 2 + 65) * scaleRatio);
-                        ctx.fillStyle = 'white';
-                        if (displayScore >= Math.floor(score)) {
-                            ctx.fillText('スペースキー または タップでリトライ！', leftCenterX * scaleRatio, (V_HEIGHT / 2 + 160) * scaleRatio);
-                        } else {
-                            ctx.fillStyle = '#7f8c8d'; ctx.font = `${Math.floor(24 * scaleRatio)}px sans-serif`;
-                            ctx.fillText('画面タップで演出をスキップ', leftCenterX * scaleRatio, (V_HEIGHT / 2 + 160) * scaleRatio);
-                        }
 
-                        const rightCenterX = V_WIDTH / 2 + 260; const rankYStart = V_HEIGHT / 2 - 130;  
+                       if (menuOverlay.style.display !== 'flex') {
+                            ctx.fillStyle = '#f1c40f';
+                            ctx.font = '24px sans-serif';
+                            if (displayScore < Math.floor(score)) {
+                                ctx.fillText('【 スペース 】or【 タップ 】でスコアスキップ', leftCenterX, V_HEIGHT / 2 + 160);
+                            } else {
+                                ctx.fillText('【 スペース 】or【 タップ 】でメニューを開く ➔', leftCenterX, V_HEIGHT / 2 + 160);
+                            }
+                        }
+
+                        const rightCenterX = V_WIDTH / 2 + 260;
+                        const rankYStart = V_HEIGHT / 2 - 130; 
+                         
                         ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
                         ctx.fillRect((rightCenterX - 200) * scaleRatio, (rankYStart - 60) * scaleRatio, 400 * scaleRatio, 310 * scaleRatio);
-                        ctx.fillStyle = '#f1c40f'; ctx.font = `bold ${Math.floor(32 * scaleRatio)}px sans-serif`;
+
+                        ctx.fillStyle = '#f1c40f'; 
+                        ctx.font = `bold ${Math.floor(32 * scaleRatio)}px sans-serif`;
                         ctx.fillText('歴代最高記録 TOP3', rightCenterX * scaleRatio, (rankYStart - 15) * scaleRatio);
                         
                         const medals = ['🥇 1st', '🥈 2nd', '🥉 3rd'];
                         const medalColors = ['#f1c40f', '#e67e22', '#bdc3c7']; 
+
                         for (let i = 0; i < 3; i++) {
                             const currentY = rankYStart + 55 + (i * 65);
-                            ctx.textAlign = 'left'; ctx.fillStyle = medalColors[i]; ctx.font = `bold ${Math.floor(30 * scaleRatio)}px sans-serif`;
+
+                            ctx.textAlign = 'left';
+                            ctx.fillStyle = medalColors[i]; 
+                            ctx.font = `bold ${Math.floor(30 * scaleRatio)}px sans-serif`;
                             ctx.fillText(medals[i], (rightCenterX - 150) * scaleRatio, currentY * scaleRatio);
-                            ctx.textAlign = 'right'; ctx.fillStyle = 'white'; ctx.font = `bold ${Math.floor(32 * scaleRatio)}px font-serif`;
+
+                            ctx.textAlign = 'right'; 
+                            ctx.fillStyle = 'white'; 
+                            ctx.font = `bold ${Math.floor(32 * scaleRatio)}px font-serif`;
                             ctx.fillText(`${topScores[i]} 秒`, (rightCenterX + 150) * scaleRatio, currentY * scaleRatio);
                         }
                         ctx.restore();
