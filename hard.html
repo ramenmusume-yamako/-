@@ -40,7 +40,6 @@
             display: none;
         }
 
-        /* メニューの表示を flex に統一して完全に中央配置 */
         #game-menu-overlay {
             display: none; 
             position: absolute;
@@ -238,7 +237,7 @@
         let highScore = localStorage.getItem(bestKey) || 0;
         let topScores = JSON.parse(localStorage.getItem(scoreKey)) || [0, 0, 0];
 
-        // メニューボタン制御
+        // メメニューボタン制御
         let currentMenuIndex = 0;
         const menuButtons = [
             document.getElementById('link-restart'),
@@ -348,13 +347,10 @@
             }
             if (gameState === 'PLAYING' && startCallTimer <= 0 && !player.isJumping) {
                 player.isJumping = true;
-                _speedRatio = currentSpeed / initialBaseSpeed;
-                _mildRatio = 1.0 + (_speedRatio - 1.0) * 0.8; 
-                player.vy = BASE_JUMP * _mildRatio;
+                player.vy = BASE_JUMP; // 💡高さを常に一定（等倍）にするため、初速に倍率を掛けないように修正
             }
         };
 
-        // リトライボタンの直接紐付け
         document.getElementById('link-restart').addEventListener('click', (e) => {
             e.preventDefault(); e.stopPropagation(); startGameSequence();
         });
@@ -396,7 +392,7 @@
                 if (blindTimer > 0) { blindTimer -= _dtRatio; if (blindTimer < 0) blindTimer = 0; }
 
                 if (startCallTimer > 0) {
-                    startCallTimer -= _dtRatio; // 💡タイポ修正：dtRatio ➔ _dtRatio
+                    startCallTimer -= _dtRatio; 
                     bgScroll += (initialBaseSpeed * 0.7) * _dtRatio;
                     if (startCallTimer <= 0) { startCallTimer = 0; playBGM(); }
                 } else {
@@ -414,11 +410,15 @@
                     speedPhaseTimer += _dtRatio;
                     if (speedPhaseTimer >= nextResetThreshold) { currentSpeed = initialBaseSpeed; setRandomResetThreshold(); }
 
+                    player.gravity = BASE_GRAVITY; // 💡重力は常に一定のベース値に固定
+
                     _speedRatio = currentSpeed / initialBaseSpeed;
-                    _mildRatio = 1.0 + (_speedRatio - 1.0) * 0.5; // 💡前々回調整したマイルドな空中タイム進捗率
+                    _mildRatio = 1.0 + (_speedRatio - 1.0) * 0.5; // 💡変化をなだらか（半分）にしたスピード倍率
                     
+                    // ジャンプ中のみ、なだらかにした倍率（_mildRatio）で時間を早送りして滞空時間を縮める
                     const jumpDt = player.isJumping ? _dtRatio * _mildRatio : _dtRatio;
-                    player.vy += player.gravity * jumpDt; player.y += player.vy * jumpDt;
+                    player.vy += player.gravity * jumpDt; 
+                    player.y += player.vy * jumpDt;
 
                     if (player.y > GROUND_Y - player.height) { player.y = GROUND_Y - player.height; player.vy = 0; player.isJumping = false; }
 
