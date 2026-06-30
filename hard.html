@@ -87,8 +87,13 @@
             background: #7f8c8d;
             border-color: #95a5a6;
         }
-        .menu-btn:active {
+        .menu-btn:active, .menu-btn.focused {
             transform: scale(0.95);
+        }
+        /* キーボードフォーカス時のスタイル（他と競合しないよう追加） */
+        .menu-btn.focused {
+            border-color: #f1c40f !important;
+            box-shadow: 0 0 10px #f1c40f;
         }
 
         @media (max-width: 959px) {
@@ -119,6 +124,7 @@
         const ui = document.getElementById('ui');
         const menuOverlay = document.getElementById('game-menu-overlay');
         const retryBtn = document.getElementById('retryBtn');
+        const menuButtons = document.querySelectorAll('.menu-btn'); // 矢印キー制御用にボタン群を取得
 
         const isPC = window.innerWidth >= 960;
 
@@ -240,6 +246,7 @@
         let startCallTimer = 0; 
         let gameOverTimer = 0; 
         let isMenuShown = false; // ★追加：メニューウィンドウがすでに表示されているかのフラグ
+        let currentMenuIndex = 0; // 矢印キー選択中のインデックス
         
         let isPageVisible = true;
         let lastTime = performance.now();
@@ -336,6 +343,17 @@
             localStorage.setItem(scoreKey, JSON.stringify(topScores)); 
         }
 
+        // 矢印キー選択位置の表示を更新する関数
+        function updateMenuFocus() {
+            menuButtons.forEach((btn, idx) => {
+                if (idx === currentMenuIndex) {
+                    btn.classList.add('focused');
+                } else {
+                    btn.classList.remove('focused');
+                }
+            });
+        }
+
         // ゲームリトライと開始処理の共通関数
         function startGameSequence() {
             playSE('start');
@@ -349,6 +367,29 @@
 
         const handleInput = (e) => {
             if (e.type === 'mousedown' && e.button === 0) return;
+            
+            // メニュー表示中の独自のキーボード操作制御
+            if (gameState === 'GAMEOVER' && isMenuShown && e.type === 'keydown') {
+                if (e.code === 'ArrowDown') {
+                    e.preventDefault();
+                    currentMenuIndex = (currentMenuIndex + 1) % menuButtons.length;
+                    updateMenuFocus();
+                    return;
+                }
+                if (e.code === 'ArrowUp') {
+                    e.preventDefault();
+                    currentMenuIndex = (currentMenuIndex - 1 + menuButtons.length) % menuButtons.length;
+                    updateMenuFocus();
+                    return;
+                }
+                if (['Space', 'Enter'].includes(e.code)) {
+                    e.preventDefault();
+                    menuButtons[currentMenuIndex].click();
+                    return;
+                }
+                return; // その他のキーは無視
+            }
+
             if (e.code && !['Space', 'ArrowUp'].includes(e.code)) return;
             
             // 初回入力時にオーディオを有効化（ブラウザのセキュリティ制限解除）
@@ -374,7 +415,9 @@
                 // ★修正：カウントアップ終了後にキー入力か画面タップされたらメニューを出現させる
                 if (!isMenuShown) {
                     isMenuShown = true;
+                    currentMenuIndex = 0; // 最初の項目（もう一度）を初期選択にする
                     menuOverlay.style.display = 'block';
+                    updateMenuFocus();
                     resize(); // 中央に再配置
                     return;
                 }
@@ -395,6 +438,16 @@
         retryBtn.addEventListener('click', (e) => {
             e.preventDefault();
             startGameSequence();
+        });
+
+        // マウスホバー時に矢印キーの選択位置も同期させる
+        menuButtons.forEach((btn, idx) => {
+            btn.addEventListener('mouseenter', () => {
+                if (isMenuShown) {
+                    currentMenuIndex = idx;
+                    updateMenuFocus();
+                }
+            });
         });
 
         window.addEventListener('mousedown', handleInput);
