@@ -85,10 +85,9 @@
             transition: all 0.2s;
             user-select: none;
             -webkit-user-select: none;
-            outline: none; /* デフォルトのフォーカス枠を消す */
+            outline: none;
         }
         
-        /* マウスホバー、またはキーボードでフォーカス（選択）された時のスタイル */
         .custom-menu-btn:hover, .custom-menu-btn.keyboard-focus {
             background: #e67e22;
             border-color: #f1c40f;
@@ -343,9 +342,10 @@
 
             if (gameState === 'PLAYING' && startCallTimer <= 0 && !player.isJumping) {
                 player.isJumping = true;
+                
+                // 💡 高さ（最高到達点）が変わらないように、初速もスピードに比例させる
                 const speedRatio = currentSpeed / initialBaseSpeed;
-                const gentleRatio = 1.0 + (speedRatio - 1.0) * 0.8; 
-                player.vy = BASE_JUMP * Math.sqrt(gentleRatio);
+                player.vy = BASE_JUMP * speedRatio;
             }
         };
 
@@ -435,9 +435,9 @@
                         setRandomResetThreshold();       
                     }
 
+                    // 💡 スピードに比例して重力を強く設定（初速の強化とセットで高さが維持されます）
                     const speedRatio = currentSpeed / initialBaseSpeed;
-                    const gentleGravityRatio = 1.0 + (Math.sqrt(speedRatio) - 1.0) * 0.8;
-                    player.gravity = BASE_GRAVITY * gentleGravityRatio;
+                    player.gravity = BASE_GRAVITY * speedRatio;
 
                     player.vy += player.gravity * dtRatio;
                     player.y += player.vy * dtRatio;
@@ -597,7 +597,6 @@
                         ctx.font = '30px sans-serif';
                         ctx.fillText(`最高記録: ${Math.floor(highScore)} 秒`, leftCenterX, V_HEIGHT / 2 + 65);
                         
-                        // ナビ案内テキスト
                         if (menuOverlay.style.display !== 'flex') {
                             ctx.fillStyle = '#f1c40f';
                             ctx.font = '24px sans-serif';
