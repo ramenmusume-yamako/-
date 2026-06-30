@@ -43,68 +43,63 @@
         #game-menu-overlay {
             display: none; /* 初期状態は非表示 */
             position: absolute;
-            z-index: 200;
-            background: rgba(12, 12, 12, 0.9);
+            z-index: 999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.9);
             border: 3px solid #e67e22;
-            border-radius: 15px;
-            padding: 20px 30px;
-            width: 280px;
-            text-align: center;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            border-radius: 12px;
+            padding: 30px 40px;
+            box-shadow: 0 0 35px rgba(0,0,0,0.8);
+            max-width: 90%;
+            box-sizing: border-box;
         }
         .menu-title {
             color: #f1c40f;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
-            margin-bottom: 20px;
-            letter-spacing: 2px;
+            margin: 0 0 10px 0;
+            letter-spacing: 0.1em;
         }
         .menu-btn-group {
             display: flex;
             flex-direction: column;
             gap: 12px;
+            width: 100%;
+            min-width: 240px;
         }
-        .menu-btn {
-            display: block;
-            padding: 12px;
+        .custom-menu-btn {
+            background: #2c3e50;
             color: white;
-            text-decoration: none;
+            border: 2px solid #ffffff;
+            padding: 12px 20px;
+            font-size: 18px;
             font-weight: bold;
-            font-size: 16px;
-            border-radius: 8px;
-            border: 2px solid #555;
-            background: #34495e;
-            transition: background 0.2s, transform 0.1s, border-color 0.2s;
+            border-radius: 6px;
             cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+            outline: none; /* デフォルトのフォーカス枠を消す */
         }
-        /* 「もう一度」ボタンは赤色 */
-        .menu-btn.primary {
-            background: #c0392b;
-            border-color: #e74c3c;
+        
+        /* 💡マウスホバー、またはキーボードでフォーカス（選択）された時のスタイル */
+        .custom-menu-btn:hover, .custom-menu-btn.keyboard-focus {
+            background: #e67e22;
+            border-color: #f1c40f;
+            transform: scale(1.03);
         }
-        /* ホームボタンなどはグレー */
-        .menu-btn.secondary {
-            background: #7f8c8d;
-            border-color: #95a5a6;
+        
+        .custom-menu-btn.primary-btn {
+            background: #800000;
+            border-color: #f1c40f;
         }
-        .menu-btn:active {
-            transform: scale(0.95);
-        }
-
-        /* ========================================================
-           ★ ここを修正：選択（ホバー・キーボードフォーカス）時に
-             スクショ（13:29）のオレンジ色になるように変更
-           ======================================================== */
-        .menu-btn:hover, .menu-btn.focused {
-            background: #e67e22 !important; /* オレンジ色に変更 */
-            border-color: #ffffff !important; /* 枠線を白にして際立たせる */
-            color: #ffffff !important;
-        }
-
-        /* 矢印キー（focused）選択時に少し凹む演出を入れる場合（お好みで） */
-        .menu-btn.focused {
-            transform: scale(0.98);
-            box-shadow: 0 0 12px rgba(230, 126, 34, 0.8);
+        .custom-menu-btn.primary-btn:hover, .custom-menu-btn.primary-btn.keyboard-focus {
+            background: #b30000;
         }
 
         @media (max-width: 959px) {
