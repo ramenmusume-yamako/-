@@ -88,7 +88,7 @@
             outline: none; /* デフォルトのフォーカス枠を消す */
         }
         
-        /* 💡マウスホバー、またはキーボードでフォーカス（選択）された時のスタイル */
+        /* マウスホバー、またはキーボードでフォーカス（選択）された時のスタイル */
         .custom-menu-btn:hover, .custom-menu-btn.keyboard-focus {
             background: #e67e22;
             border-color: #f1c40f;
@@ -119,9 +119,9 @@
     <div id="game-menu-overlay">
         <div class="menu-title">メニュー</div>
         <div class="menu-btn-group">
-            <a href="index.html" class="custom-menu-btn primary-btn" id="link-restart">もう一度（リトライ）</a>
+            <a href="hard.html" class="custom-menu-btn primary-btn" id="link-restart">もう一度（リトライ）</a>
             <a href="easy.html" class="custom-menu-btn" id="link-easy">EASY モードで遊ぶ</a>
-            <a href="hard.html" class="custom-menu-btn" id="link-hard">HARD モードで遊ぶ</a>
+            <a href="nomal.html" class="custom-menu-btn" id="link-hard">NORMAL モードで遊ぶ</a>
             <a href="game.html" class="custom-menu-btn" style="background: #7f8c8d;" id="link-home">ホームページに戻る</a>
         </div>
     </div>
@@ -197,7 +197,7 @@
         let isPageVisible = true;
         let lastTime = performance.now();
 
-        let DIFFICULTY = 'normal'; 
+        let DIFFICULTY = 'hard'; 
         const deviceType = isPC ? 'PC' : 'SP';
         
         function getBestKey() { return `dinoBestTime_${DIFFICULTY}_${deviceType}`; }
@@ -206,7 +206,7 @@
         let highScore = localStorage.getItem(getBestKey()) || 0;
         let topScores = JSON.parse(localStorage.getItem(getScoreKey())) || [0, 0, 0];
 
-        // 💡 キーボード選択用インデックス管理
+        // キーボード選択用インデックス管理
         let currentMenuIndex = 0;
         const menuButtons = [
             document.getElementById('link-restart'),
@@ -215,7 +215,7 @@
             document.getElementById('link-home')
         ];
 
-        // 💡 フォーカス表示を更新する関数
+        // フォーカス表示を更新する関数
         function updateMenuFocus() {
             menuButtons.forEach((btn, idx) => {
                 if (idx === currentMenuIndex) {
@@ -228,7 +228,7 @@
 
         function getInitialSpeed() {
             if (DIFFICULTY === 'easy') return isPC ? 6.0 : 10.0;
-            if (DIFFICULTY === 'hard') return isPC ? 11.0 : 16.0;
+            if (DIFFICULTY === 'hard') return isPC ? 11.0 : 16.0; 
             return isPC ? 8.0 : 13.0; 
         }
         let initialBaseSpeed = getInitialSpeed();
@@ -287,9 +287,8 @@
             localStorage.setItem(sKey, JSON.stringify(topScores)); 
         }
 
-        // 💡 キーボード用の独立したイベントリスナー
+        // キーボード用の独立したイベントリスナー
         window.addEventListener('keydown', (e) => {
-            // メニューが開いている時だけの専用操作
             if (menuOverlay.style.display === 'flex') {
                 if (e.code === 'ArrowDown' || e.code === 'ArrowRight') {
                     e.preventDefault();
@@ -301,12 +300,11 @@
                     updateMenuFocus();
                 } else if (e.code === 'Enter' || e.code === 'Space') {
                     e.preventDefault();
-                    menuButtons[currentMenuIndex].click(); // 現在選択中のリンクを踏む
+                    menuButtons[currentMenuIndex].click(); 
                 }
                 return;
             }
 
-            // メニューが開いていない時は、通常通りの共通入力ロジックを呼ぶ
             if (['Space', 'ArrowUp'].includes(e.code)) {
                 handleInput(e);
             }
@@ -316,7 +314,6 @@
         const handleInput = (e) => {
             if (e.type === 'mousedown' && e.button === 0) return;
             
-            // メニュー出現中はボタン側（リンク）のクリックイベントを優先
             if (menuOverlay.style.display === 'flex') return;
 
             if (gameState === 'START') {
@@ -331,15 +328,13 @@
             if (gameState === 'GAMEOVER') {
                 if (gameOverTimer > 0) return;
 
-                // 1ステップ目：カウントアップ中の場合、即座に最大値にして演出をスキップ
                 if (displayScore < Math.floor(score)) {
                     displayScore = Math.floor(score);
                     return;
                 }
 
-                // 2ステップ目：カウントアップ終了後に押されたら、リンクメニューを表示
                 if (menuOverlay.style.display !== 'flex') {
-                    currentMenuIndex = 0; // 初期選択をリトライにリセット
+                    currentMenuIndex = 0; 
                     updateMenuFocus();
                     menuOverlay.style.display = 'flex';
                 }
@@ -354,7 +349,6 @@
             }
         };
 
-        // マウスホバー時にキーボードフォーカスのインデックスを同期させる（直感的な操作のため）
         menuButtons.forEach((btn, idx) => {
             btn.addEventListener('mouseenter', () => {
                 if (menuOverlay.style.display === 'flex') {
