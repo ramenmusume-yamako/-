@@ -314,8 +314,6 @@
             startCallTimer = 120;
             ui.style.display = 'block'; 
             menuOverlay.style.display = 'none';
-            
-            // 💡確実にオーディオ再生が許可された状態でドラを鳴らす
             setTimeout(() => { playSE('start'); }, 10);
         }
 
@@ -339,7 +337,6 @@
             if (e.type === 'mousedown' && e.button === 0) return;
             if (menuOverlay.style.display === 'flex') return;
 
-            // 💡最初のタップ等で即座にWeb Audioのロックを解除
             initAudio();
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
@@ -363,7 +360,7 @@
 
         document.getElementById('link-restart').addEventListener('click', (e) => {
             e.preventDefault(); e.stopPropagation(); 
-            initAudio(); // 💡メニュークリック時も念のためロック解除
+            initAudio(); 
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             startGameSequence();
         });
@@ -470,18 +467,22 @@
             draw(); requestAnimationFrame(update);
         }
 
+        // 💡すべてのパターンが画面内に正しく収まるように scaleRatio を全体に適用
         function drawStickyChashu(pattern, alpha) {
             if (!imgChashu.complete) return;
             ctx.save(); ctx.globalAlpha = alpha;
             if (pattern === 0) {
+                // 1枚ど真ん中
                 ctx.drawImage(imgChashu, (V_WIDTH / 2 - 400) * scaleRatio, (V_HEIGHT / 2 - 250) * scaleRatio, 800 * scaleRatio, 500 * scaleRatio);
             } else if (pattern === 1) {
+                // 3枚バラバラ配置（修正：scaleRatio を座標全体に確実に適用）
                 ctx.drawImage(imgChashu, 260 * scaleRatio, 360 * scaleRatio, 280 * scaleRatio, 220 * scaleRatio); 
                 ctx.drawImage(imgChashu, 740 * scaleRatio, 380 * scaleRatio, 280 * scaleRatio, 220 * scaleRatio); 
-                ctx.drawImage(imgChashu, 440 * scaleRatio, 260 * scaleRatio, 440 * scaleRatio, 330 * scaleRatio); 
+                ctx.drawImage(imgChashu, 440 * scaleRatio, 160 * scaleRatio, 440 * scaleRatio, 330 * scaleRatio); 
             } else if (pattern === 2) {
-                ctx.drawImage(imgChashu, 180 * scaleRatio, 380 * scaleRatio, 360 * scaleRatio, 270 * scaleRatio); 
-                ctx.drawImage(imgChashu, 680 * scaleRatio, 280 * scaleRatio, 520 * scaleRatio, 390 * scaleRatio); 
+                // 2枚の巨大チャーシュー
+                ctx.drawImage(imgChashu, 120 * scaleRatio, 300 * scaleRatio, 460 * scaleRatio, 350 * scaleRatio); 
+                ctx.drawImage(imgChashu, 680 * scaleRatio, 180 * scaleRatio, 520 * scaleRatio, 390 * scaleRatio); 
             }
             ctx.restore();
         }
