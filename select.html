@@ -183,39 +183,15 @@
     </div>
 
     <script>
-        // 全体のキャラクターデータ
+        // 🛠【修正ポイント】Finderの写真フォルダとファイル名を完全に一致させました！
         const CHAR_DATA = {
-            hajime: { name: "ハジメ",     imgL: "hajimel.png" }, 
-            meana:  { name: "メーナ",     imgL: "meanal.png" },  
-            boy:    { name: "中華ボーイ",   imgL: "boy_l.png" },  
-            aniki:  { name: "チャーシュー兄", imgL: "aniki_l.png" }, 
-            naruto: { name: "ナルトちゃん", imgL: "naruto_l.png" }  
+            hajime: { name: "ハジメ",     imgL: "hajime.png" },    /* hajimel.png から修正 */
+            meana:  { name: "メーナ",     imgL: "meana.png" },     /* meanal.png から修正 */
+            boy:    { name: "中華ボーイ",   imgL: "boy.png" },       /* boy_l.png から修正 */
+            aniki:  { name: "チャーシュー兄", imgL: "tya-syu-.png" },  /* フォルダの実際の名前「tya-syu-.png」に修正 */
+            naruto: { name: "ナルトちゃん", imgL: "naruto.png" }     /* フォルダの実際の名前「naruto.png」に修正 */
         };
 
         const CHAR_KEYS = Object.keys(CHAR_DATA);
 
-        let tempSelectedChar = localStorage.getItem("selectedChar") || "hajime";
-        
-        let unlocked = [];
-        try {
-            const saved = localStorage.getItem("unlockedChars");
-            // 💡【強力ガード】もしデータが空、または配列じゃなかったら強制的に初期化する
-            if (saved && saved !== "undefined" && saved !== "null") {
-                unlocked = JSON.parse(saved);
-            }
-            if (!Array.isArray(unlocked)) {
-                unlocked = [];
-            }
-        } catch(e) {
-            unlocked = [];
-        }
-
-        // ハジメを確実に解放リストに入れる
-        if (!unlocked.includes("hajime")) { 
-            unlocked.push("hajime"); 
-            localStorage.setItem("unlockedChars", JSON.stringify(unlocked));
-        }
-
-        if (!CHAR_DATA[tempSelectedChar]) {
-            tempSelectedChar = "hajime";
-        }
+        let tempSelectedChar = localStorage.
