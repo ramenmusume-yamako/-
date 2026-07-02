@@ -227,7 +227,7 @@
         let spawnTimer = 0;
         let nextSpawnThreshold = 60; 
 
-        // 💡 PCキーボード選択用の管理配列
+        // PCキーボード選択用の管理配列
         let currentMenuIndex = 0;
         const menuButtons = [
             document.getElementById('link-restart'),
@@ -236,7 +236,7 @@
             document.getElementById('link-home')
         ];
 
-        // 💡 フォーカスクラスの表示切り替え関数
+        // フォーカスクラスの表示切り替え関数
         function updateMenuFocus() {
             menuButtons.forEach((btn, idx) => {
                 if (idx === currentMenuIndex) {
@@ -272,7 +272,7 @@
             localStorage.setItem(scoreKey, JSON.stringify(topScores)); 
         }
 
-        // 💡 PCキーボード専用のキーイベントリスナー
+        // PCキーボード専用のキーイベントリスナー
         window.addEventListener('keydown', (e) => {
             if (menuOverlay.style.display === 'flex') {
                 if (e.code === 'ArrowDown' || e.code === 'ArrowRight') {
@@ -494,16 +494,17 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (bgReadyCount > 0) {
-                // 💡 画像の枚数（bgSrcs.length = 9枚）に合わせて動的に計算
+                // 画像の枚数（bgSrcs.length）に合わせて動的に計算
                 const totalBgWidth = V_WIDTH * bgSrcs.length;
                 let offsetX = -(bgScroll % totalBgWidth);
                 
                 for (let j = 0; j < 2; j++) {
-                    // 💡 9枚分すべてループを回す
+                    // bgSrcs.length 分すべてループを回す
                     for (let i = 0; i < bgSrcs.length; i++) {
                         if (bgImages[i] && bgImages[i].complete) {
                             let dx = offsetX + (j * totalBgWidth) + (i * V_WIDTH);
-                            ctx.drawImage(bgImages[i], dx * scaleRatio, 0, V_WIDTH * scaleRatio, V_HEIGHT * scaleRatio);
+                            // 未定義の scaleRatio を削除し、V_WIDTH と V_HEIGHT で描画
+                            ctx.drawImage(bgImages[i], dx, 0, V_WIDTH, V_HEIGHT);
                         }
                     }
                 }
@@ -588,12 +589,12 @@
                         ctx.font = '30px sans-serif';
                         ctx.fillText(`最高記録: ${Math.floor(highScore)} 秒`, leftCenterX, V_HEIGHT / 2 + 65);
                         
-                        // 💡 ナビテキストをメニュー誘導に書き換え
+                        // ナビテキストをメニュー誘導に書き換え
                         if (menuOverlay.style.display !== 'flex') {
                             ctx.fillStyle = '#f1c40f';
                             ctx.font = '24px sans-serif';
                             if (displayScore < Math.floor(score)) {
-                                ctx.fillText('【 スペース 】or【 タップ 】でスコアスキップ', leftCenterX, V_HEIGHT / 2 + 160);
+                                Hub.fillText('【 スペース 】or【 タップ 】でスコアスキップ', leftCenterX, V_HEIGHT / 2 + 160);
                             } else {
                                 ctx.fillText('【 スペース 】or【 タップ 】でメニューを開く ➔', leftCenterX, V_HEIGHT / 2 + 160);
                             }
