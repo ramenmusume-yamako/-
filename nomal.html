@@ -138,11 +138,12 @@
         canvas.height = V_HEIGHT;
 
         const isPC = window.innerWidth >= 960;
+        const scaleRatio = 1.0; // 本来の仮想サイズで描画制御
 
         // --- オーディオ設定 ---
         const bgm = new Audio('CHINA_BOY.mp3'); 
         bgm.loop = true;                  
-        bgm.volume = 0.5;                 
+        bgm.volume = 0.5;                  
 
         const seStart = new Audio('dora.mp3'); 
         seStart.volume = 1.0; 
@@ -162,15 +163,12 @@
         pImgL.src = activeChar.left;
         pImgR.src = activeChar.right;
 
-        let pReadyCount = 0; 
-        pImgL.onload = pImgR.onload = () => { pReadyCount++; };
-
         const bgImages = [];
-        const bgSrcs = ['hiru1.png', 'hiru2.png', 'hiru3.png','hiru4.png','hiru5.png','hiru6.png','hiruyuu.png','yuu1.png','yuu2.png','yuu3.png','yuu4.png','yuu5.png','yuu6.png','yuuyoru','yoru1.png','yoru2.png','yoru3.png','yoru4.png','yoru5.png','yoru6.png','yoruasa.png','asahiru.png'];
-        let bgReadyCount = 0; let bgScroll = 0;
+        // 💡 修正：'yuuyoru' に '.png' を追加しました
+        const bgSrcs = ['hiru1.png', 'hiru2.png', 'hiru3.png','hiru4.png','hiru5.png','hiru6.png','hiruyuu.png','yuu1.png','yuu2.png','yuu3.png','yuu4.png','yuu5.png','yuu6.png','yuuyoru.png','yoru1.png','yoru2.png','yoru3.png','yoru4.png','yoru5.png','yoru6.png','yoruasa.png','asahiru.png'];
+        let bgScroll = 0;
         bgSrcs.forEach((src, index) => {
             bgImages[index] = new Image(); bgImages[index].src = src;
-            bgImages[index].onload = () => { bgReadyCount++; };
         });
 
         const imgNaruto = new Image(); imgNaruto.src = 'naruto.png';
@@ -289,7 +287,6 @@
 
         // 💡 キーボード用の独立したイベントリスナー
         window.addEventListener('keydown', (e) => {
-            // メニューが開いている時だけの専用操作
             if (menuOverlay.style.display === 'flex') {
                 if (e.code === 'ArrowDown' || e.code === 'ArrowRight') {
                     e.preventDefault();
@@ -301,12 +298,11 @@
                     updateMenuFocus();
                 } else if (e.code === 'Enter' || e.code === 'Space') {
                     e.preventDefault();
-                    menuButtons[currentMenuIndex].click(); // 現在選択中のリンクを踏む
+                    menuButtons[currentMenuIndex].click(); 
                 }
                 return;
             }
 
-            // メニューが開いていない時は、通常通りの共通入力ロジックを呼ぶ
             if (['Space', 'ArrowUp'].includes(e.code)) {
                 handleInput(e);
             }
@@ -315,8 +311,6 @@
         // マウス・タップ用の共通ロジック
         const handleInput = (e) => {
             if (e.type === 'mousedown' && e.button === 0) return;
-            
-            // メニュー出現中はボタン側（リンク）のクリックイベントを優先
             if (menuOverlay.style.display === 'flex') return;
 
             if (gameState === 'START') {
@@ -331,15 +325,13 @@
             if (gameState === 'GAMEOVER') {
                 if (gameOverTimer > 0) return;
 
-                // 1ステップ目：カウントアップ中の場合、即座に最大値にして演出をスキップ
                 if (displayScore < Math.floor(score)) {
                     displayScore = Math.floor(score);
                     return;
                 }
 
-                // 2ステップ目：カウントアップ終了後に押されたら、リンクメニューを表示
                 if (menuOverlay.style.display !== 'flex') {
-                    currentMenuIndex = 0; // 初期選択をリトライにリセット
+                    currentMenuIndex = 0; 
                     updateMenuFocus();
                     menuOverlay.style.display = 'flex';
                 }
@@ -354,7 +346,6 @@
             }
         };
 
-        // マウスホバー時にキーボードフォーカスのインデックスを同期させる（直感的な操作のため）
         menuButtons.forEach((btn, idx) => {
             btn.addEventListener('mouseenter', () => {
                 if (menuOverlay.style.display === 'flex') {
@@ -417,6 +408,7 @@
             }
 
             const dtRatio = deltaTime / (1000 / 60);
+            const totalBgWidth = V_WIDTH * bgSrcs.length;
 
             if (gameState === 'PLAYING') {
                 player.animTimer += dtRatio; 
@@ -424,6 +416,7 @@
                 if (startCallTimer > 0) {
                     startCallTimer -= dtRatio;
                     bgScroll += (initialBaseSpeed * 0.7) * dtRatio;
+                    if (bgScroll >= totalBgWidth) bgScroll -= totalBgWidth;
 
                     if (startCallTimer <= 0) {
                         startCallTimer = 0;
@@ -434,6 +427,7 @@
                     score += (1 / 60) * dtRatio; 
                     
                     bgScroll += (currentSpeed * 0.7) * dtRatio; 
+                    if (bgScroll >= totalBgWidth) bgScroll -= totalBgWidth;
 
                     speedPhaseTimer += dtRatio;
                     if (speedPhaseTimer >= nextResetThreshold) {
@@ -512,31 +506,49 @@
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (bgReadyCount > 0) {
-                // 💡 画像の枚数（bgSrcs.length = 9枚）に合わせて動的に計算
-                const totalBgWidth = V_WIDTH * bgSrcs.length;
-                let offsetX = -(bgScroll % totalBgWidth);
-                
-                for (let j = 0; j < 2; j++) {
-                    // 💡 9枚分すべてループを回す
-                    for (let i = 0; i < bgSrcs.length; i++) {
-                        if (bgImages[i] && bgImages[i].complete) {
-                            let dx = offsetX + (j * totalBgWidth) + (i * V_WIDTH);
-                            ctx.drawImage(bgImages[i], dx * scaleRatio, 0, V_WIDTH * scaleRatio, V_HEIGHT * scaleRatio);
-                        }
+            
+            // 💡 修正：画像のロードを待たず、22枚の配列サイズに合わせて動的に安全描画するロジック
+            const bgW = V_WIDTH;
+            const totalBgWidth = bgW * bgSrcs.length;
+            let currentScroll = bgScroll % totalBgWidth;
+
+            for (let i = 0; i < bgSrcs.length; i++) {
+                let dx = (i * bgW) - currentScroll;
+                if (dx + bgW < 0) dx += totalBgWidth;
+                if (dx > V_WIDTH) dx -= totalBgWidth;
+
+                if (dx < V_WIDTH && dx + bgW > 0) {
+                    if (bgImages[i] && bgImages[i].complete && bgImages[i].naturalWidth > 0) {
+                        ctx.drawImage(bgImages[i], dx * scaleRatio, 0, bgW * scaleRatio, V_HEIGHT * scaleRatio);
+                    } else {
+                        // 💡 画像が見つからない・読み込み中の場合のバックアップ背景
+                        ctx.fillStyle = '#34495e';
+                        ctx.fillRect(dx * scaleRatio, 0, bgW * scaleRatio, V_HEIGHT * scaleRatio);
                     }
                 }
             }
+
+            // 地面
             ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.fillRect(0, GROUND_Y, V_WIDTH, 4);
 
-            if (pReadyCount === 2) {
+            // 💡 修正：キャラ画像がなくても「赤い四角」で強制描画してゲームを動かす
+            if (pImgL.complete && pImgR.complete && pImgL.naturalWidth > 0) {
                 const currentImg = (Math.floor(player.animTimer / 30) % 2 === 0) ? pImgL : pImgR;
                 ctx.drawImage(currentImg, player.x, player.y, player.width, player.height);
+            } else {
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillRect(player.x, player.y, player.width, player.height);
             }
 
+            // 障害物
             obstacles.forEach(o => {
-                if (o.img && o.img.complete) ctx.drawImage(o.img, o.x, o.y, o.w, o.h);
+                if (o.img && o.img.complete && o.img.naturalWidth > 0) {
+                    ctx.drawImage(o.img, o.x, o.y, o.w, o.h);
+                } else {
+                    ctx.fillStyle = '#f39c12';
+                    ctx.fillRect(o.x, o.y, o.w, o.h);
+                }
             });
 
             if (gameState === 'PLAYING' && startCallTimer > 0) {
