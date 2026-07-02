@@ -206,7 +206,8 @@
         pImgL.onload = pImgR.onload = () => { pReadyCount++; };
 
         const bgImages = [];
-        const bgSrcs = ['hiru1.png', 'hiru2.png', 'hiru3.png','hiru4.png','hiru5.png','hiru6.png','hiruyuu.png','yuu1.png','yuu2.png','yuu3.png','yuu4.png','yuu5.png','yuu6.png','yuuyoru','yoru1.png','yoru2.png','yoru3.png','yoru4.png','yoru5.png','yoru6.png','yoruasa.png','asahiru.png'];
+        // 💡 修正箇所：誤字 'yuuyoru' に '.png' を追加、すべての画像パスを正確に
+        const bgSrcs = ['hiru1.png', 'hiru2.png', 'hiru3.png','hiru4.png','hiru5.png','hiru6.png','hiruyuu.png','yuu1.png','yuu2.png','yuu3.png','yuu4.png','yuu5.png','yuu6.png','yuuyoru.png','yoru1.png','yoru2.png','yoru3.png','yoru4.png','yoru5.png','yoru6.png','yoruasa.png','asahiru.png'];
         let bgReadyCount = 0; let bgScroll = 0;
         bgSrcs.forEach((src, index) => {
             bgImages[index] = new Image(); bgImages[index].src = src;
@@ -467,43 +468,59 @@
             draw(); requestAnimationFrame(update);
         }
 
-        // 💡すべてのパターンが画面内に正しく収まるように scaleRatio を全体に適用
         function drawStickyChashu(pattern, alpha) {
             if (!imgChashu.complete) return;
             ctx.save(); ctx.globalAlpha = alpha;
             if (pattern === 0) {
-                // 1枚ど真ん中
                 ctx.drawImage(imgChashu, (V_WIDTH / 2 - 400) * scaleRatio, (V_HEIGHT / 2 - 250) * scaleRatio, 800 * scaleRatio, 500 * scaleRatio);
             } else if (pattern === 1) {
-                // 3枚バラバラ配置（修正：scaleRatio を座標全体に確実に適用）
                 ctx.drawImage(imgChashu, 260 * scaleRatio, 360 * scaleRatio, 280 * scaleRatio, 220 * scaleRatio); 
                 ctx.drawImage(imgChashu, 740 * scaleRatio, 380 * scaleRatio, 280 * scaleRatio, 220 * scaleRatio); 
                 ctx.drawImage(imgChashu, 440 * scaleRatio, 160 * scaleRatio, 440 * scaleRatio, 330 * scaleRatio); 
             } else if (pattern === 2) {
-                // 2枚の巨大チャーシュー
                 ctx.drawImage(imgChashu, 120 * scaleRatio, 300 * scaleRatio, 460 * scaleRatio, 350 * scaleRatio); 
                 ctx.drawImage(imgChashu, 680 * scaleRatio, 180 * scaleRatio, 520 * scaleRatio, 390 * scaleRatio); 
             }
             ctx.restore();
         }
 
+        // 💡修正・最適化した描画処理
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
             if (bgReadyCount > 0) {
-                // 💡 画像の枚数（bgSrcs.length = 9枚）に合わせて動的に計算
-                const totalBgWidth = V_WIDTH * bgSrcs.length;
-                let offsetX = -(bgScroll % totalBgWidth);
+                // 背景1枚ごとの横幅
+                const bgW = V_WIDTH;
+                // 全部の背景を横一列に並べたときの総横幅（22枚分）
+                const totalBgWidth = bgW * bgSrcs.length;
                 
-                for (let j = 0; j < 2; j++) {
-                    // 💡 9枚分すべてループを回す
-                    for (let i = 0; i < bgSrcs.length; i++) {
-                        if (bgImages[i] && bgImages[i].complete) {
-                            let dx = offsetX + (j * totalBgWidth) + (i * V_WIDTH);
-                            ctx.drawImage(bgImages[i], dx * scaleRatio, 0, V_WIDTH * scaleRatio, V_HEIGHT * scaleRatio);
+                // 現在の全体のスクロール位置を総横幅に収まるようループさせる
+                let currentScroll = bgScroll % totalBgWidth;
+
+                // 💡 画面内に映る可能性のある画像だけをスマートに計算してループ描画
+                // メモリ負荷を抑え、位置が絶対にズレない正統派なループ手法です
+                for (let i = 0; i < bgSrcs.length; i++) {
+                    if (bgImages[i] && bgImages[i].complete) {
+                        // この背景の基本配置X座標
+                        let dx = (i * bgW) - currentScroll;
+
+                        // 画面の左外に完全にはみ出た場合は、右側に回り込ませる
+                        if (dx + bgW < 0) {
+                            dx += totalBgWidth;
+                        }
+                        // 逆に右側が足りなくなるパターンの保険
+                        if (dx > V_WIDTH) {
+                            dx -= totalBgWidth;
+                        }
+
+                        // 画面内に少しでも入っている場合のみ描画実行
+                        if (dx < V_WIDTH && dx + bgW > 0) {
+                            ctx.drawImage(bgImages[i], dx * scaleRatio, 0, bgW * scaleRatio, V_HEIGHT * scaleRatio);
                         }
                     }
                 }
             }
+
             ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.fillRect(0, GROUND_Y * scaleRatio, canvas.width, 4 * scaleRatio);
 
