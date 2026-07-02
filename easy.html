@@ -494,16 +494,13 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (bgReadyCount > 0) {
-                // 画像の枚数（bgSrcs.length）に合わせて動的に計算
                 const totalBgWidth = V_WIDTH * bgSrcs.length;
                 let offsetX = -(bgScroll % totalBgWidth);
                 
                 for (let j = 0; j < 2; j++) {
-                    // bgSrcs.length 分すべてループを回す
                     for (let i = 0; i < bgSrcs.length; i++) {
                         if (bgImages[i] && bgImages[i].complete) {
                             let dx = offsetX + (j * totalBgWidth) + (i * V_WIDTH);
-                            // 未定義の scaleRatio を削除し、V_WIDTH と V_HEIGHT で描画
                             ctx.drawImage(bgImages[i], dx, 0, V_WIDTH, V_HEIGHT);
                         }
                     }
@@ -594,7 +591,7 @@
                             ctx.fillStyle = '#f1c40f';
                             ctx.font = '24px sans-serif';
                             if (displayScore < Math.floor(score)) {
-                                Hub.fillText('【 スペース 】or【 タップ 】でスコアスキップ', leftCenterX, V_HEIGHT / 2 + 160);
+                                ctx.fillText('【 スペース 】or【 タップ 】でスコアスキップ', leftCenterX, V_HEIGHT / 2 + 160);
                             } else {
                                 ctx.fillText('【 スペース 】or【 タップ 】でメニューを開く ➔', leftCenterX, V_HEIGHT / 2 + 160);
                             }
