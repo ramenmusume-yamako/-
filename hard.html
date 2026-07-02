@@ -202,16 +202,13 @@
 
         const pImgL = new Image(); const pImgR = new Image();
         pImgL.src = activeChar.left; pImgR.src = activeChar.right;
-        let pReadyCount = 0; 
-        pImgL.onload = pImgR.onload = () => { pReadyCount++; };
 
         const bgImages = [];
-        // 💡 修正箇所：誤字 'yuuyoru' に '.png' を追加、すべての画像パスを正確に
+        // 💡 修正：'yuuyoru' を 'yuuyoru.png' に正しく修正
         const bgSrcs = ['hiru1.png', 'hiru2.png', 'hiru3.png','hiru4.png','hiru5.png','hiru6.png','hiruyuu.png','yuu1.png','yuu2.png','yuu3.png','yuu4.png','yuu5.png','yuu6.png','yuuyoru.png','yoru1.png','yoru2.png','yoru3.png','yoru4.png','yoru5.png','yoru6.png','yoruasa.png','asahiru.png'];
-        let bgReadyCount = 0; let bgScroll = 0;
+        let bgScroll = 0;
         bgSrcs.forEach((src, index) => {
             bgImages[index] = new Image(); bgImages[index].src = src;
-            bgImages[index].onload = () => { bgReadyCount++; };
         });
 
         const imgNaruto = new Image();   imgNaruto.src = 'naruto.png';
@@ -397,7 +394,7 @@
             if (_deltaTime > 100) _deltaTime = 16.666;
             _dtRatio = _deltaTime / (1000 / 60);
 
-            // 【超重要】1ループ分の総横幅をあらかじめ計算
+            // 💡 22枚分の背景総横幅を動的に安全計算
             const totalBgWidth = V_WIDTH * bgSrcs.length;
 
             if (gameState === 'PLAYING') {
@@ -408,8 +405,7 @@
                 if (startCallTimer > 0) {
                     startCallTimer -= _dtRatio; 
                     bgScroll += (initialBaseSpeed * 0.7) * _dtRatio;
-                    // 安全装置：1ループの幅を超えたらリセット
-                    if (bgScroll >= totalBgWidth) bgScroll -= totalBgWidth;
+                    if (bgScroll >= totalBgWidth) bgScroll -= totalBgWidth; // オーバーフロー防止安全装置
 
                     if (startCallTimer <= 0) { startCallTimer = 0; playBGM(); }
                 } else {
@@ -424,8 +420,7 @@
                     }
                     
                     bgScroll += (currentSpeed * 0.7) * _dtRatio; 
-                    // 安全装置：1ループの幅を超えたらリセット
-                    if (bgScroll >= totalBgWidth) bgScroll -= totalBgWidth;
+                    if (bgScroll >= totalBgWidth) bgScroll -= totalBgWidth; // オーバーフロー防止安全装置
 
                     speedPhaseTimer += _dtRatio;
                     if (speedPhaseTimer >= nextResetThreshold) { currentSpeed = initialBaseSpeed; setRandomResetThreshold(); }
@@ -477,52 +472,69 @@
             draw(); requestAnimationFrame(update);
         }
 
-        // 💡修正・最適化した描画処理
+        function drawStickyChashu(pattern, alpha) {
+            if (!imgChashu.complete) return;
+            ctx.save(); ctx.globalAlpha = alpha;
+            if (pattern === 0) {
+                ctx.drawImage(imgChashu, (V_WIDTH / 2 - 400) * scaleRatio, (V_HEIGHT / 2 - 250) * scaleRatio, 800 * scaleRatio, 500 * scaleRatio);
+            } else if (pattern === 1) {
+                ctx.drawImage(imgChashu, 260 * scaleRatio, 360 * scaleRatio, 280 * scaleRatio, 220 * scaleRatio); 
+                ctx.drawImage(imgChashu, 740 * scaleRatio, 380 * scaleRatio, 280 * scaleRatio, 220 * scaleRatio); 
+                ctx.drawImage(imgChashu, 440 * scaleRatio, 160 * scaleRatio, 440 * scaleRatio, 330 * scaleRatio); 
+            } else if (pattern === 2) {
+                ctx.drawImage(imgChashu, 120 * scaleRatio, 300 * scaleRatio, 460 * scaleRatio, 350 * scaleRatio); 
+                ctx.drawImage(imgChashu, 680 * scaleRatio, 180 * scaleRatio, 520 * scaleRatio, 390 * scaleRatio); 
+            }
+            ctx.restore();
+        }
+
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            if (bgReadyCount > 0) {
-                // 背景1枚ごとの横幅
-                const bgW = V_WIDTH;
-                // 全部の背景を横一列に並べたときの総横幅（22枚分）
-                const totalBgWidth = bgW * bgSrcs.length;
-                
-                // 現在の全体のスクロール位置を総横幅に収まるようループさせる
-                let currentScroll = bgScroll % totalBgWidth;
+            // 💡 修正：画像のロードを待たずに強制描画するロジック
+            const bgW = V_WIDTH;
+            const totalBgWidth = bgW * bgSrcs.length;
+            let currentScroll = bgScroll % totalBgWidth;
 
-                // 💡 画面内に映る可能性のある画像だけをスマートに計算してループ描画
-                // メモリ負荷を抑え、位置が絶対にズレない正統派なループ手法です
-                for (let i = 0; i < bgSrcs.length; i++) {
-                    if (bgImages[i] && bgImages[i].complete) {
-                        // この背景の基本配置X座標
-                        let dx = (i * bgW) - currentScroll;
+            for (let i = 0; i < bgSrcs.length; i++) {
+                let dx = (i * bgW) - currentScroll;
+                if (dx + bgW < 0) dx += totalBgWidth;
+                if (dx > V_WIDTH) dx -= totalBgWidth;
 
-                        // 画面の左外に完全にはみ出た場合は、右側に回り込ませる
-                        if (dx + bgW < 0) {
-                            dx += totalBgWidth;
-                        }
-                        // 逆に右側が足りなくなるパターンの保険
-                        if (dx > V_WIDTH) {
-                            dx -= totalBgWidth;
-                        }
-
-                        // 画面内に少しでも入っている場合のみ描画実行
-                        if (dx < V_WIDTH && dx + bgW > 0) {
-                            ctx.drawImage(bgImages[i], dx * scaleRatio, 0, bgW * scaleRatio, V_HEIGHT * scaleRatio);
-                        }
+                if (dx < V_WIDTH && dx + bgW > 0) {
+                    if (bgImages[i] && bgImages[i].complete && bgImages[i].naturalWidth > 0) {
+                        // 正常に読み込めている場合のみ背景画像を描画
+                        ctx.drawImage(bgImages[i], dx * scaleRatio, 0, bgW * scaleRatio, V_HEIGHT * scaleRatio);
+                    } else {
+                        // 画像がない・読み込みエラー時の保険背景（画面に穴が開かないように落ち着いた紺色にする）
+                        ctx.fillStyle = '#34495e';
+                        ctx.fillRect(dx * scaleRatio, 0, bgW * scaleRatio, V_HEIGHT * scaleRatio);
                     }
                 }
             }
 
+            // 地面
             ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.fillRect(0, GROUND_Y * scaleRatio, canvas.width, 4 * scaleRatio);
 
-            if (pReadyCount === 2) {
+            // 💡 修正：キャラクターの画像ロード失敗時の保険
+            if (pImgL.complete && pImgR.complete && pImgL.naturalWidth > 0) {
                 ctx.drawImage((Math.floor(player.animTimer / 30) % 2 === 0) ? pImgL : pImgR, player.x * scaleRatio, player.y * scaleRatio, player.width * scaleRatio, player.height * scaleRatio);
+            } else {
+                // キャラクター画像が無い時の代わりに「赤い四角」を表示
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillRect(player.x * scaleRatio, player.y * scaleRatio, player.width * scaleRatio, player.height * scaleRatio);
             }
 
+            // 障害物
             obstacles.forEach(o => {
-                if (o.img && o.img.complete) ctx.drawImage(o.img, o.x * scaleRatio, o.y * scaleRatio, o.w * scaleRatio, o.h * scaleRatio);
+                if (o.img && o.img.complete && o.img.naturalWidth > 0) {
+                    ctx.drawImage(o.img, o.x * scaleRatio, o.y * scaleRatio, o.w * scaleRatio, o.h * scaleRatio);
+                } else {
+                    // 障害物の画像が無い時の代わりに「オレンジの四角」を表示
+                    ctx.fillStyle = '#f39c12';
+                    ctx.fillRect(o.x * scaleRatio, o.y * scaleRatio, o.w * scaleRatio, o.h * scaleRatio);
+                }
             });
 
             if (gameState === 'PLAYING' && blindTimer > 0) {
