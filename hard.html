@@ -490,11 +490,15 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (bgReadyCount > 0) {
-                let offsetX = -(bgScroll % (V_WIDTH * 3));
+                // 💡 画像の枚数（bgSrcs.length = 9枚）に合わせて動的に計算
+                const totalBgWidth = V_WIDTH * bgSrcs.length;
+                let offsetX = -(bgScroll % totalBgWidth);
+                
                 for (let j = 0; j < 2; j++) {
-                    for (let i = 0; i < 3; i++) {
+                    // 💡 9枚分すべてループを回す
+                    for (let i = 0; i < bgSrcs.length; i++) {
                         if (bgImages[i] && bgImages[i].complete) {
-                            let dx = offsetX + (j * V_WIDTH * 3) + (i * V_WIDTH);
+                            let dx = offsetX + (j * totalBgWidth) + (i * V_WIDTH);
                             ctx.drawImage(bgImages[i], dx * scaleRatio, 0, V_WIDTH * scaleRatio, V_HEIGHT * scaleRatio);
                         }
                     }
