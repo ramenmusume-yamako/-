@@ -397,6 +397,9 @@
             if (_deltaTime > 100) _deltaTime = 16.666;
             _dtRatio = _deltaTime / (1000 / 60);
 
+            // 【超重要】1ループ分の総横幅をあらかじめ計算
+            const totalBgWidth = V_WIDTH * bgSrcs.length;
+
             if (gameState === 'PLAYING') {
                 player.animTimer += _dtRatio; 
 
@@ -405,6 +408,9 @@
                 if (startCallTimer > 0) {
                     startCallTimer -= _dtRatio; 
                     bgScroll += (initialBaseSpeed * 0.7) * _dtRatio;
+                    // 安全装置：1ループの幅を超えたらリセット
+                    if (bgScroll >= totalBgWidth) bgScroll -= totalBgWidth;
+
                     if (startCallTimer <= 0) { startCallTimer = 0; playBGM(); }
                 } else {
                     currentSpeed += (isPC ? 0.006 : 0.009) * _dtRatio; 
@@ -418,6 +424,9 @@
                     }
                     
                     bgScroll += (currentSpeed * 0.7) * _dtRatio; 
+                    // 安全装置：1ループの幅を超えたらリセット
+                    if (bgScroll >= totalBgWidth) bgScroll -= totalBgWidth;
+
                     speedPhaseTimer += _dtRatio;
                     if (speedPhaseTimer >= nextResetThreshold) { currentSpeed = initialBaseSpeed; setRandomResetThreshold(); }
 
@@ -466,22 +475,6 @@
                 }
             }
             draw(); requestAnimationFrame(update);
-        }
-
-        function drawStickyChashu(pattern, alpha) {
-            if (!imgChashu.complete) return;
-            ctx.save(); ctx.globalAlpha = alpha;
-            if (pattern === 0) {
-                ctx.drawImage(imgChashu, (V_WIDTH / 2 - 400) * scaleRatio, (V_HEIGHT / 2 - 250) * scaleRatio, 800 * scaleRatio, 500 * scaleRatio);
-            } else if (pattern === 1) {
-                ctx.drawImage(imgChashu, 260 * scaleRatio, 360 * scaleRatio, 280 * scaleRatio, 220 * scaleRatio); 
-                ctx.drawImage(imgChashu, 740 * scaleRatio, 380 * scaleRatio, 280 * scaleRatio, 220 * scaleRatio); 
-                ctx.drawImage(imgChashu, 440 * scaleRatio, 160 * scaleRatio, 440 * scaleRatio, 330 * scaleRatio); 
-            } else if (pattern === 2) {
-                ctx.drawImage(imgChashu, 120 * scaleRatio, 300 * scaleRatio, 460 * scaleRatio, 350 * scaleRatio); 
-                ctx.drawImage(imgChashu, 680 * scaleRatio, 180 * scaleRatio, 520 * scaleRatio, 390 * scaleRatio); 
-            }
-            ctx.restore();
         }
 
         // 💡修正・最適化した描画処理
