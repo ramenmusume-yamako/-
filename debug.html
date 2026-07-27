@@ -3,248 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>デバッグページ</title>
-    <style>
-        :root {
-            --bg-color: #2c3e50;
-            --card-bg: rgba(0, 0, 0, 0.5);
-            --border-color: #e67e22;
-            --accent-gold: #f1c40f;
-            --text-color: #ffffff;
-            --btn-easy: #27ae60;
-            --btn-normal: #d35400;
-            --btn-hard: #c0392b;
-        }
-
-        body {
-            margin: 0;
-            padding: 20px;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: sans-serif;
-            box-sizing: border-box;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 900px;
-            background: rgba(0, 0, 0, 0.75);
-            border: 3px solid var(--border-color);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 0 35px rgba(0,0,0,0.8);
-            box-sizing: border-box;
-        }
-
-        h1 {
-            color: var(--accent-gold);
-            text-align: center;
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 26px;
-            letter-spacing: 0.1em;
-            border-bottom: 2px dashed var(--border-color);
-            padding-bottom: 12px;
-        }
-
-        h2 {
-            color: var(--accent-gold);
-            font-size: 18px;
-            margin-top: 0;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            padding-bottom: 6px;
-        }
-
-        .top-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 20px;
-        }
-
-        /* ボタンデザイン */
-        .btn {
-            background: var(--bg-color);
-            color: white;
-            border: 2px solid white;
-            padding: 8px 16px;
-            font-size: 14px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.2s;
-            display: inline-block;
-            user-select: none;
-        }
-
-        .btn:hover {
-            background: var(--border-color);
-            border-color: var(--accent-gold);
-            transform: scale(1.03);
-        }
-
-        .btn-danger {
-            background: #800000;
-            border-color: #ff4d4d;
-        }
-        .btn-danger:hover { background: #b30000; }
-
-        /* HP閲覧数カウンターのスタイル */
-        .pv-counter {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid var(--accent-gold);
-        }
-
-        .pv-number {
-            font-size: 32px;
-            font-weight: bold;
-            color: var(--accent-gold);
-            font-family: monospace;
-        }
-
-        /* 日付選択エリア */
-        .date-picker-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-
-        input[type="date"] {
-            background: #1a252f;
-            color: #fff;
-            border: 2px solid var(--border-color);
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 16px;
-            outline: none;
-        }
-
-        /* 難易度別グリッド */
-        .difficulty-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 15px;
-        }
-
-        .diff-box {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
-            padding: 12px;
-            border-left: 4px solid #7f8c8d;
-        }
-
-        .diff-box.easy   { border-left-color: var(--btn-easy); }
-        .diff-box.normal { border-left-color: var(--btn-normal); }
-        .diff-box.hard   { border-left-color: var(--btn-hard); }
-
-        .diff-name {
-            font-weight: bold;
-            font-size: 15px;
-            margin-bottom: 8px;
-        }
-
-        .easy .diff-name   { color: #2ecc71; }
-        .normal .diff-name { color: #e67e22; }
-        .hard .diff-name   { color: #e74c3c; }
-
-        .score-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            font-size: 13px;
-        }
-
-        .score-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
-        }
-
-        .empty-msg {
-            color: #7f8c8d;
-            font-style: italic;
-            font-size: 13px;
-        }
-
-        @media (max-width: 600px) {
-            body { padding: 10px; }
-            .container { padding: 15px; }
-            h1 { font-size: 20px; }
-            .top-nav { flex-direction: column; align-items: stretch; }
-            .btn { text-align: center; }
-        }
-    </style>
+    <title>HP全体 デバッグ・管理パネル</title>
+    <link rel="stylesheet" href="debug.css">
 </head>
 <body>
 
     <div class="container">
-        <h1>🛠️ デバッグモード</h1>
+        <h1>🌐 HP全体 デバッグ・管理パネル</h1>
 
         <div class="top-nav">
-            <a href="game.html" class="btn">🏠 ホームページに戻る</a>
-            <!-- デバッグモード解除ボタン -->
+            <a href="game.html" class="btn">🏠 HPトップに戻る</a>
             <button class="btn btn-danger" onclick="exitDebugMode()">⛔ デバッグモードを終了</button>
         </div>
 
-        <!-- 1. 全ユーザーのHP閲覧数 -->
+        <!-- 1. 全一般ユーザーのHP閲覧数アクセスログ -->
         <div class="card">
-            <h2>👀 全ユーザーのHP閲覧数 (総PV数)</h2>
-            <div class="pv-counter">
-                <div>総閲覧数:</div>
-                <div class="pv-number" id="total-pv-count">0</div>
-                <div style="font-size: 13px; color: #bdc3c7;">回</div>
+            <h2>📊 HP全体 アクセス統計 (全ユーザー合計)</h2>
+            <div class="pv-grid">
+                <div class="pv-card">
+                    <div class="pv-title">HP全体 総閲覧数 (PV)</div>
+                    <span class="pv-number" id="total-hp-pv">0</span> <span class="pv-unit">回</span>
+                </div>
+                <div class="pv-card">
+                    <div class="pv-title">ゲームページ 訪問数</div>
+                    <span class="pv-number" id="game-page-pv">0</span> <span class="pv-unit">回</span>
+                </div>
+                <div class="pv-card">
+                    <div class="pv-title">本日の訪問者数</div>
+                    <span class="pv-number" id="today-pv">0</span> <span class="pv-unit">人</span>
+                </div>
             </div>
         </div>
 
-        <!-- 2. 日付別・ゲームスコア一覧 (全員分) -->
+        <!-- 2. HP内のゲームプレイログ（日付指定＋難易度別表示） -->
         <div class="card">
-            <h2>🎮 ゲームプレイログ (日付別・難易度別)</h2>
+            <h2>🎮 ゲーム項目プレイログ (全員分)</h2>
             
             <div class="date-picker-area">
-                <label for="select-date" style="font-size: 14px; font-weight: bold;">表示する日付を選択:</label>
+                <label for="select-date">日付を選択:</label>
                 <input type="date" id="select-date" onchange="loadScoresByDate(this.value)">
-                <button class="btn" onclick="setTodayDate()">今日にする</button>
+                <button class="btn" onclick="setTodayDate()">今日</button>
             </div>
 
             <div id="score-display-area">
                 <div class="difficulty-grid">
                     <div class="diff-box easy">
-                        <div class="diff-name">EASY</div>
+                        <div class="diff-name">EASY モード</div>
                         <div id="easy-scores" class="score-list"><div class="empty-msg">日付を選択してください</div></div>
                     </div>
                     <div class="diff-box normal">
-                        <div class="diff-name">NORMAL</div>
+                        <div class="diff-name">NORMAL モード</div>
                         <div id="normal-scores" class="score-list"><div class="empty-msg">日付を選択してください</div></div>
                     </div>
                     <div class="diff-box hard">
-                        <div class="diff-name">HARD</div>
+                        <div class="diff-name">HARD モード</div>
                         <div id="hard-scores" class="score-list"><div class="empty-msg">日付を選択してください</div></div>
                     </div>
                 </div>
@@ -253,24 +65,27 @@
     </div>
 
     <script>
-        // ページ読み込み時処理
         window.addEventListener('DOMContentLoaded', () => {
-            // デバッグモードが有効か判定（無効ならHPへ弾く）
+            // デバッグモード状態のチェック
             if (localStorage.getItem('debug_mode_enabled') === 'false') {
-                alert('デバッグモードはOFFになっています。');
+                alert('デバッグモードはオフになっています。HPトップへ移動します。');
                 window.location.href = 'game.html';
                 return;
             }
 
-            loadTotalPV();
+            loadHPAccessStats();
             setTodayDate();
         });
 
-        // 1. 全ユーザーのHP閲覧数を読み込み
-        function loadTotalPV() {
-            // 他ユーザー共有対応: バックエンドAPIがある場合は fetch 経由、無い場合は蓄積LocalStorageを表示
-            const totalPV = localStorage.getItem('global_total_pv') || 0;
-            document.getElementById('total-pv-count').textContent = Number(totalPV).toLocaleString();
+        // HP全体の閲覧数を読み込み
+        function loadHPAccessStats() {
+            const hpPV = localStorage.getItem('site_total_pv') || 0;
+            const gamePV = localStorage.getItem('site_game_pv') || 0;
+            const todayPV = localStorage.getItem('site_today_pv') || 0;
+
+            document.getElementById('total-hp-pv').textContent = Number(hpPV).toLocaleString();
+            document.getElementById('game-page-pv').textContent = Number(gamePV).toLocaleString();
+            document.getElementById('today-pv').textContent = Number(todayPV).toLocaleString();
         }
 
         // 今日を選択
@@ -281,11 +96,10 @@
             loadScoresByDate(today);
         }
 
-        // 2. 日付を押したとき、その日の全員のゲームスコアを難易度別に読み込み
+        // 選択された日付の全員のゲームスコアを難易度別に取得
         function loadScoresByDate(selectedDate) {
             if (!selectedDate) return;
 
-            // 全プレイヤー共通のゲームスコアデータ構造から取得
             const allScoresData = JSON.parse(localStorage.getItem('all_players_game_scores') || '{}');
             const dayData = allScoresData[selectedDate] || { easy: [], normal: [], hard: [] };
 
@@ -302,11 +116,10 @@
                 return;
             }
 
-            // 新しい順にソートして表示
             const sortedList = [...scoreList].reverse();
             let html = '<ul class="score-list">';
             
-            sortedList.forEach((item, index) => {
+            sortedList.forEach(item => {
                 const userLabel = item.user ? `[${item.user}] ` : '';
                 html += `
                     <li class="score-item">
@@ -320,7 +133,7 @@
             container.innerHTML = html;
         }
 
-        // 3. デバッグモードをやめる機能
+        // デバッグモード終了機能
         function exitDebugMode() {
             if (confirm('デバッグモードを終了して一般モードに戻りますか？')) {
                 localStorage.setItem('debug_mode_enabled', 'false');
