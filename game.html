@@ -16,6 +16,9 @@
                 <li><a href="character.html">キャラ紹介</a></li>
                 <li><a href="game.html">ミニゲーム</a></li>
                 <li><a href="news.html">お知らせ</a></li>
+                <li id="debug-menu-item" style="display: none;">
+    <a href="debug.html" class="debug-link">🔧 デバッグページ</a>
+</li>
             </ul>
         </div>
     </div>
@@ -174,6 +177,15 @@
     pvData[today] = (pvData[today] || 0) + 1;
     localStorage.setItem('site_pv_data', JSON.stringify(pvData));
   })();
+</script>
+<script>
+  // ページ読み込み時にデバッグモードならメニューを表示する
+  document.addEventListener('DOMContentLoaded', () => {
+    const debugMenuItem = document.getElementById('debug-menu-item');
+    if (debugMenuItem && localStorage.getItem('debug_mode') === 'true') {
+      debugMenuItem.style.display = 'block';
+    }
+  });
 </script>
 </body>
 </html>
