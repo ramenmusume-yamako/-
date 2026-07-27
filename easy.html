@@ -493,15 +493,17 @@
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (bgReadyCount > 0) {
-                const totalBgWidth = V_WIDTH * bgSrcs.length;
-                let offsetX = -(bgScroll % totalBgWidth);
-                
-                for (let j = 0; j < 2; j++) {
-                    for (let i = 0; i < bgSrcs.length; i++) {
-                        if (bgImages[i] && bgImages[i].complete) {
-                            let dx = offsetX + (j * totalBgWidth) + (i * V_WIDTH);
-                            ctx.drawImage(bgImages[i], dx, 0, V_WIDTH, V_HEIGHT);
+                if (bgReadyCount > 0) {
+                    const totalBgWidth = V_WIDTH * bgSrcs.length;
+                    let currentBgIndex = Math.floor((bgScroll % totalBgWidth) / V_WIDTH);
+                    let offsetInBg = (bgScroll % totalBgWidth) % V_WIDTH;
+
+                    for (let i = 0; i < 2; i++) {
+                        let bgIdx = (currentBgIndex + i) % bgSrcs.length;
+                        let dx = (i * V_WIDTH) - offsetInBg;
+
+                        if (bgImages[bgIdx] && bgImages[bgIdx].complete) {
+                            ctx.drawImage(bgImages[bgIdx], dx, 0, V_WIDTH, V_HEIGHT);
                         }
                     }
                 }
