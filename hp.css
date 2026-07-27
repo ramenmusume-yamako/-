@@ -398,3 +398,28 @@ body {
     .menu-btn span:before { bottom: 6px; } /* 三本線の上下のすき間を狭く */
     .menu-btn span:after { top: 6px; }
 }
+
+/* ==========================================================================
+   6. デバッグモード用スタイル（追加分）
+   ========================================================================== */
+/* 画像のクリックをJavaScriptで検知できるようクリックイベントを許可 */
+.kanban-bg-img {
+    pointer-events: auto !important;
+    cursor: pointer;
+}
+
+#footer-copyright {
+    cursor: pointer;
+    user-select: none; /* 連打時に文字が青く選択されるのを防止 */
+}
+
+/* デバッグメニューリンクの装飾 */
+.menu-content ul li a.debug-link {
+    color: #ff4757;
+    font-weight: bold;
+}
+
+.menu-content ul li a.debug-link::before {
+    border-top: solid 2px #ff4757;
+    border-right: solid 2px #ff4757;
+}

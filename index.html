@@ -17,13 +17,18 @@
                 <li><a href="character.html">キャラ紹介</a></li>
                 <li><a href="game.html">ミニゲーム</a></li>
                 <li><a href="news.html">お知らせ</a></li>
+                <!-- デバッグモード時のみ表示されるメニュー項目 -->
+                <li id="debug-menu-item" style="display: none;">
+                    <a href="debug.html" class="debug-link">🔧 デバッグページ</a>
+                </li>
             </ul>
         </div>
     </div>
 </header>
 
     <div class="shop-kanban">
-        <img src="header.png" alt="看板背景" class="kanban-bg-img">
+        <!-- 判定用に id="header-img" を追加 -->
+        <img src="header.png" alt="看板背景" class="kanban-bg-img" id="header-img">
         
         <div class="kanban-text-overlay">
             <h1 class="shop-title">ラーメン娘</h1>
@@ -67,8 +72,67 @@
     <hr>
 
     <footer class="shop-footer">
-        <p>&copy; 2026 ramengirls</p>
+        <!-- 判定用に id="footer-copyright" を追加 -->
+        <p id="footer-copyright">&copy; 2026 ramengirls</p>
     </footer>
 
+    <!-- デバッグモード起動JavaScript -->
+    <script>
+      let headerTaps = 0;
+      let footerTaps = 0;
+      let resetTimer = null;
+
+      // デバッグ状態に合わせてメニューの表示/非表示を切り替える
+      function updateDebugMenu() {
+        const debugMenuItem = document.getElementById('debug-menu-item');
+        if (!debugMenuItem) return;
+
+        if (localStorage.getItem('debug_mode') === 'true') {
+          debugMenuItem.style.display = 'block';
+        } else {
+          debugMenuItem.style.display = 'none';
+        }
+      }
+
+      // タップ回数をチェックする
+      function checkDebugUnlock() {
+        // 5秒間何も押さないとカウントをリセット（誤作動防止）
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(() => {
+          headerTaps = 0;
+          footerTaps = 0;
+        }, 5000);
+
+        // 看板とコピーライトの両方が5回以上押されたら有効化
+        if (headerTaps >= 5 && footerTaps >= 5) {
+          localStorage.setItem('debug_mode', 'true');
+          alert('デバッグモードが有効になりました！ハンバーガーメニューをご確認ください。');
+          updateDebugMenu();
+          headerTaps = 0;
+          footerTaps = 0;
+        }
+      }
+
+      // イベントの設定
+      const headerImg = document.getElementById('header-img');
+      const footerCopy = document.getElementById('footer-copyright');
+
+      if (headerImg) {
+        headerImg.addEventListener('click', () => {
+          headerTaps++;
+          checkDebugUnlock();
+        });
+      }
+
+      if (footerCopy) {
+        footerCopy.addEventListener('click', () => {
+          footerTaps++;
+          checkDebugUnlock();
+        });
+      }
+
+      // ページ読み込み時に状態をチェック
+      document.addEventListener('DOMContentLoaded', updateDebugMenu);
+    </script>
 </body>
 </html>
