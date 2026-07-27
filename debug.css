@@ -35,7 +35,35 @@
     padding-bottom: 8px;
 }
 
-/* PVリスト */
+/* ゲームスコア用サブヘッダー */
+.debug-score-section h3 {
+    font-size: 1rem;
+    color: #800000;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    padding-left: 8px;
+    border-left: 4px solid #800000;
+}
+
+/* 日付選択エリア */
+.debug-date-picker {
+    margin-bottom: 15px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #2b2b2b;
+}
+
+.debug-date-picker input[type="date"] {
+    padding: 6px 10px;
+    font-size: 1rem;
+    border: 2px solid #2b2b2b;
+    background-color: #f7f3e9;
+    color: #2b2b2b;
+    border-radius: 4px;
+    outline: none;
+}
+
+/* PVリスト / スコアリスト共通 */
 .pv-list {
     list-style: none;
     padding: 0;
