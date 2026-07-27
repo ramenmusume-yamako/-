@@ -5,6 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>かわら版（お知らせ） | ラーメン娘</title>
     <link rel="stylesheet" href="news.css">
+    
+    <!-- Cropper.js (画像トリミング用ライブラリ) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    
+    <style>
+        /* トリミングモーダル用スタイル */
+        .crop-container {
+            max-width: 100%;
+            max-height: 400px;
+            margin-bottom: 15px;
+            background-color: #333;
+        }
+        .crop-container img {
+            max-width: 100%;
+            display: block;
+        }
+        .crop-btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .crop-btn {
+            padding: 8px 16px;
+            border: 2px solid #2b2b2b;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .crop-btn-submit {
+            background-color: #800000;
+            color: #fff;
+        }
+        .crop-btn-cancel {
+            background-color: #ccc;
+        }
+        /* トリミング完了後のプレビュー表示 */
+        .cropped-preview {
+            margin-top: 10px;
+            max-width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border: 2px dashed #800000;
+            display: none;
+        }
+    </style>
 </head>
 <body class="news-page-theme">
 
@@ -56,10 +101,10 @@
             
             <h2 id="detail-title" class="detail-modal-title"></h2>
             
-            <!-- タイトル画像があればここに表示 -->
+            <!-- タイトル画像 -->
             <div id="detail-title-img-container"></div>
             
-            <!-- 改行対応の本文エリア -->
+            <!-- 本文エリア -->
             <div id="detail-text" class="news-item-text detail-body-text"></div>
             
             <!-- 詳細画像ギャラリー -->
@@ -67,7 +112,7 @@
         </div>
     </div>
 
-    <!-- 2. お知らせ投稿用モーダルダイアログ -->
+    <!-- 2. お知らせ投稿用モーダルダイアログ (デバッグモードのみ使用) -->
     <div id="news-modal" class="news-modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
@@ -90,8 +135,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label>アイキャッチ画像 (1枚のみ)</label>
+                    <label>アイキャッチ画像 (ヘッダー用に範囲指定)</label>
                     <input type="file" id="news-title-img" accept="image/*">
+                    <!-- 切り抜いた結果の切り抜きプレビュー表示 -->
+                    <img id="title-cropped-preview" class="cropped-preview" alt="調整済み画像">
                 </div>
 
                 <div class="form-group">
@@ -109,28 +156,38 @@
         </div>
     </div>
 
+    <!-- 3. 画像位置・拡大調整（トリミング）専用モーダル -->
+    <div id="crop-modal" class="news-modal" style="display: none; z-index: 300;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>画像の範囲調整</h2>
+            </div>
+            <p style="font-size: 0.85rem; color: #666; margin: 5px 0 10px;">
+                枠をドラッグ・拡大縮小してヘッダーに合わせる位置を決めてください。
+            </p>
+            <div class="crop-container">
+                <img id="crop-image" src="" alt="調整用画像">
+            </div>
+            <div class="crop-btn-group">
+                <button type="button" id="crop-cancel-btn" class="crop-btn crop-btn-cancel">キャンセル</button>
+                <button type="button" id="crop-submit-btn" class="crop-btn crop-btn-submit">決定</button>
+            </div>
+        </div>
+    </div>
+
     <footer class="shop-footer">
         <p>&copy; 2026 ramengirls</p>
     </footer>
 
-    <!-- アクセス計測用 -->
     <script>
       (function trackPV() {
         const today = new Date().toISOString().split('T')[0];
-  
-        // 今のセッション（タブを開いてから閉じるまで）で一度カウントしたか確認
-        if (!sessionStorage.getItem('visited_session')) {
-          let pvData = JSON.parse(localStorage.getItem('site_pv_data') || '{}');
-          pvData[today] = (pvData[today] || 0) + 1;
-          localStorage.setItem('site_pv_data', JSON.stringify(pvData));
-    
-           // カウント済みフラグを立てる
-           sessionStorage.setItem('visited_session', 'true');
-        }
+        let pvData = JSON.parse(localStorage.getItem('site_pv_data') || '{}');
+        pvData[today] = (pvData[today] || 0) + 1;
+        localStorage.setItem('site_pv_data', JSON.stringify(pvData));
       })();
     </script>
 
-    <!-- お知らせデータ処理スクリプト -->
     <script>
       const defaultNews = [
         {
@@ -142,26 +199,6 @@
           titleImg: '',
           text: 'メーナちゃんも大絶賛！\nキンキンに冷えた醤油スープに、自慢の極太ちぢれ麺が絡む至高の一杯です。\n\n6月1日より提供開始いたします！',
           detailImgs: []
-        },
-        {
-          id: '2',
-          date: '2026.05.20',
-          category: 'label-update',
-          categoryName: '更新情報',
-          title: 'キャラクター個別ページに「聖地巡礼マップ」を追加！',
-          titleImg: '',
-          text: 'メーナちゃんの個別紹介ページの下部に、劇中に登場するお店のモデルになった場所のGoogleマップを掲載しました。\n\nスマホで見ながら聖地巡礼を楽しめます！',
-          detailImgs: []
-        },
-        {
-          id: '3',
-          date: '2026.05.10',
-          category: 'label-event',
-          categoryName: 'お祭り',
-          title: '【お詫び】ミニゲームの難易度「激辛」が辛すぎた件について',
-          titleImg: '',
-          text: '現在公開中のミニゲームにおいて、難易度「激辛」のバランス調整を行いました。\n\n職人級の厳しさはそのままに、ギリギリクリアできる難易度に修正してあります。',
-          detailImgs: []
         }
       ];
 
@@ -172,6 +209,8 @@
       };
 
       let isDebug = false;
+      let cropper = null; // Cropperインスタンス
+      let croppedBase64Result = ''; // 切り抜いた画像データ
 
       function fileToBase64(file) {
         return new Promise((resolve, reject) => {
@@ -217,7 +256,6 @@
         `).join('');
       }
 
-      // 詳細モーダルを開く関数
       function openDetail(id) {
         const newsData = JSON.parse(localStorage.getItem('site_news_data') || JSON.stringify(defaultNews));
         const item = newsData.find(n => n.id === id);
@@ -231,7 +269,6 @@
 
         document.getElementById('detail-title').textContent = item.title;
 
-        // タイトル画像
         const titleImgContainer = document.getElementById('detail-title-img-container');
         if (item.titleImg) {
           titleImgContainer.innerHTML = `<img src="${item.titleImg}" class="detail-hero-img" alt="タイトル画像">`;
@@ -239,10 +276,8 @@
           titleImgContainer.innerHTML = '';
         }
 
-        // 改行を含めて本文を設定
         document.getElementById('detail-text').innerHTML = linkify(item.text);
 
-        // 詳細画像ギャラリー
         const galleryEl = document.getElementById('detail-gallery');
         if (item.detailImgs && item.detailImgs.length > 0) {
           galleryEl.innerHTML = item.detailImgs.map(img => `<img src="${img}" class="news-detail-img" alt="詳細画像">`).join('');
@@ -265,13 +300,116 @@
         isDebug = localStorage.getItem('debug_mode') === 'true';
 
         const debugMenuItem = document.getElementById('debug-menu-item');
-        if (debugMenuItem && isDebug) {
-          debugMenuItem.style.display = 'block';
-        }
+        if (debugMenuItem && isDebug) debugMenuItem.style.display = 'block';
 
         const fabBtn = document.getElementById('add-news-fab');
-        if (isDebug && fabBtn) {
-          fabBtn.style.display = 'flex';
+        const modal = document.getElementById('news-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const newsForm = document.getElementById('news-form');
+
+        // ★ デバッグモードの時のみ、投稿ボタンや各種イベントを有効化 ★
+        if (isDebug) {
+          if (fabBtn) fabBtn.style.display = 'flex';
+
+          if (fabBtn) fabBtn.addEventListener('click', () => modal.style.display = 'flex');
+          if (closeModalBtn) closeModalBtn.addEventListener('click', () => modal.style.display = 'none');
+
+          // 画像トリミング用の要素
+          const titleImgInput = document.getElementById('news-title-img');
+          const cropModal = document.getElementById('crop-modal');
+          const cropImage = document.getElementById('crop-image');
+          const cropSubmitBtn = document.getElementById('crop-submit-btn');
+          const cropCancelBtn = document.getElementById('crop-cancel-btn');
+          const titleCroppedPreview = document.getElementById('title-cropped-preview');
+
+          // デバッグ時の投稿モーダル内で画像を選んだ場合のみトリミングを開く
+          if (titleImgInput) {
+            titleImgInput.addEventListener('change', (e) => {
+              const file = e.target.files[0];
+              if (!file) return;
+
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                cropImage.src = event.target.result;
+                cropModal.style.display = 'flex';
+
+                if (cropper) cropper.destroy();
+
+                cropper = new Cropper(cropImage, {
+                  aspectRatio: 3.5 / 1, // ヘッダー用の横長比率
+                  viewMode: 1,
+                  autoCropArea: 1
+                });
+              };
+              reader.readAsDataURL(file);
+            });
+          }
+
+          if (cropSubmitBtn) {
+            cropSubmitBtn.addEventListener('click', () => {
+              if (!cropper) return;
+              const canvas = cropper.getCroppedCanvas({
+                width: 800,
+                height: 230
+              });
+              croppedBase64Result = canvas.toDataURL('image/jpeg');
+
+              titleCroppedPreview.src = croppedBase64Result;
+              titleCroppedPreview.style.display = 'block';
+              cropModal.style.display = 'none';
+            });
+          }
+
+          if (cropCancelBtn) {
+            cropCancelBtn.addEventListener('click', () => {
+              titleImgInput.value = '';
+              croppedBase64Result = '';
+              titleCroppedPreview.style.display = 'none';
+              cropModal.style.display = 'none';
+            });
+          }
+
+          if (newsForm) {
+            newsForm.addEventListener('submit', async (e) => {
+              e.preventDefault();
+
+              const category = document.getElementById('news-category').value;
+              const title = document.getElementById('news-title').value;
+              const text = document.getElementById('news-detail-text').value;
+
+              const detailImgFiles = Array.from(document.getElementById('news-detail-imgs').files);
+              const detailImgsBase64 = [];
+              for (const file of detailImgFiles) {
+                const b64 = await fileToBase64(file);
+                detailImgsBase64.push(b64);
+              }
+
+              const now = new Date();
+              const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
+
+              const newNewsItem = {
+                id: Date.now().toString(),
+                date: dateStr,
+                category: category,
+                categoryName: categoryLabels[category],
+                title: title,
+                titleImg: croppedBase64Result,
+                text: text,
+                detailImgs: detailImgsBase64
+              };
+
+              const newsData = JSON.parse(localStorage.getItem('site_news_data') || JSON.stringify(defaultNews));
+              newsData.unshift(newNewsItem);
+              localStorage.setItem('site_news_data', JSON.stringify(newsData));
+
+              newsForm.reset();
+              croppedBase64Result = '';
+              titleCroppedPreview.style.display = 'none';
+              modal.style.display = 'none';
+              renderNews();
+              alert('お知らせを投稿しました！');
+            });
+          }
         }
 
         if (!localStorage.getItem('site_news_data')) {
@@ -280,79 +418,9 @@
 
         renderNews();
 
-        // 詳細閉じるボタン
-        const closeDetailBtn = document.getElementById('close-detail-btn');
-        if (closeDetailBtn) {
-          closeDetailBtn.addEventListener('click', () => {
-            document.getElementById('detail-modal').style.display = 'none';
-          });
-        }
-
-        // 投稿モーダル制御
-        const modal = document.getElementById('news-modal');
-        const closeModalBtn = document.getElementById('close-modal-btn');
-        const newsForm = document.getElementById('news-form');
-
-        if (fabBtn) {
-          fabBtn.addEventListener('click', () => {
-            modal.style.display = 'flex';
-          });
-        }
-
-        if (closeModalBtn) {
-          closeModalBtn.addEventListener('click', () => {
-            modal.style.display = 'none';
-          });
-        }
-
-        if (newsForm) {
-          newsForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const category = document.getElementById('news-category').value;
-            const title = document.getElementById('news-title').value;
-            const text = document.getElementById('news-detail-text').value;
-
-            const titleImgFile = document.getElementById('news-title-img').files[0];
-            let titleImgBase64 = '';
-            if (titleImgFile) {
-              titleImgBase64 = await fileToBase64(titleImgFile);
-            }
-
-            const detailImgFiles = Array.from(document.getElementById('news-detail-imgs').files);
-            const detailImgsBase64 = [];
-            for (const file of detailImgFiles) {
-              const b64 = await fileToBase64(file);
-              detailImgsBase64.push(b64);
-            }
-
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const dateStr = `${year}.${month}.${day}`;
-
-            const newNewsItem = {
-              id: Date.now().toString(),
-              date: dateStr,
-              category: category,
-              categoryName: categoryLabels[category],
-              title: title,
-              titleImg: titleImgBase64,
-              text: text,
-              detailImgs: detailImgsBase64
-            };
-
-            const newsData = JSON.parse(localStorage.getItem('site_news_data') || JSON.stringify(defaultNews));
-            newsData.unshift(newNewsItem);
-            localStorage.setItem('site_news_data', JSON.stringify(newsData));
-
-            newsForm.reset();
-            modal.style.display = 'none';
-            renderNews();
-            alert('お知らせを投稿しました！');
-          });
-        }
+        document.getElementById('close-detail-btn').addEventListener('click', () => {
+          document.getElementById('detail-modal').style.display = 'none';
+        });
       });
     </script>
 </body>
