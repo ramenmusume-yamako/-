@@ -359,3 +359,14 @@ input[name="chara-slider"] {
     }
     /* 💡重複していたメニュー縮小コードは上に統合したため、ここからは綺麗に削除しました */
 }
+
+/* デバッグメニューリンクの装飾 */
+.menu-content ul li a.debug-link {
+    color: #ff4757;
+    font-weight: bold;
+}
+
+.menu-content ul li a.debug-link::before {
+    border-top: solid 2px #ff4757;
+    border-right: solid 2px #ff4757;
+}
