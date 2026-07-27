@@ -3,144 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HP全体 デバッグ・管理パネル</title>
+    <title>デバッグ管理画面 - ラーメン娘</title>
+    <link rel="stylesheet" href="hp.css">
     <link rel="stylesheet" href="debug.css">
 </head>
 <body>
 
-    <div class="container">
-        <h1>🌐 HP全体 デバッグ・管理パネル</h1>
+    <main class="debug-container">
+        <h1 class="debug-title">🔧 デバッグ管理パネル</h1>
 
-        <div class="top-nav">
-            <a href="game.html" class="btn">🏠 HPトップに戻る</a>
-            <button class="btn btn-danger" onclick="exitDebugMode()">⛔ デバッグモードを終了</button>
+        <!-- 閲覧数表示エリア -->
+        <section class="debug-card">
+            <h2>📊 日別閲覧数（PV）</h2>
+            <ul id="pv-list" class="pv-list">
+                <!-- JSでここに日付ごとの閲覧数が挿入されます -->
+            </ul>
+        </section>
+
+        <!-- 設定・操作エリア -->
+        <section class="debug-card">
+            <h2>⚙️ 操作</h2>
+            <button id="exit-debug-btn" class="debug-btn-danger">デバッグモードを終了する</button>
+        </section>
+
+        <div class="debug-back-link">
+            <a href="index.html">← ホームへ戻る</a>
         </div>
-
-        <!-- 1. 全一般ユーザーのHP閲覧数アクセスログ -->
-        <div class="card">
-            <h2>📊 HP全体 アクセス統計 (全ユーザー合計)</h2>
-            <div class="pv-grid">
-                <div class="pv-card">
-                    <div class="pv-title">HP全体 総閲覧数 (PV)</div>
-                    <span class="pv-number" id="total-hp-pv">0</span> <span class="pv-unit">回</span>
-                </div>
-                <div class="pv-card">
-                    <div class="pv-title">ゲームページ 訪問数</div>
-                    <span class="pv-number" id="game-page-pv">0</span> <span class="pv-unit">回</span>
-                </div>
-                <div class="pv-card">
-                    <div class="pv-title">本日の訪問者数</div>
-                    <span class="pv-number" id="today-pv">0</span> <span class="pv-unit">人</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 2. HP内のゲームプレイログ（日付指定＋難易度別表示） -->
-        <div class="card">
-            <h2>🎮 ゲーム項目プレイログ (全員分)</h2>
-            
-            <div class="date-picker-area">
-                <label for="select-date">日付を選択:</label>
-                <input type="date" id="select-date" onchange="loadScoresByDate(this.value)">
-                <button class="btn" onclick="setTodayDate()">今日</button>
-            </div>
-
-            <div id="score-display-area">
-                <div class="difficulty-grid">
-                    <div class="diff-box easy">
-                        <div class="diff-name">EASY モード</div>
-                        <div id="easy-scores" class="score-list"><div class="empty-msg">日付を選択してください</div></div>
-                    </div>
-                    <div class="diff-box normal">
-                        <div class="diff-name">NORMAL モード</div>
-                        <div id="normal-scores" class="score-list"><div class="empty-msg">日付を選択してください</div></div>
-                    </div>
-                    <div class="diff-box hard">
-                        <div class="diff-name">HARD モード</div>
-                        <div id="hard-scores" class="score-list"><div class="empty-msg">日付を選択してください</div></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    </main>
 
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            // デバッグモード状態のチェック
-            if (localStorage.getItem('debug_mode_enabled') === 'false') {
-                alert('デバッグモードはオフになっています。HPトップへ移動します。');
-                window.location.href = 'game.html';
-                return;
-            }
-
-            loadHPAccessStats();
-            setTodayDate();
-        });
-
-        // HP全体の閲覧数を読み込み
-        function loadHPAccessStats() {
-            const hpPV = localStorage.getItem('site_total_pv') || 0;
-            const gamePV = localStorage.getItem('site_game_pv') || 0;
-            const todayPV = localStorage.getItem('site_today_pv') || 0;
-
-            document.getElementById('total-hp-pv').textContent = Number(hpPV).toLocaleString();
-            document.getElementById('game-page-pv').textContent = Number(gamePV).toLocaleString();
-            document.getElementById('today-pv').textContent = Number(todayPV).toLocaleString();
+        // 1. デバッグモードの判定（無効ならTOPへリダイレクト）
+        if (localStorage.getItem('debug_mode') !== 'true') {
+            alert('アクセス権限がありません。');
+            window.location.href = 'index.html';
         }
 
-        // 今日を選択
-        function setTodayDate() {
-            const today = new Date().toISOString().split('T')[0];
-            const dateInput = document.getElementById('select-date');
-            dateInput.value = today;
-            loadScoresByDate(today);
-        }
+        document.addEventListener('DOMContentLoaded', () => {
+            // 2. 保存されているPVデータの読み込み＆表示
+            const pvData = JSON.parse(localStorage.getItem('site_pv_data') || '{}');
+            const pvList = document.getElementById('pv-list');
 
-        // 選択された日付の全員のゲームスコアを難易度別に取得
-        function loadScoresByDate(selectedDate) {
-            if (!selectedDate) return;
+            const entries = Object.entries(pvData).reverse(); // 新しい日付順にソート
 
-            const allScoresData = JSON.parse(localStorage.getItem('all_players_game_scores') || '{}');
-            const dayData = allScoresData[selectedDate] || { easy: [], normal: [], hard: [] };
-
-            renderDifficultyScores('easy-scores', dayData.easy);
-            renderDifficultyScores('normal-scores', dayData.normal);
-            renderDifficultyScores('hard-scores', dayData.hard);
-        }
-
-        function renderDifficultyScores(containerId, scoreList) {
-            const container = document.getElementById(containerId);
-
-            if (!scoreList || scoreList.length === 0) {
-                container.innerHTML = '<div class="empty-msg">この日のプレイ記録はありません</div>';
-                return;
-            }
-
-            const sortedList = [...scoreList].reverse();
-            let html = '<ul class="score-list">';
-            
-            sortedList.forEach(item => {
-                const userLabel = item.user ? `[${item.user}] ` : '';
-                html += `
-                    <li class="score-item">
-                        <span>⏱️ ${item.time || ''} ${userLabel}</span>
-                        <span><strong>${item.score}</strong> 秒</span>
+            if (entries.length === 0) {
+                pvList.innerHTML = '<li class="pv-empty">データがまだありません。</li>';
+            } else {
+                pvList.innerHTML = entries.map(([date, count]) => `
+                    <li class="pv-item">
+                        <span class="pv-date">${date}</span>
+                        <span class="pv-count">${count} PV</span>
                     </li>
-                `;
-            });
-
-            html += '</ul>';
-            container.innerHTML = html;
-        }
-
-        // デバッグモード終了機能
-        function exitDebugMode() {
-            if (confirm('デバッグモードを終了して一般モードに戻りますか？')) {
-                localStorage.setItem('debug_mode_enabled', 'false');
-                alert('デバッグモードを終了しました。');
-                window.location.href = 'game.html';
+                `).join('');
             }
-        }
+
+            // 3. デバッグモード解除ボタンの処理
+            document.getElementById('exit-debug-btn').addEventListener('click', () => {
+                localStorage.removeItem('debug_mode');
+                alert('デバッグモードを解除しました。');
+                window.location.href = 'index.html';
+            });
+        });
     </script>
 </body>
 </html>
