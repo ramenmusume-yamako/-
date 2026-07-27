@@ -164,5 +164,16 @@
             }
         });
     </script>
+
+    <script>
+  // 訪問時にPV（閲覧数）を自動記録
+  (function trackPV() {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 形式
+    let pvData = JSON.parse(localStorage.getItem('site_pv_data') || '{}');
+    
+    pvData[today] = (pvData[today] || 0) + 1;
+    localStorage.setItem('site_pv_data', JSON.stringify(pvData));
+  })();
+</script>
 </body>
 </html>

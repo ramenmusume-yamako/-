@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デバッグ管理画面 - ラーメン娘</title>
+    <link rel="stylesheet" href="hp.css">
+    <link rel="stylesheet" href="debug.css">
+</head>
+<body>
+
+    <main class="debug-container">
+        <h1 class="debug-title">🔧 デバッグ管理パネル</h1>
+
+        <!-- 閲覧数表示エリア -->
+        <section class="debug-card">
+            <h2>📊 日別閲覧数（PV）</h2>
+            <ul id="pv-list" class="pv-list">
+                <!-- JSでここに日付ごとの閲覧数が挿入されます -->
+            </ul>
+        </section>
+
+        <!-- 設定・操作エリア -->
+        <section class="debug-card">
+            <h2>⚙️ 操作</h2>
+            <button id="exit-debug-btn" class="debug-btn-danger">デバッグモードを終了する</button>
+        </section>
+
+        <div class="debug-back-link">
+            <a href="index.html">← ホームへ戻る</a>
+        </div>
+    </main>
+
+    <script>
+        // 1. デバッグモードの判定（無効ならTOPへリダイレクト）
+        if (localStorage.getItem('debug_mode') !== 'true') {
+            alert('アクセス権限がありません。');
+            window.location.href = 'index.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 2. 保存されているPVデータの読み込み＆表示
+            const pvData = JSON.parse(localStorage.getItem('site_pv_data') || '{}');
+            const pvList = document.getElementById('pv-list');
+
+            const entries = Object.entries(pvData).reverse(); // 新しい日付順にソート
+
+            if (entries.length === 0) {
+                pvList.innerHTML = '<li class="pv-empty">データがまだありません。</li>';
+            } else {
+                pvList.innerHTML = entries.map(([date, count]) => `
+                    <li class="pv-item">
+                        <span class="pv-date">${date}</span>
+                        <span class="pv-count">${count} PV</span>
+                    </li>
+                `).join('');
+            }
+
+            // 3. デバッグモード解除ボタンの処理
+            document.getElementById('exit-debug-btn').addEventListener('click', () => {
+                localStorage.removeItem('debug_mode');
+                alert('デバッグモードを解除しました。');
+                window.location.href = 'index.html';
+            });
+        });
+    </script>
+</body>
+</html>
