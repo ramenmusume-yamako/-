@@ -18,8 +18,8 @@
                 <li><a href="game.html">ミニゲーム</a></li>
                 <li><a href="news.html">お知らせ</a></li>
                 <li id="debug-menu-item" style="display: none;">
-    <a href="debug.html" class="debug-link">🔧 デバッグページ</a>
-</li>
+                    <a href="debug.html" class="debug-link">🔧 デバッグページ</a>
+                </li>
             </ul>
         </div>
     </header>
@@ -27,79 +27,296 @@
     <div class="deco-text">瓦版</div>
 
     <main class="news-container">
-        
         <div class="news-card-box">
-            
             <div class="news-header">
                 <span class="sub-title">―― 最新情報 ――</span>
                 <h1 class="page-title">かわら版（お知らせ）</h1>
             </div>
 
-            <ul class="news-list">
-
-                <li class="news-item">
-                    <div class="news-meta">
-                        <span class="news-date">2026.05.25</span>
-                        <span class="news-label label-menu">新メニュー</span>
-                    </div>
-                    <div class="news-content">
-                        <h3 class="news-item-title">夏季限定「冷やし極太冷麺」がまもなく登場！</h3>
-                        <p class="news-item-text">メーナちゃんも大絶賛！キンキンに冷えた醤油スープに、自慢の極太ちぢれ麺が絡む至高の一杯です。6月1日より提供開始いたします！</p>
-                    </div>
-                </li>
-
-                <li class="news-item">
-                    <div class="news-meta">
-                        <span class="news-date">2026.05.20</span>
-                        <span class="news-label label-update">更新情報</span>
-                    </div>
-                    <div class="news-content">
-                        <h3 class="news-item-title">キャラクター個別ページに「聖地巡礼マップ」を追加！</h3>
-                        <p class="news-item-text">メーナちゃんの個別紹介ページの下部に、劇中に登場するお店のモデルになった場所のGoogleマップを掲載しました。スマホで見ながら聖地巡礼を楽しめます！</p>
-                    </div>
-                </li>
-
-                <li class="news-item">
-                    <div class="news-meta">
-                        <span class="news-date">2026.05.10</span>
-                        <span class="news-label label-event">お祭り</span>
-                    </div>
-                    <div class="news-content">
-                        <h3 class="news-item-title">【お詫び】ミニゲームの難易度「激辛」が辛すぎた件について</h3>
-                        <p class="news-item-text">現在公開中のミニゲームにおいて、難易度「激辛」のバランス調整を行いました。職人級の厳しさはそのままに、ギリギリクリアできる難易度に修正してあります。</p>
-                    </div>
-                </li>
-
-            </ul>
+            <!-- 動的にお知らせが入るリスト容器 -->
+            <ul class="news-list" id="news-list"></ul>
 
             <div class="hanko">通</div>
         </div>
-
     </main>
+
+    <!-- デバッグ用：右下のアディショナル(+)ボタン -->
+    <button id="add-news-fab" class="add-news-fab" style="display: none;">＋</button>
+
+    <!-- お知らせ投稿用モーダルダイアログ -->
+    <div id="news-modal" class="news-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>瓦版 新規投稿</h2>
+                <button id="close-modal-btn" class="close-btn">&times;</button>
+            </div>
+            <form id="news-form">
+                <div class="form-group">
+                    <label>カテゴリ</label>
+                    <select id="news-category" required>
+                        <option value="label-menu">新メニュー</option>
+                        <option value="label-update">更新情報</option>
+                        <option value="label-event">お祭り</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>タイトル</label>
+                    <input type="text" id="news-title" placeholder="タイトルを入力" required>
+                </div>
+
+                <div class="form-group">
+                    <label>アイキャッチ画像 (1枚のみ)</label>
+                    <input type="file" id="news-title-img" accept="image/*">
+                </div>
+
+                <div class="form-group">
+                    <label>詳細本文 (URLは自動でリンク化されます)</label>
+                    <textarea id="news-detail-text" rows="5" placeholder="詳細を入力してください"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>詳細用追加画像 (複数可)</label>
+                    <input type="file" id="news-detail-imgs" accept="image/*" multiple>
+                </div>
+
+                <button type="submit" class="submit-btn">投稿する</button>
+            </form>
+        </div>
+    </div>
 
     <footer class="shop-footer">
         <p>&copy; 2026 ramengirls</p>
     </footer>
 
+    <!-- アクセス計測用 -->
     <script>
-  // 訪問時にPV（閲覧数）を自動記録
-  (function trackPV() {
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 形式
-    let pvData = JSON.parse(localStorage.getItem('site_pv_data') || '{}');
-    
-    pvData[today] = (pvData[today] || 0) + 1;
-    localStorage.setItem('site_pv_data', JSON.stringify(pvData));
-  })();
-</script>
-<script>
-  // ページ読み込み時にデバッグモードならメニューを表示する
-  document.addEventListener('DOMContentLoaded', () => {
-    const debugMenuItem = document.getElementById('debug-menu-item');
-    if (debugMenuItem && localStorage.getItem('debug_mode') === 'true') {
-      debugMenuItem.style.display = 'block';
-    }
-  });
-</script>
+      (function trackPV() {
+        const today = new Date().toISOString().split('T')[0];
+        let pvData = JSON.parse(localStorage.getItem('site_pv_data') || '{}');
+        pvData[today] = (pvData[today] || 0) + 1;
+        localStorage.setItem('site_pv_data', JSON.stringify(pvData));
+      })();
+    </script>
 
+    <!-- お知らせデータ読み込み・投稿・削除スクリプト -->
+    <script>
+      // デフォルトのサンプルデータ（初回起動時用）
+      const defaultNews = [
+        {
+          id: '1',
+          date: '2026.05.25',
+          category: 'label-menu',
+          categoryName: '新メニュー',
+          title: '夏季限定「冷やし極太冷麺」がまもなく登場！',
+          titleImg: '',
+          text: 'メーナちゃんも大絶賛！キンキンに冷えた醤油スープに、自燃の極太ちぢれ麺が絡む至高の一杯です。6月1日より提供開始いたします！',
+          detailImgs: []
+        },
+        {
+          id: '2',
+          date: '2026.05.20',
+          category: 'label-update',
+          categoryName: '更新情報',
+          title: 'キャラクター個別ページに「聖地巡礼マップ」を追加！',
+          titleImg: '',
+          text: 'メーナちゃんの個別紹介ページの下部に、劇中に登場するお店のモデルになった場所のGoogleマップを掲載しました。スマホで見ながら聖地巡礼を楽しめます！',
+          detailImgs: []
+        },
+        {
+          id: '3',
+          date: '2026.05.10',
+          category: 'label-event',
+          categoryName: 'お祭り',
+          title: '【お詫び】ミニゲームの難易度「激辛」が辛すぎた件について',
+          titleImg: '',
+          text: '現在公開中のミニゲームにおいて、難易度「激辛」のバランス調整を行いました。職人級の厳しさはそのままに、ギリギリクリアできる難易度に修正してあります。',
+          detailImgs: []
+        }
+      ];
+
+      // カテゴリコード -> ラベルテキストの変換マップ
+      const categoryLabels = {
+        'label-menu': '新メニュー',
+        'label-update': '更新情報',
+        'label-event': 'お祭り'
+      };
+
+      let isDebug = false;
+
+      // 画像ファイルを Base64 文字列に変換するユーティリティ関数
+      function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = error => reject(error);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // テキスト内のURLをハイパーリンクに置換する処理
+      function linkify(text) {
+        if (!text) return '';
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+      }
+
+      // お知らせ一覧を描画する処理
+      function renderNews() {
+        const newsListEl = document.getElementById('news-list');
+        const newsData = JSON.parse(localStorage.getItem('site_news_data') || JSON.stringify(defaultNews));
+        
+        if (newsData.length === 0) {
+          newsListEl.innerHTML = '<li class="news-empty">現在お知らせはありません。</li>';
+          return;
+        }
+
+        newsListEl.innerHTML = newsData.map(item => `
+          <li class="news-item" id="news-${item.id}">
+            <div class="news-meta">
+              <span class="news-date">${item.date}</span>
+              <span class="news-label ${item.category}">${item.categoryName || categoryLabels[item.category]}</span>
+            </div>
+            
+            <div class="news-content">
+              <div class="news-title-area" onclick="toggleDetail('${item.id}')">
+                <h3 class="news-item-title">${item.title}</h3>
+                ${item.titleImg ? `<div class="news-title-img-wrap"><img src="${item.titleImg}" alt="タイトル画像" class="news-title-img"></div>` : ''}
+                <span class="toggle-icon">詳細を表示 ▾</span>
+              </div>
+
+              <div class="news-detail" id="detail-${item.id}" style="display: none;">
+                ${item.text ? `<p class="news-item-text">${linkify(item.text)}</p>` : ''}
+                ${item.detailImgs && item.detailImgs.length > 0 ? `
+                  <div class="news-detail-gallery">
+                    ${item.detailImgs.map(img => `<img src="${img}" class="news-detail-img" alt="詳細画像">`).join('')}
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            ${isDebug ? `<button class="delete-news-btn" onclick="deleteNews('${item.id}')">削除</button>` : ''}
+          </li>
+        `).join('');
+      }
+
+      // アコーディオン開閉 toggle
+      function toggleDetail(id) {
+        const detailEl = document.getElementById(`detail-${id}`);
+        const itemEl = document.getElementById(`news-${id}`);
+        if (!detailEl) return;
+        
+        const isHidden = detailEl.style.display === 'none';
+        detailEl.style.display = isHidden ? 'block' : 'none';
+        
+        const iconEl = itemEl.querySelector('.toggle-icon');
+        if (iconEl) {
+          iconEl.textContent = isHidden ? '詳細をたたむ ▴' : '詳細を表示 ▾';
+        }
+      }
+
+      // お知らせ削除処理
+      function deleteNews(id) {
+        if (!confirm('このお知らせを削除してもよろしいですか？')) return;
+        let newsData = JSON.parse(localStorage.getItem('site_news_data') || JSON.stringify(defaultNews));
+        newsData = newsData.filter(item => item.id !== id);
+        localStorage.setItem('site_news_data', JSON.stringify(newsData));
+        renderNews();
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        isDebug = localStorage.getItem('debug_mode') === 'true';
+
+        // デバッグメニューの表示
+        const debugMenuItem = document.getElementById('debug-menu-item');
+        if (debugMenuItem && isDebug) {
+          debugMenuItem.style.display = 'block';
+        }
+
+        // デバッグモード専用＋ボタンの表示
+        const fabBtn = document.getElementById('add-news-fab');
+        if (isDebug && fabBtn) {
+          fabBtn.style.display = 'flex';
+        }
+
+        // localStorageへの初回保存対応
+        if (!localStorage.getItem('site_news_data')) {
+          localStorage.setItem('site_news_data', JSON.stringify(defaultNews));
+        }
+
+        renderNews();
+
+        // モーダルダイアログ制御
+        const modal = document.getElementById('news-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const newsForm = document.getElementById('news-form');
+
+        if (fabBtn) {
+          fabBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+          });
+        }
+
+        if (closeModalBtn) {
+          closeModalBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+          });
+        }
+
+        // フォーム送信処理
+        if (newsForm) {
+          newsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const category = document.getElementById('news-category').value;
+            const title = document.getElementById('news-title').value;
+            const text = document.getElementById('news-detail-text').value;
+
+            // アイキャッチ画像の取得
+            const titleImgFile = document.getElementById('news-title-img').files[0];
+            let titleImgBase64 = '';
+            if (titleImgFile) {
+              titleImgBase64 = await fileToBase64(titleImgFile);
+            }
+
+            // 詳細画像の複数取得
+            const detailImgFiles = Array.from(document.getElementById('news-detail-imgs').files);
+            const detailImgsBase64 = [];
+            for (const file of detailImgFiles) {
+              const b64 = await fileToBase64(file);
+              detailImgsBase64.push(b64);
+            }
+
+            // 日付の生成 (YYYY.MM.DD)
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const dateStr = `${year}.${month}.${day}`;
+
+            const newNewsItem = {
+              id: Date.now().toString(),
+              date: dateStr,
+              category: category,
+              categoryName: categoryLabels[category],
+              title: title,
+              titleImg: titleImgBase64,
+              text: text,
+              detailImgs: detailImgsBase64
+            };
+
+            const newsData = JSON.parse(localStorage.getItem('site_news_data') || JSON.stringify(defaultNews));
+            newsData.unshift(newNewsItem); // 最新を一番上に追加
+            localStorage.setItem('site_news_data', JSON.stringify(newsData));
+
+            // フォームリセット＆閉じる
+            newsForm.reset();
+            modal.style.display = 'none';
+            renderNews();
+            alert('お知らせを投稿しました！');
+          });
+        }
+      });
+    </script>
 </body>
 </html>
