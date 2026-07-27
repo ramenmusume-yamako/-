@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>走れ！ラーメン娘！！ - スコアログ・デバッグ</title>
+    <title>走れ！ラーメン娘！！ - デバッグ＆スコアログ</title>
     <style>
         :root {
             --bg-color: #2c3e50;
-            --card-bg: rgba(0, 0, 0, 0.4);
+            --card-bg: rgba(0, 0, 0, 0.5);
             --border-color: #e67e22;
             --accent-gold: #f1c40f;
             --text-color: #ffffff;
@@ -32,11 +32,11 @@
         .container {
             width: 100%;
             max-width: 900px;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.75);
             border: 3px solid var(--border-color);
             border-radius: 12px;
             padding: 25px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            box-shadow: 0 0 35px rgba(0,0,0,0.8);
             box-sizing: border-box;
         }
 
@@ -45,21 +45,40 @@
             text-align: center;
             margin-top: 0;
             margin-bottom: 20px;
-            font-size: 28px;
+            font-size: 26px;
             letter-spacing: 0.1em;
             border-bottom: 2px dashed var(--border-color);
-            padding-bottom: 10px;
+            padding-bottom: 12px;
         }
 
-        .actions {
+        h2 {
+            color: var(--accent-gold);
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 6px;
+        }
+
+        .top-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
         }
 
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        /* ボタンデザイン */
         .btn {
             background: var(--bg-color);
             color: white;
@@ -72,6 +91,7 @@
             text-decoration: none;
             transition: all 0.2s;
             display: inline-block;
+            user-select: none;
         }
 
         .btn:hover {
@@ -80,34 +100,25 @@
             transform: scale(1.03);
         }
 
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            border-color: #2ecc71;
+        }
+        .btn-success:hover { background: #2ecc71; }
+
         .btn-danger {
             background: #800000;
             border-color: #ff4d4d;
         }
+        .btn-danger:hover { background: #b30000; }
 
-        .btn-danger:hover {
-            background: #b30000;
-            border-color: #ffffff;
-        }
-
-        /* 日付ブロック */
-        .date-card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-
-        .date-title {
-            font-size: 20px;
-            color: var(--accent-gold);
-            margin: 0 0 15px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
+        /* スコアグリッド */
         .difficulty-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -127,9 +138,8 @@
 
         .diff-name {
             font-weight: bold;
-            font-size: 16px;
+            font-size: 15px;
             margin-bottom: 8px;
-            text-transform: uppercase;
         }
 
         .easy .diff-name   { color: #2ecc71; }
@@ -140,7 +150,7 @@
             list-style: none;
             padding: 0;
             margin: 0;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .score-item {
@@ -150,8 +160,26 @@
             border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
         }
 
-        .score-item:last-child {
-            border-bottom: none;
+        /* JSON生データエリア */
+        pre {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 12px;
+            border-radius: 6px;
+            color: #2ecc71;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            max-height: 250px;
+        }
+
+        .status-badge {
+            background: #e67e22;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: bold;
         }
 
         .empty-msg {
@@ -164,7 +192,7 @@
             body { padding: 10px; }
             .container { padding: 15px; }
             h1 { font-size: 20px; }
-            .actions { flex-direction: column; align-items: stretch; }
+            .top-nav { flex-direction: column; gap: 10px; align-items: stretch; }
             .btn { text-align: center; }
         }
     </style>
@@ -172,43 +200,103 @@
 <body>
 
     <div class="container">
-        <h1>🍜 プレイ記録ログ (デバッグ)</h1>
+        <h1>🛠️ デバッグ ＆ 開発者ツール</h1>
 
-        <div class="actions">
+        <div class="top-nav">
             <a href="game.html" class="btn">🏠 ホームページに戻る</a>
-            <button class="btn btn-danger" onclick="clearLogs()">🗑️ ログデータを全削除</button>
+            <button class="btn btn-danger" onclick="clearAllLocalStorage()">⚠️ 全データ完全リセット</button>
         </div>
 
-        <div id="log-container">
-            <!-- JavaScriptでここに日付ごとのデータが挿入されます -->
+        <!-- 1. キャラクターステータス & 操作 -->
+        <div class="card">
+            <h2>👤 キャラクターデータ操作</h2>
+            <p style="margin-top: 0; font-size: 14px;">
+                現在の選択キャラ: <span id="current-char-display" class="status-badge">読み込み中...</span>
+            </p>
+            <div class="btn-group">
+                <button class="btn btn-success" onclick="unlockAllCharacters()">🔓 全キャラ即時開放</button>
+                <button class="btn" onclick="setChar('hajime')">はじめに変更</button>
+                <button class="btn" onclick="setChar('meana')">メアナに変更</button>
+                <button class="btn" onclick="setChar('aniki')">アニキに変更</button>
+                <button class="btn" onclick="setChar('naruto')">ナルトに変更</button>
+            </div>
+        </div>
+
+        <!-- 2. 日付別 プレイログ -->
+        <div class="card">
+            <h2>📅 日付別プレイログ (日別スコア)</h2>
+            <div class="btn-group" style="margin-bottom: 12px;">
+                <button class="btn btn-danger" onclick="clearGameScoresLog()">🗑️ スコアログのみ削除</button>
+            </div>
+            <div id="log-container">
+                <!-- JSで展開 -->
+            </div>
+        </div>
+
+        <!-- 3. LocalStorage 全データの確認 -->
+        <div class="card">
+            <h2>🔍 LocalStorage 生データ一覧</h2>
+            <div class="btn-group" style="margin-bottom: 12px;">
+                <button class="btn" onclick="renderAllData()">🔄 表示を更新</button>
+            </div>
+            <pre id="raw-storage-display">データがありません</pre>
         </div>
     </div>
 
     <script>
+        // ページ読み込み時の処理
+        function initDebug() {
+            updateCharDisplay();
+            loadLogs();
+            renderAllData();
+        }
+
+        // --- キャラクター関連 ---
+        function updateCharDisplay() {
+            const char = localStorage.getItem('selectedChar') || 'hajime (初期値)';
+            document.getElementById('current-char-display').textContent = char;
+        }
+
+        function setChar(charId) {
+            localStorage.setItem('selectedChar', charId);
+            updateCharDisplay();
+            renderAllData();
+            alert(`選択キャラを [ ${charId} ] に変更しました！`);
+        }
+
+        function unlockAllCharacters() {
+            // キャラクタ一括解放用フラグ等の書き込み
+            localStorage.setItem('unlocked_meana', 'true');
+            localStorage.setItem('unlocked_aniki', 'true');
+            localStorage.setItem('unlocked_naruto', 'true');
+            renderAllData();
+            alert('全キャラクターを開放状態にセットしました！');
+        }
+
+        // --- ログ関連 ---
         function loadLogs() {
             const container = document.getElementById('log-container');
             const rawData = localStorage.getItem('site_game_scores');
 
             if (!rawData) {
-                container.innerHTML = '<p class="empty-msg" style="text-align:center; font-size:16px;">保存されているログデータはありません。</p>';
+                container.innerHTML = '<p class="empty-msg">保存されているログデータはありません。</p>';
                 return;
             }
 
             const gameData = JSON.parse(rawData);
-            const dates = Object.keys(gameData).sort().reverse(); // 新しい日付順
+            const dates = Object.keys(gameData).sort().reverse();
 
             if (dates.length === 0) {
-                container.innerHTML = '<p class="empty-msg" style="text-align:center; font-size:16px;">保存されているログデータはありません。</p>';
+                container.innerHTML = '<p class="empty-msg">保存されているログデータはありません。</p>';
                 return;
             }
 
             let html = '';
-
             dates.forEach(date => {
                 const dayData = gameData[date];
                 html += `
-                    <div class="date-card">
-                        <div class="date-title">📅 ${date}</div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                        <div style="font-size: 16px; color: var(--accent-gold); margin-bottom: 10px; font-weight: bold;">📅 ${date}</div>
                         <div class="difficulty-grid">
                             ${renderDifficultyBox('EASY', dayData.easy, 'easy')}
                             ${renderDifficultyBox('NORMAL', dayData.normal, 'normal')}
@@ -223,9 +311,7 @@
 
         function renderDifficultyBox(title, scores, className) {
             let listHtml = '';
-            
             if (scores && scores.length > 0) {
-                // 時間の新しい順に表示
                 const reversedScores = [...scores].reverse();
                 listHtml = '<ul class="score-list">' + 
                     reversedScores.map(item => `
@@ -247,15 +333,38 @@
             `;
         }
 
-        function clearLogs() {
-            if (confirm('本当にすべてのプレイログを削除しますか？\n（最高記録TOP3などは削除されません）')) {
+        // --- リセット関連 ---
+        function clearGameScoresLog() {
+            if (confirm('プレイログ（日付ごとのスコア履歴）のみ削除しますか？\n※ハイスコアやキャラ解放状況は保持されます。')) {
                 localStorage.removeItem('site_game_scores');
-                loadLogs();
+                initDebug();
             }
         }
 
-        // ページ読み込み時に実行
-        window.addEventListener('DOMContentLoaded', loadLogs);
+        function clearAllLocalStorage() {
+            if (confirm('【注意】ハイスコア、全開放フラグ、ログを含むすべての保存データを消去しますか？')) {
+                localStorage.clear();
+                initDebug();
+                alert('すべてのデータをリセットしました。');
+            }
+        }
+
+        // --- Rawストレージ表示 ---
+        function renderAllData() {
+            const display = document.getElementById('raw-storage-display');
+            const data = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                try {
+                    data[key] = JSON.parse(localStorage.getItem(key));
+                } catch(e) {
+                    data[key] = localStorage.getItem(key);
+                }
+            }
+            display.textContent = JSON.stringify(data, null, 2);
+        }
+
+        window.addEventListener('DOMContentLoaded', initDebug);
     </script>
 </body>
 </html>
