@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>走れ！ラーメン娘！！ - デバッグ＆スコアログ</title>
+    <title>デバッグページ</title>
     <style>
         :root {
             --bg-color: #2c3e50;
@@ -68,6 +68,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .card {
@@ -100,25 +102,50 @@
             transform: scale(1.03);
         }
 
-        .btn-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .btn-success {
-            background: #27ae60;
-            border-color: #2ecc71;
-        }
-        .btn-success:hover { background: #2ecc71; }
-
         .btn-danger {
             background: #800000;
             border-color: #ff4d4d;
         }
         .btn-danger:hover { background: #b30000; }
 
-        /* スコアグリッド */
+        /* HP閲覧数カウンターのスタイル */
+        .pv-counter {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-gold);
+        }
+
+        .pv-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent-gold);
+            font-family: monospace;
+        }
+
+        /* 日付選択エリア */
+        .date-picker-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        input[type="date"] {
+            background: #1a252f;
+            color: #fff;
+            border: 2px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        /* 難易度別グリッド */
         .difficulty-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -156,30 +183,8 @@
         .score-item {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0;
+            padding: 5px 0;
             border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
-        }
-
-        /* JSON生データエリア */
-        pre {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 12px;
-            border-radius: 6px;
-            color: #2ecc71;
-            font-family: monospace;
-            font-size: 12px;
-            overflow-x: auto;
-            max-height: 250px;
-        }
-
-        .status-badge {
-            background: #e67e22;
-            color: #fff;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 13px;
-            font-weight: bold;
         }
 
         .empty-msg {
@@ -192,7 +197,7 @@
             body { padding: 10px; }
             .container { padding: 15px; }
             h1 { font-size: 20px; }
-            .top-nav { flex-direction: column; gap: 10px; align-items: stretch; }
+            .top-nav { flex-direction: column; align-items: stretch; }
             .btn { text-align: center; }
         }
     </style>
@@ -200,171 +205,129 @@
 <body>
 
     <div class="container">
-        <h1>🛠️ デバッグ ＆ 開発者ツール</h1>
+        <h1>🛠️ デバッグモード</h1>
 
         <div class="top-nav">
             <a href="game.html" class="btn">🏠 ホームページに戻る</a>
-            <button class="btn btn-danger" onclick="clearAllLocalStorage()">⚠️ 全データ完全リセット</button>
+            <!-- デバッグモード解除ボタン -->
+            <button class="btn btn-danger" onclick="exitDebugMode()">⛔ デバッグモードを終了</button>
         </div>
 
-        <!-- 1. キャラクターステータス & 操作 -->
+        <!-- 1. 全ユーザーのHP閲覧数 -->
         <div class="card">
-            <h2>👤 キャラクターデータ操作</h2>
-            <p style="margin-top: 0; font-size: 14px;">
-                現在の選択キャラ: <span id="current-char-display" class="status-badge">読み込み中...</span>
-            </p>
-            <div class="btn-group">
-                <button class="btn btn-success" onclick="unlockAllCharacters()">🔓 全キャラ即時開放</button>
-                <button class="btn" onclick="setChar('hajime')">はじめに変更</button>
-                <button class="btn" onclick="setChar('meana')">メアナに変更</button>
-                <button class="btn" onclick="setChar('aniki')">アニキに変更</button>
-                <button class="btn" onclick="setChar('naruto')">ナルトに変更</button>
+            <h2>👀 全ユーザーのHP閲覧数 (総PV数)</h2>
+            <div class="pv-counter">
+                <div>総閲覧数:</div>
+                <div class="pv-number" id="total-pv-count">0</div>
+                <div style="font-size: 13px; color: #bdc3c7;">回</div>
             </div>
         </div>
 
-        <!-- 2. 日付別 プレイログ -->
+        <!-- 2. 日付別・ゲームスコア一覧 (全員分) -->
         <div class="card">
-            <h2>📅 日付別プレイログ (日別スコア)</h2>
-            <div class="btn-group" style="margin-bottom: 12px;">
-                <button class="btn btn-danger" onclick="clearGameScoresLog()">🗑️ スコアログのみ削除</button>
+            <h2>🎮 ゲームプレイログ (日付別・難易度別)</h2>
+            
+            <div class="date-picker-area">
+                <label for="select-date" style="font-size: 14px; font-weight: bold;">表示する日付を選択:</label>
+                <input type="date" id="select-date" onchange="loadScoresByDate(this.value)">
+                <button class="btn" onclick="setTodayDate()">今日にする</button>
             </div>
-            <div id="log-container">
-                <!-- JSで展開 -->
-            </div>
-        </div>
 
-        <!-- 3. LocalStorage 全データの確認 -->
-        <div class="card">
-            <h2>🔍 LocalStorage 生データ一覧</h2>
-            <div class="btn-group" style="margin-bottom: 12px;">
-                <button class="btn" onclick="renderAllData()">🔄 表示を更新</button>
+            <div id="score-display-area">
+                <div class="difficulty-grid">
+                    <div class="diff-box easy">
+                        <div class="diff-name">EASY</div>
+                        <div id="easy-scores" class="score-list"><div class="empty-msg">日付を選択してください</div></div>
+                    </div>
+                    <div class="diff-box normal">
+                        <div class="diff-name">NORMAL</div>
+                        <div id="normal-scores" class="score-list"><div class="empty-msg">日付を選択してください</div></div>
+                    </div>
+                    <div class="diff-box hard">
+                        <div class="diff-name">HARD</div>
+                        <div id="hard-scores" class="score-list"><div class="empty-msg">日付を選択してください</div></div>
+                    </div>
+                </div>
             </div>
-            <pre id="raw-storage-display">データがありません</pre>
         </div>
     </div>
 
     <script>
-        // ページ読み込み時の処理
-        function initDebug() {
-            updateCharDisplay();
-            loadLogs();
-            renderAllData();
-        }
-
-        // --- キャラクター関連 ---
-        function updateCharDisplay() {
-            const char = localStorage.getItem('selectedChar') || 'hajime (初期値)';
-            document.getElementById('current-char-display').textContent = char;
-        }
-
-        function setChar(charId) {
-            localStorage.setItem('selectedChar', charId);
-            updateCharDisplay();
-            renderAllData();
-            alert(`選択キャラを [ ${charId} ] に変更しました！`);
-        }
-
-        function unlockAllCharacters() {
-            // キャラクタ一括解放用フラグ等の書き込み
-            localStorage.setItem('unlocked_meana', 'true');
-            localStorage.setItem('unlocked_aniki', 'true');
-            localStorage.setItem('unlocked_naruto', 'true');
-            renderAllData();
-            alert('全キャラクターを開放状態にセットしました！');
-        }
-
-        // --- ログ関連 ---
-        function loadLogs() {
-            const container = document.getElementById('log-container');
-            const rawData = localStorage.getItem('site_game_scores');
-
-            if (!rawData) {
-                container.innerHTML = '<p class="empty-msg">保存されているログデータはありません。</p>';
+        // ページ読み込み時処理
+        window.addEventListener('DOMContentLoaded', () => {
+            // デバッグモードが有効か判定（無効ならHPへ弾く）
+            if (localStorage.getItem('debug_mode_enabled') === 'false') {
+                alert('デバッグモードはOFFになっています。');
+                window.location.href = 'game.html';
                 return;
             }
 
-            const gameData = JSON.parse(rawData);
-            const dates = Object.keys(gameData).sort().reverse();
+            loadTotalPV();
+            setTodayDate();
+        });
 
-            if (dates.length === 0) {
-                container.innerHTML = '<p class="empty-msg">保存されているログデータはありません。</p>';
+        // 1. 全ユーザーのHP閲覧数を読み込み
+        function loadTotalPV() {
+            // 他ユーザー共有対応: バックエンドAPIがある場合は fetch 経由、無い場合は蓄積LocalStorageを表示
+            const totalPV = localStorage.getItem('global_total_pv') || 0;
+            document.getElementById('total-pv-count').textContent = Number(totalPV).toLocaleString();
+        }
+
+        // 今日を選択
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            const dateInput = document.getElementById('select-date');
+            dateInput.value = today;
+            loadScoresByDate(today);
+        }
+
+        // 2. 日付を押したとき、その日の全員のゲームスコアを難易度別に読み込み
+        function loadScoresByDate(selectedDate) {
+            if (!selectedDate) return;
+
+            // 全プレイヤー共通のゲームスコアデータ構造から取得
+            const allScoresData = JSON.parse(localStorage.getItem('all_players_game_scores') || '{}');
+            const dayData = allScoresData[selectedDate] || { easy: [], normal: [], hard: [] };
+
+            renderDifficultyScores('easy-scores', dayData.easy);
+            renderDifficultyScores('normal-scores', dayData.normal);
+            renderDifficultyScores('hard-scores', dayData.hard);
+        }
+
+        function renderDifficultyScores(containerId, scoreList) {
+            const container = document.getElementById(containerId);
+
+            if (!scoreList || scoreList.length === 0) {
+                container.innerHTML = '<div class="empty-msg">この日のプレイ記録はありません</div>';
                 return;
             }
 
-            let html = '';
-            dates.forEach(date => {
-                const dayData = gameData[date];
+            // 新しい順にソートして表示
+            const sortedList = [...scoreList].reverse();
+            let html = '<ul class="score-list">';
+            
+            sortedList.forEach((item, index) => {
+                const userLabel = item.user ? `[${item.user}] ` : '';
                 html += `
-                    <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                        <div style="font-size: 16px; color: var(--accent-gold); margin-bottom: 10px; font-weight: bold;">📅 ${date}</div>
-                        <div class="difficulty-grid">
-                            ${renderDifficultyBox('EASY', dayData.easy, 'easy')}
-                            ${renderDifficultyBox('NORMAL', dayData.normal, 'normal')}
-                            ${renderDifficultyBox('HARD', dayData.hard, 'hard')}
-                        </div>
-                    </div>
+                    <li class="score-item">
+                        <span>⏱️ ${item.time || ''} ${userLabel}</span>
+                        <span><strong>${item.score}</strong> 秒</span>
+                    </li>
                 `;
             });
 
+            html += '</ul>';
             container.innerHTML = html;
         }
 
-        function renderDifficultyBox(title, scores, className) {
-            let listHtml = '';
-            if (scores && scores.length > 0) {
-                const reversedScores = [...scores].reverse();
-                listHtml = '<ul class="score-list">' + 
-                    reversedScores.map(item => `
-                        <li class="score-item">
-                            <span>⏱️ ${item.time}</span>
-                            <span><strong>${item.score}</strong> 秒</span>
-                        </li>
-                    `).join('') + 
-                '</ul>';
-            } else {
-                listHtml = '<div class="empty-msg">記録なし</div>';
-            }
-
-            return `
-                <div class="diff-box ${className}">
-                    <div class="diff-name">${title}</div>
-                    ${listHtml}
-                </div>
-            `;
-        }
-
-        // --- リセット関連 ---
-        function clearGameScoresLog() {
-            if (confirm('プレイログ（日付ごとのスコア履歴）のみ削除しますか？\n※ハイスコアやキャラ解放状況は保持されます。')) {
-                localStorage.removeItem('site_game_scores');
-                initDebug();
+        // 3. デバッグモードをやめる機能
+        function exitDebugMode() {
+            if (confirm('デバッグモードを終了して一般モードに戻りますか？')) {
+                localStorage.setItem('debug_mode_enabled', 'false');
+                alert('デバッグモードを終了しました。');
+                window.location.href = 'game.html';
             }
         }
-
-        function clearAllLocalStorage() {
-            if (confirm('【注意】ハイスコア、全開放フラグ、ログを含むすべての保存データを消去しますか？')) {
-                localStorage.clear();
-                initDebug();
-                alert('すべてのデータをリセットしました。');
-            }
-        }
-
-        // --- Rawストレージ表示 ---
-        function renderAllData() {
-            const display = document.getElementById('raw-storage-display');
-            const data = {};
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                try {
-                    data[key] = JSON.parse(localStorage.getItem(key));
-                } catch(e) {
-                    data[key] = localStorage.getItem(key);
-                }
-            }
-            display.textContent = JSON.stringify(data, null, 2);
-        }
-
-        window.addEventListener('DOMContentLoaded', initDebug);
     </script>
 </body>
 </html>
