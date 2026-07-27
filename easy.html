@@ -272,6 +272,25 @@
             localStorage.setItem(scoreKey, JSON.stringify(topScores)); 
         }
 
+        // ★★★ 追加: 日付別のゲームスコアを保存する関数 ★★★
+        function saveGameScore(difficulty, score) {
+            const today = new Date().toISOString().split('T')[0];
+            let gameData = JSON.parse(localStorage.getItem('site_game_scores') || '{}');
+
+            if (!gameData[today]) {
+                gameData[today] = { easy: [], normal: [], hard: [] };
+            }
+
+            if (gameData[today][difficulty]) {
+                gameData[today][difficulty].push({
+                    score: score,
+                    time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
+                });
+            }
+
+            localStorage.setItem('site_game_scores', JSON.stringify(gameData));
+        }
+
         // PCキーボード専用のキーイベントリスナー
         window.addEventListener('keydown', (e) => {
             if (menuOverlay.style.display === 'flex') {
@@ -464,6 +483,8 @@
                             gameOverTimer = 120; 
 
                             saveScore(score);
+                            // ★★★ 追加: ゲームオーバー時にスコアを保存 ★★★
+                            saveGameScore(DIFFICULTY, Math.floor(score));
                         }
                         if (o.x + o.w < -100) obstacles.splice(i, 1);
                     }
