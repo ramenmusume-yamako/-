@@ -400,23 +400,23 @@ body {
 }
 
 /* ==========================================================================
-   6. デバッグモード用スタイル（完全隠密バージョン）
+   6. デバッグモード用スタイル（スマホ誤動作防止バージョン）
    ========================================================================== */
-/* 看板画像：クリックイベントを許可しつつ、カーソルは矢印固定＆ドラッグ不可に */
+.kanban-bg-img,
+#footer-copyright {
+    cursor: default !important;
+    user-select: none;                   /* テキスト選択を無効化 */
+    -webkit-user-select: none;            /* Safari/Chrome用 */
+    -webkit-touch-callout: none;          /* スマホでの長押しメニュー禁止 */
+    touch-action: manipulation !important; /* ダブルタップズームやブラウザ固有動作を無効化 */
+}
+
 .kanban-bg-img {
     pointer-events: auto !important;
-    cursor: default !important; /* 強制的に普通の矢印カーソルにする */
-    -webkit-user-drag: none;    /* 画像をドラッグしようとして浮き上がるのを防ぐ */
-    user-select: none;
+    -webkit-user-drag: none;
 }
 
-/* フッターの著作権表示：普通のテキストカーソルにせず、青く選択されるのも防ぐ */
-#footer-copyright {
-    cursor: default !important; /* 矢印カーソルに固定 */
-    user-select: none;          /* 5回連打しても文字が青く選択されない */
-}
-
-/* デバッグメニューリンクの装飾（変更なし） */
+/* デバッグメニューリンクの装飾 */
 .menu-content ul li a.debug-link {
     color: #ff4757;
     font-weight: bold;
