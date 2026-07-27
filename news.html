@@ -117,9 +117,16 @@
     <script>
       (function trackPV() {
         const today = new Date().toISOString().split('T')[0];
-        let pvData = JSON.parse(localStorage.getItem('site_pv_data') || '{}');
-        pvData[today] = (pvData[today] || 0) + 1;
-        localStorage.setItem('site_pv_data', JSON.stringify(pvData));
+  
+        // 今のセッション（タブを開いてから閉じるまで）で一度カウントしたか確認
+        if (!sessionStorage.getItem('visited_session')) {
+          let pvData = JSON.parse(localStorage.getItem('site_pv_data') || '{}');
+          pvData[today] = (pvData[today] || 0) + 1;
+          localStorage.setItem('site_pv_data', JSON.stringify(pvData));
+    
+           // カウント済みフラグを立てる
+           sessionStorage.setItem('visited_session', 'true');
+        }
       })();
     </script>
 
