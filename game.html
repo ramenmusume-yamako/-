@@ -168,21 +168,38 @@
         });
     </script>
 
-    <script>
-  // 訪問時にPV（閲覧数）を自動記録
-  (function trackPV() {
-  const today = new Date().toISOString().split('T')[0];
-  
-  // 今のセッション（タブを開いてから閉じるまで）で一度カウントしたか確認
-  if (!sessionStorage.getItem('visited_session')) {
-    let pvData = JSON.parse(localStorage.getItem('site_pv_data') || '{}');
-    pvData[today] = (pvData[today] || 0) + 1;
-    localStorage.setItem('site_pv_data', JSON.stringify(pvData));
-    
-    // カウント済みフラグを立てる
-    sessionStorage.setItem('visited_session', 'true');
-  }
-})();
+    <!-- PVカウント用スクリプト (Firebase連動) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD5HT-oNq3hFOLSpBqG19Vw7ZmmaEHPzSY",
+    authDomain: "ramengirls-bd769.firebaseapp.com",
+    projectId: "ramengirls-bd769",
+    storageBucket: "ramengirls-bd769.firebasestorage.app",
+    messagingSenderId: "211447953783",
+    appId: "1:211447953783:web:3d3ee33f78e0d830f48972"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  (async function trackPV() {
+    // セッション（タブを開いてから閉じるまで）で1回だけカウント
+    if (!sessionStorage.getItem('visited_session')) {
+      const today = new Date().toISOString().split('T')[0];
+      const pvRef = doc(db, "pv", today);
+
+      try {
+        // 今日のドキュメントの count を +1（無ければ自動作成）
+        await setDoc(pvRef, { count: increment(1) }, { merge: true });
+        sessionStorage.setItem('visited_session', 'true');
+      } catch (e) {
+        console.error("PVカウントエラー:", e);
+      }
+    }
+  })();
 </script>
 <script>
   // ページ読み込み時にデバッグモードならメニューを表示する

@@ -14,13 +14,13 @@
 
         <!-- 1. 閲覧数表示エリア -->
         <section class="debug-card">
-            <h2>📊 日別閲覧数（PV）</h2>
+            <h2>📊 日別閲覧数（全デバイス集計 PV）</h2>
             <ul id="pv-list" class="pv-list">
-                <!-- JSでここに日付ごとの閲覧数が挿入されます -->
+                <li class="pv-empty">読み込み中...</li>
             </ul>
         </section>
 
-        <!-- 2. ゲームスコア表示エリア (新規追加) -->
+        <!-- 2. ゲームスコア表示エリア -->
         <section class="debug-card">
             <h2>🎮 ゲームプレイログ（難易度別）</h2>
             
@@ -58,7 +58,23 @@
         </div>
     </main>
 
-    <script>
+    <!-- Firebase SDK & デバッグスクリプト -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD5HT-oNq3hFOLSpBqG19Vw7ZmmaEHPzSY",
+            authDomain: "ramengirls-bd769.firebaseapp.com",
+            projectId: "ramengirls-bd769",
+            storageBucket: "ramengirls-bd769.firebasestorage.app",
+            messagingSenderId: "211447953783",
+            appId: "1:211447953783:web:3d3ee33f78e0d830f48972"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         // 1. デバッグモードの判定（無効ならTOPへリダイレクト）
         if (localStorage.getItem('debug_mode') !== 'true') {
             alert('アクセス権限がありません。');
@@ -66,37 +82,46 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // 2. 保存されているPVデータの読み込み＆表示
-            const pvData = JSON.parse(localStorage.getItem('site_pv_data') || '{}');
+            // 2. Firebaseからリアルタイムで全デバイスのPVデータを読み込み＆表示
             const pvList = document.getElementById('pv-list');
+            const pvQuery = query(collection(db, "pv"));
 
-            const entries = Object.entries(pvData).reverse(); // 新しい日付順にソート
+            onSnapshot(pvQuery, (snapshot) => {
+                if (snapshot.empty) {
+                    pvList.innerHTML = '<li class="pv-empty">データがまだありません。</li>';
+                    return;
+                }
 
-            if (entries.length === 0) {
-                pvList.innerHTML = '<li class="pv-empty">データがまだありません。</li>';
-            } else {
-                pvList.innerHTML = entries.map(([date, count]) => `
+                const pvEntries = [];
+                snapshot.forEach(docSnap => {
+                    pvEntries.push({ date: docSnap.id, count: docSnap.data().count || 0 });
+                });
+
+                // 日付順（新しい順）にソート
+                pvEntries.sort((a, b) => b.date.localeCompare(a.date));
+
+                pvList.innerHTML = pvEntries.map(item => `
                     <li class="pv-item">
-                        <span class="pv-date">${date}</span>
-                        <span class="pv-count">${count} PV</span>
+                        <span class="pv-date">${item.date}</span>
+                        <span class="pv-count">${item.count} PV</span>
                     </li>
                 `).join('');
-            }
+            }, (error) => {
+                console.error("PV読み込みエラー:", error);
+                pvList.innerHTML = '<li class="pv-empty">PVデータの取得に失敗しました。</li>';
+            });
 
-            // 3. ゲームスコア（日付別・難易度別）の読み込み設定
+            // 3. ゲームスコアの初期表示処理
             const scoreDateInput = document.getElementById('score-date');
-            
-            // 初期値として今日の日付をセット
             const today = new Date().toISOString().split('T')[0];
             scoreDateInput.value = today;
             loadScoresForDate(today);
 
-            // 日付変更時のイベント
             scoreDateInput.addEventListener('change', (e) => {
                 loadScoresForDate(e.target.value);
             });
 
-            // 4. デバッグモード解除ボタンの処理
+            // 4. デバッグモード解除ボタン
             document.getElementById('exit-debug-btn').addEventListener('click', () => {
                 localStorage.removeItem('debug_mode');
                 alert('デバッグモードを解除しました。');
@@ -104,9 +129,8 @@
             });
         });
 
-        // 日付ごとの全プレイヤーのスコアを取得して表示する関数
+        // 日付ごとのゲームスコア取得関数
         function loadScoresForDate(selectedDate) {
-            // 全プレイヤーのログ（easy.html, normal.html, hard.html から保存された共通データ）
             const allScores = JSON.parse(localStorage.getItem('all_players_game_scores') || '{}');
             const dayScores = allScores[selectedDate] || { easy: [], normal: [], hard: [] };
 
@@ -123,7 +147,6 @@
                 return;
             }
 
-            // 新しい順に表示
             const reversed = [...scores].reverse();
             listElem.innerHTML = reversed.map(item => `
                 <li class="pv-item">
