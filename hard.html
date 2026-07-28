@@ -204,26 +204,29 @@
         pImgL.src = activeChar.left; pImgR.src = activeChar.right;
 
         // --- 背景画像（計6枚）の設定 ---
+        // 送付いただいたhiru.png（7枚分の幅）に合わせて units: 7 に設定
         const bgData = [
-            { src: 'hiru.png',    units: 6 }, // 1280 * 6px
-            { src: 'hiruyuu.png', units: 1 }, // 1280 * 1px
-            { src: 'yuu.png',     units: 6 }, // 1280 * 6px
-            { src: 'yuuyoru.png', units: 1 }, // 1280 * 1px
-            { src: 'yoru.png',    units: 6 }, // 1280 * 6px
-            { src: 'yoruasa.png', units: 1 }  // 1280 * 1px
+            { src: 'hiru.png',    units: 7 },
+            { src: 'hiruyuu.png', units: 1 },
+            { src: 'yuu.png',     units: 7 },
+            { src: 'yuuyoru.png', units: 1 },
+            { src: 'yoru.png',    units: 7 },
+            { src: 'yoruasa.png', units: 1 },
+            { src: 'asahiru.png', units: 1 }
         ];
 
         const bgImages = [];
         let totalBgWidth = 0;
 
-        // 全背景の横幅（単位: V_WIDTH）を計算して読み込み＆事前デコード
         bgData.forEach((item, index) => {
             const img = new Image();
             img.src = item.src;
+            img.onerror = () => {
+                console.error(`背景画像の読み込みに失敗しました: ${item.src}`);
+            };
             bgImages[index] = img;
             totalBgWidth += V_WIDTH * item.units;
 
-            // 背景切り替え時の一瞬の引っかかりを防ぐための事前デコード
             if (img.decode) {
                 img.decode().catch(() => {});
             }
@@ -320,11 +323,16 @@
         }
 
         function saveScore(currentScore) {
-            const finalScore = Math.floor(currentScore);
-            if (finalScore > highScore) { highScore = finalScore; localStorage.setItem(bestKey, highScore); }
-            topScores.push(finalScore); topScores.sort((a, b) => b - a); topScores = topScores.slice(0, 3);
-            localStorage.setItem(scoreKey, JSON.stringify(topScores)); 
-        }
+    const finalScore = Math.floor(currentScore);
+    if (finalScore > highScore) { highScore = finalScore; localStorage.setItem(bestKey, highScore); }
+    topScores.push(finalScore); topScores.sort((a, b) => b - a); topScores = topScores.slice(0, 3);
+    localStorage.setItem(scoreKey, JSON.stringify(topScores)); 
+
+    // ★ ここを追加（クラウドへ日付・難易度・端末情報・スコアを保存）
+    if (window.recordScoreToCloud) {
+        window.recordScoreToCloud(DIFFICULTY, deviceType, finalScore);
+    }
+}
 
         function startGameSequence() {
             resetGame(); 
@@ -508,25 +516,40 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // --- 6枚の背景画像のループ描画処理 ---
+            // --- 背景画像の描画処理（巨大画像の分割切り出し安全描画） ---
             let currentScroll = bgScroll % totalBgWidth;
             let currentX = 0;
 
             for (let i = 0; i < bgData.length; i++) {
                 const item = bgData[i];
                 const img = bgImages[i];
-                const bgW = V_WIDTH * item.units; // それぞれの画像横幅
+                const bgW = V_WIDTH * item.units;
 
-                // ループ画面外（前後）の描画判定用オフセット
                 [-totalBgWidth, 0, totalBgWidth].forEach(offset => {
                     let dx = (currentX + offset) - currentScroll;
 
-                    // 画面内に少しでも入っている場合のみ描画
                     if (dx < V_WIDTH && dx + bgW > 0) {
                         if (img && img.complete && img.naturalWidth > 0) {
-                            ctx.drawImage(img, dx * scaleRatio, 0, bgW * scaleRatio, V_HEIGHT * scaleRatio);
+                            
+                            // 💡 1280pxごとに分割切り出しして描画（ブラウザの超巨大画像スキップ防止）
+                            for (let u = 0; u < item.units; u++) {
+                                let subDx = dx + (u * V_WIDTH);
+                                
+                                if (subDx < V_WIDTH && subDx + V_WIDTH > 0) {
+                                    let sx = (u / item.units) * img.naturalWidth;
+                                    let sw = img.naturalWidth / item.units;
+                                    let sh = img.naturalHeight;
+
+                                    ctx.drawImage(
+                                        img,
+                                        sx, 0, sw, sh,
+                                        subDx * scaleRatio, 0,
+                                        V_WIDTH * scaleRatio, V_HEIGHT * scaleRatio
+                                    );
+                                }
+                            }
+
                         } else {
-                            // ロード中・画像未用意時の保険背景
                             ctx.fillStyle = '#34495e';
                             ctx.fillRect(dx * scaleRatio, 0, bgW * scaleRatio, V_HEIGHT * scaleRatio);
                         }
@@ -622,5 +645,40 @@
         window.addEventListener('load', () => { resize(); setTimeout(resize, 200); });
         requestAnimationFrame(update);
     </script>
+
+    <!-- Firebase SDK の読み込み（デザインには一切影響しません） -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  // 手順1で取得したご自身のFirebase設定情報に置き換えてください
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // クラウドへ保存する関数をグローバルに公開
+  window.recordScoreToCloud = async function(difficulty, device, scoreVal) {
+    const today = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"（日付）
+    try {
+      await addDoc(collection(db, "game_scores"), {
+        difficulty: difficulty,
+        device: device,
+        score: scoreVal,
+        date: today,
+        createdAt: serverTimestamp()
+      });
+    } catch (e) {
+      console.error("Score send error: ", e);
+    }
+  };
+</script>
 </body>
 </html>

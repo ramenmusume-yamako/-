@@ -61,7 +61,7 @@
     <!-- Firebase SDK & デバッグスクリプト -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD5HT-oNq3hFOLSpBqG19Vw7ZmmaEHPzSY",
@@ -80,6 +80,8 @@
             alert('アクセス権限がありません。');
             window.location.href = 'index.html';
         }
+
+        let scoreUnsubscribe = null; // リアルタイムリスナーの解除用
 
         document.addEventListener('DOMContentLoaded', () => {
             // 2. Firebaseからリアルタイムで全デバイスのPVデータを読み込み＆表示
@@ -129,14 +131,52 @@
             });
         });
 
-        // 日付ごとのゲームスコア取得関数
+        // Firebaseから選択された日付のゲームスコアをリアルタイム取得
         function loadScoresForDate(selectedDate) {
-            const allScores = JSON.parse(localStorage.getItem('all_players_game_scores') || '{}');
-            const dayScores = allScores[selectedDate] || { easy: [], normal: [], hard: [] };
+            // 以前のリスナーがあれば解除
+            if (scoreUnsubscribe) scoreUnsubscribe();
 
-            renderDifficultyList('easy-score-list', dayScores.easy);
-            renderDifficultyList('normal-score-list', dayScores.normal);
-            renderDifficultyList('hard-score-list', dayScores.hard);
+            const scoresQuery = query(
+                collection(db, "game_scores"),
+                where("date", "==", selectedDate)
+            );
+
+            scoreUnsubscribe = onSnapshot(scoresQuery, (snapshot) => {
+                const dayScores = { easy: [], normal: [], hard: [] };
+
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const diff = (data.difficulty || '').toLowerCase();
+
+                    // createdAt から時刻文字列（例: 14:30:15）を生成
+                    let timeStr = '';
+                    if (data.createdAt) {
+                        timeStr = data.createdAt.toDate().toLocaleTimeString('ja-JP');
+                    }
+
+                    const scoreItem = {
+                        score: data.score,
+                        device: data.device || '',
+                        time: timeStr,
+                        timestamp: data.createdAt ? data.createdAt.toMillis() : 0
+                    };
+
+                    if (diff === 'easy') dayScores.easy.push(scoreItem);
+                    else if (diff === 'normal' || diff === 'nomal') dayScores.normal.push(scoreItem);
+                    else if (diff === 'hard') dayScores.hard.push(scoreItem);
+                });
+
+                // 新しい順（タイムスタンプ順）にソート
+                dayScores.easy.sort((a, b) => b.timestamp - a.timestamp);
+                dayScores.normal.sort((a, b) => b.timestamp - a.timestamp);
+                dayScores.hard.sort((a, b) => b.timestamp - a.timestamp);
+
+                renderDifficultyList('easy-score-list', dayScores.easy);
+                renderDifficultyList('normal-score-list', dayScores.normal);
+                renderDifficultyList('hard-score-list', dayScores.hard);
+            }, (error) => {
+                console.error("スコア読み込みエラー:", error);
+            });
         }
 
         function renderDifficultyList(elementId, scores) {
@@ -147,10 +187,9 @@
                 return;
             }
 
-            const reversed = [...scores].reverse();
-            listElem.innerHTML = reversed.map(item => `
+            listElem.innerHTML = scores.map(item => `
                 <li class="pv-item">
-                    <span class="pv-date">${item.time || ''} ${item.user ? `[${item.user}]` : ''}</span>
+                    <span class="pv-date">${item.time} ${item.device ? `[${item.device}]` : ''}</span>
                     <span class="pv-count">${item.score} 秒</span>
                 </li>
             `).join('');
