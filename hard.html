@@ -621,28 +621,45 @@
 
   // スコアを "hard" に保存する関数
   function saveHardScore(finalScore) {
-      if (finalScore <= 0) return;
+    // スコアを Firebase に送信する関数（デバッグ版）
+function saveHardScore(finalScore) {
+    console.log("① saveHardScore が呼び出されました。スコア:", finalScore);
 
-      // 今日の日付を YYYY-MM-DD 形式で取得
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const dateStr = `${year}-${month}-${day}`;
+    if (finalScore <= 0) {
+        console.log("スコアが0以下のため送信をスキップしました");
+        return;
+    }
 
-      // 👈 collection を "hard" に指定
-      db.collection("hard").add({
-          score: Number(finalScore), // displayScore を数値として保存
-          date: dateStr,             // 日付タグ
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      })
-      .then((docRef) => {
-          console.log("HARDスコア送信完了 ID:", docRef.id);
-      })
-      .catch((error) => {
-          console.error("送信エラー:", error);
-      });
-  }
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+
+    console.log("② 送信データ作成完了:", { score: Number(finalScore), date: dateStr });
+
+    // Firebase (v9/v10 モジュール形式の場合の書き方)
+    // ※もし古い形式(v8 compat)をお使いの場合は下のコメントアウト側を使ってください
+    try {
+        db.collection("hard").add({
+            score: Number(finalScore),
+            date: dateStr,
+            device: (typeof isPC !== 'undefined' && isPC) ? 'PC' : 'SP',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then((docRef) => {
+            console.log("③ 【成功】Firebaseに保存されました！ ID:", docRef.id);
+            alert("Firebaseへの送信に成功しました！"); // 成功したらポップアップを出します
+        })
+        .catch((error) => {
+            console.error("❌ 【エラー】Firebase書き込み失敗:", error);
+            alert("送信エラーが発生しました: " + error.message);
+        });
+    } catch (e) {
+        console.error("❌ 【実行エラー】:", e);
+        alert("コード実行エラー: " + e.message);
+    }
+}
 
   // --------------------------------------------------
   // 【ゲームオーバー時の呼び出し箇所】
