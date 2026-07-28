@@ -178,7 +178,7 @@
             const gainNode = audioCtx.createGain();
             gainNode.gain.value = 0.4;
             bgmSource.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
+            bgmSource.connect(audioCtx.destination);
             bgmSource.start(0);
         }
 
@@ -203,13 +203,33 @@
         const pImgL = new Image(); const pImgR = new Image();
         pImgL.src = activeChar.left; pImgR.src = activeChar.right;
 
+        // --- 背景画像（計6枚）の設定 ---
+        const bgData = [
+            { src: 'hiru.png',    units: 6 }, // 1280 * 6px
+            { src: 'hiruyuu.png', units: 1 }, // 1280 * 1px
+            { src: 'yuu.png',     units: 6 }, // 1280 * 6px
+            { src: 'yuuyoru.png', units: 1 }, // 1280 * 1px
+            { src: 'yoru.png',    units: 6 }, // 1280 * 6px
+            { src: 'yoruasa.png', units: 1 }  // 1280 * 1px
+        ];
+
         const bgImages = [];
-        // 💡 修正：'yuuyoru' を 'yuuyoru.png' に正しく修正
-        const bgSrcs = ['hiru1.png', 'hiru2.png', 'hiru3.png','hiru4.png','hiru5.png','hiru6.png','hiruyuu.png','yuu1.png','yuu2.png','yuu3.png','yuu4.png','yuu5.png','yuu6.png','yuuyoru.png','yoru1.png','yoru2.png','yoru3.png','yoru4.png','yoru5.png','yoru6.png','yoruasa.png','asahiru.png'];
-        let bgScroll = 0;
-        bgSrcs.forEach((src, index) => {
-            bgImages[index] = new Image(); bgImages[index].src = src;
+        let totalBgWidth = 0;
+
+        // 全背景の横幅（単位: V_WIDTH）を計算して読み込み＆事前デコード
+        bgData.forEach((item, index) => {
+            const img = new Image();
+            img.src = item.src;
+            bgImages[index] = img;
+            totalBgWidth += V_WIDTH * item.units;
+
+            // 背景切り替え時の一瞬の引っかかりを防ぐための事前デコード
+            if (img.decode) {
+                img.decode().catch(() => {});
+            }
         });
+
+        let bgScroll = 0;
 
         const imgNaruto = new Image();   imgNaruto.src = 'naruto.png';
         const imgMenma = new Image();    imgMenma.src = 'menma.png';
@@ -394,9 +414,6 @@
             if (_deltaTime > 100) _deltaTime = 16.666;
             _dtRatio = _deltaTime / (1000 / 60);
 
-            // 💡 22枚分の背景総横幅を動的に安全計算
-            const totalBgWidth = V_WIDTH * bgSrcs.length;
-
             if (gameState === 'PLAYING') {
                 player.animTimer += _dtRatio; 
 
@@ -405,7 +422,7 @@
                 if (startCallTimer > 0) {
                     startCallTimer -= _dtRatio; 
                     bgScroll += (initialBaseSpeed * 0.7) * _dtRatio;
-                    if (bgScroll >= totalBgWidth) bgScroll -= totalBgWidth; // オーバーフロー防止安全装置
+                    if (bgScroll >= totalBgWidth) bgScroll -= totalBgWidth;
 
                     if (startCallTimer <= 0) { startCallTimer = 0; playBGM(); }
                 } else {
@@ -420,7 +437,7 @@
                     }
                     
                     bgScroll += (currentSpeed * 0.7) * _dtRatio; 
-                    if (bgScroll >= totalBgWidth) bgScroll -= totalBgWidth; // オーバーフロー防止安全装置
+                    if (bgScroll >= totalBgWidth) bgScroll -= totalBgWidth;
 
                     speedPhaseTimer += _dtRatio;
                     if (speedPhaseTimer >= nextResetThreshold) { currentSpeed = initialBaseSpeed; setRandomResetThreshold(); }
@@ -491,37 +508,42 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 💡 修正：画像のロードを待たずに強制描画するロジック
-            const bgW = V_WIDTH;
-            const totalBgWidth = bgW * bgSrcs.length;
+            // --- 6枚の背景画像のループ描画処理 ---
             let currentScroll = bgScroll % totalBgWidth;
+            let currentX = 0;
 
-            for (let i = 0; i < bgSrcs.length; i++) {
-                let dx = (i * bgW) - currentScroll;
-                if (dx + bgW < 0) dx += totalBgWidth;
-                if (dx > V_WIDTH) dx -= totalBgWidth;
+            for (let i = 0; i < bgData.length; i++) {
+                const item = bgData[i];
+                const img = bgImages[i];
+                const bgW = V_WIDTH * item.units; // それぞれの画像横幅
 
-                if (dx < V_WIDTH && dx + bgW > 0) {
-                    if (bgImages[i] && bgImages[i].complete && bgImages[i].naturalWidth > 0) {
-                        // 正常に読み込めている場合のみ背景画像を描画
-                        ctx.drawImage(bgImages[i], dx * scaleRatio, 0, bgW * scaleRatio, V_HEIGHT * scaleRatio);
-                    } else {
-                        // 画像がない・読み込みエラー時の保険背景（画面に穴が開かないように落ち着いた紺色にする）
-                        ctx.fillStyle = '#34495e';
-                        ctx.fillRect(dx * scaleRatio, 0, bgW * scaleRatio, V_HEIGHT * scaleRatio);
+                // ループ画面外（前後）の描画判定用オフセット
+                [-totalBgWidth, 0, totalBgWidth].forEach(offset => {
+                    let dx = (currentX + offset) - currentScroll;
+
+                    // 画面内に少しでも入っている場合のみ描画
+                    if (dx < V_WIDTH && dx + bgW > 0) {
+                        if (img && img.complete && img.naturalWidth > 0) {
+                            ctx.drawImage(img, dx * scaleRatio, 0, bgW * scaleRatio, V_HEIGHT * scaleRatio);
+                        } else {
+                            // ロード中・画像未用意時の保険背景
+                            ctx.fillStyle = '#34495e';
+                            ctx.fillRect(dx * scaleRatio, 0, bgW * scaleRatio, V_HEIGHT * scaleRatio);
+                        }
                     }
-                }
+                });
+
+                currentX += bgW;
             }
 
             // 地面
             ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.fillRect(0, GROUND_Y * scaleRatio, canvas.width, 4 * scaleRatio);
 
-            // 💡 修正：キャラクターの画像ロード失敗時の保険
+            // キャラクターの描画
             if (pImgL.complete && pImgR.complete && pImgL.naturalWidth > 0) {
                 ctx.drawImage((Math.floor(player.animTimer / 30) % 2 === 0) ? pImgL : pImgR, player.x * scaleRatio, player.y * scaleRatio, player.width * scaleRatio, player.height * scaleRatio);
             } else {
-                // キャラクター画像が無い時の代わりに「赤い四角」を表示
                 ctx.fillStyle = '#e74c3c';
                 ctx.fillRect(player.x * scaleRatio, player.y * scaleRatio, player.width * scaleRatio, player.height * scaleRatio);
             }
@@ -531,7 +553,6 @@
                 if (o.img && o.img.complete && o.img.naturalWidth > 0) {
                     ctx.drawImage(o.img, o.x * scaleRatio, o.y * scaleRatio, o.w * scaleRatio, o.h * scaleRatio);
                 } else {
-                    // 障害物の画像が無い時の代わりに「オレンジの四角」を表示
                     ctx.fillStyle = '#f39c12';
                     ctx.fillRect(o.x * scaleRatio, o.y * scaleRatio, o.w * scaleRatio, o.h * scaleRatio);
                 }
