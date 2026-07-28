@@ -188,19 +188,33 @@
       })();
     </script>
 
-    <script>
-      const defaultNews = [
-        {
-          id: '1',
-          date: '2026.05.25',
-          category: 'label-menu',
-          categoryName: '新メニュー',
-          title: '夏季限定「冷やし極太冷麺」がまもなく登場！',
-          titleImg: '',
-          text: 'メーナちゃんも大絶賛！\nキンキンに冷えた醤油スープに、自慢の極太ちぢれ麺が絡む至高の一杯です。\n\n6月1日より提供開始いたします！',
-          detailImgs: []
-        }
-      ];
+    <!-- ★ Firebase SDK & お知らせ連動スクリプト (module指定) ★ -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+      import { 
+        getFirestore, 
+        collection, 
+        addDoc, 
+        deleteDoc, 
+        doc, 
+        onSnapshot, 
+        query, 
+        orderBy 
+      } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+      // 1. Firebase初期化（先ほど取得したキーをセット）
+      const firebaseConfig = {
+        apiKey: "AIzaSyD5HT-oNq3hFOLSpBqG19Vw7ZmmaEHPzSY",
+        authDomain: "ramengirls-bd769.firebaseapp.com",
+        projectId: "ramengirls-bd769",
+        storageBucket: "ramengirls-bd769.firebasestorage.app",
+        messagingSenderId: "211447953783",
+        appId: "1:211447953783:web:3d3ee33f78e0d830f48972",
+        measurementId: "G-T9LL8LCH8K"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
 
       const categoryLabels = {
         'label-menu': '新メニュー',
@@ -209,8 +223,9 @@
       };
 
       let isDebug = false;
-      let cropper = null; // Cropperインスタンス
-      let croppedBase64Result = ''; // 切り抜いた画像データ
+      let newsDataList = []; // Firebaseから受け取るお知らせリスト
+      let cropper = null; 
+      let croppedBase64Result = ''; 
 
       function fileToBase64(file) {
         return new Promise((resolve, reject) => {
@@ -227,47 +242,67 @@
         return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
       }
 
+      // お知らせ一覧を画面に描画
       function renderNews() {
         const newsListEl = document.getElementById('news-list');
-        const newsData = JSON.parse(localStorage.getItem('site_news_data') || JSON.stringify(defaultNews));
+        if (!newsListEl) return;
         
-        if (newsData.length === 0) {
+        if (newsDataList.length === 0) {
           newsListEl.innerHTML = '<li class="news-empty">現在お知らせはありません。</li>';
           return;
         }
 
-        newsListEl.innerHTML = newsData.map(item => `
+        newsListEl.innerHTML = newsDataList.map(item => `
           <li class="news-item" id="news-${item.id}">
             <div class="news-meta">
-              <span class="news-date">${item.date}</span>
-              <span class="news-label ${item.category}">${item.categoryName || categoryLabels[item.category]}</span>
+              <span class="news-date">${item.date || ''}</span>
+              <span class="news-label ${item.category}">${item.categoryName || categoryLabels[item.category] || 'お知らせ'}</span>
             </div>
             
             <div class="news-content">
-              <div class="news-title-area" onclick="openDetail('${item.id}')">
+              <div class="news-title-area" data-id="${item.id}">
                 <h3 class="news-item-title">${item.title}</h3>
                 ${item.titleImg ? `<div class="news-title-img-wrap"><img src="${item.titleImg}" alt="タイトル画像" class="news-title-img"></div>` : ''}
                 <span class="toggle-icon">クリックで詳細を表示 🔍</span>
               </div>
             </div>
 
-            ${isDebug ? `<button class="delete-news-btn" onclick="deleteNews('${item.id}')">削除</button>` : ''}
+            ${isDebug ? `<button class="delete-news-btn" data-id="${item.id}">削除</button>` : ''}
           </li>
         `).join('');
+
+        // 詳細モーダル開くイベントをアタッチ
+        document.querySelectorAll('.news-title-area').forEach(el => {
+          el.addEventListener('click', () => {
+            const id = el.getAttribute('data-id');
+            openDetail(id);
+          });
+        });
+
+        // 削除ボタンのイベント（デバッグモード時のみ）
+        if (isDebug) {
+          document.querySelectorAll('.delete-news-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const id = btn.getAttribute('data-id');
+              deleteNews(id);
+            });
+          });
+        }
       }
 
-      function openDetail(id) {
-        const newsData = JSON.parse(localStorage.getItem('site_news_data') || JSON.stringify(defaultNews));
-        const item = newsData.find(n => n.id === id);
+      // 詳細画面表示
+      window.openDetail = function(id) {
+        const item = newsDataList.find(n => n.id === id);
         if (!item) return;
 
-        document.getElementById('detail-date').textContent = item.date;
+        document.getElementById('detail-date').textContent = item.date || '';
         
         const catEl = document.getElementById('detail-category');
-        catEl.textContent = item.categoryName || categoryLabels[item.category];
+        catEl.textContent = item.categoryName || categoryLabels[item.category] || 'お知らせ';
         catEl.className = `news-label ${item.category}`;
 
-        document.getElementById('detail-title').textContent = item.title;
+        document.getElementById('detail-title').textContent = item.title || '';
 
         const titleImgContainer = document.getElementById('detail-title-img-container');
         if (item.titleImg) {
@@ -286,16 +321,20 @@
         }
 
         document.getElementById('detail-modal').style.display = 'flex';
-      }
+      };
 
-      function deleteNews(id) {
-        if (!confirm('このお知らせを削除してもよろしいですか？')) return;
-        let newsData = JSON.parse(localStorage.getItem('site_news_data') || JSON.stringify(defaultNews));
-        newsData = newsData.filter(item => item.id !== id);
-        localStorage.setItem('site_news_data', JSON.stringify(newsData));
-        renderNews();
-      }
+      // 削除処理（Firebaseから削除）
+      window.deleteNews = async function(id) {
+        if (!confirm('このお知らせを削除してもよろしいですか？（全端末から消去されます）')) return;
+        try {
+          await deleteDoc(doc(db, "news", id));
+        } catch (error) {
+          console.error("削除エラー:", error);
+          alert('削除に失敗しました: ' + error.message);
+        }
+      };
 
+      // ページ読み込み時の初期化処理
       document.addEventListener('DOMContentLoaded', () => {
         isDebug = localStorage.getItem('debug_mode') === 'true';
 
@@ -307,14 +346,28 @@
         const closeModalBtn = document.getElementById('close-modal-btn');
         const newsForm = document.getElementById('news-form');
 
-        // ★ デバッグモードの時のみ、投稿ボタンや各種イベントを有効化 ★
+        // ★ Firebase からリアルタイム監視（他端末にも即座に自動反映される） ★
+        const q = query(collection(db, "news"), orderBy("createdAt", "desc"));
+        onSnapshot(q, (snapshot) => {
+          newsDataList = [];
+          snapshot.forEach((docSnapshot) => {
+            newsDataList.push({
+              id: docSnapshot.id,
+              ...docSnapshot.data()
+            });
+          });
+          renderNews(); // 全端末で描画更新
+        }, (error) => {
+          console.error("Firebase取得エラー:", error);
+        });
+
+        // デバッグモードの時のみ投稿ボタンや各種イベントを有効化
         if (isDebug) {
           if (fabBtn) fabBtn.style.display = 'flex';
 
           if (fabBtn) fabBtn.addEventListener('click', () => modal.style.display = 'flex');
           if (closeModalBtn) closeModalBtn.addEventListener('click', () => modal.style.display = 'none');
 
-          // 画像トリミング用の要素
           const titleImgInput = document.getElementById('news-title-img');
           const cropModal = document.getElementById('crop-modal');
           const cropImage = document.getElementById('crop-image');
@@ -322,7 +375,6 @@
           const cropCancelBtn = document.getElementById('crop-cancel-btn');
           const titleCroppedPreview = document.getElementById('title-cropped-preview');
 
-          // デバッグ時の投稿モーダル内で画像を選んだ場合のみトリミングを開く
           if (titleImgInput) {
             titleImgInput.addEventListener('change', (e) => {
               const file = e.target.files[0];
@@ -336,7 +388,7 @@
                 if (cropper) cropper.destroy();
 
                 cropper = new Cropper(cropImage, {
-                  aspectRatio: 3.5 / 1, // ヘッダー用の横長比率
+                  aspectRatio: 3.5 / 1,
                   viewMode: 1,
                   autoCropArea: 1
                 });
@@ -387,37 +439,36 @@
               const now = new Date();
               const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
 
+              // Firebaseへ送信するデータ
               const newNewsItem = {
-                id: Date.now().toString(),
                 date: dateStr,
                 category: category,
                 categoryName: categoryLabels[category],
                 title: title,
                 titleImg: croppedBase64Result,
                 text: text,
-                detailImgs: detailImgsBase64
+                detailImgs: detailImgsBase64,
+                createdAt: new Date() // 並び替え用
               };
 
-              const newsData = JSON.parse(localStorage.getItem('site_news_data') || JSON.stringify(defaultNews));
-              newsData.unshift(newNewsItem);
-              localStorage.setItem('site_news_data', JSON.stringify(newsData));
+              try {
+                // Firebase (Firestore) へ保存（保存された瞬間に全端末の画面が更新されます）
+                await addDoc(collection(db, "news"), newNewsItem);
 
-              newsForm.reset();
-              croppedBase64Result = '';
-              titleCroppedPreview.style.display = 'none';
-              modal.style.display = 'none';
-              renderNews();
-              alert('お知らせを投稿しました！');
+                newsForm.reset();
+                croppedBase64Result = '';
+                titleCroppedPreview.style.display = 'none';
+                modal.style.display = 'none';
+                alert('全体へお知らせを配信しました！');
+              } catch (error) {
+                console.error("投稿エラー:", error);
+                alert('投稿に失敗しました: ' + error.message);
+              }
             });
           }
         }
 
-        if (!localStorage.getItem('site_news_data')) {
-          localStorage.setItem('site_news_data', JSON.stringify(defaultNews));
-        }
-
-        renderNews();
-
+        // 詳細モーダルを閉じる処理
         document.getElementById('close-detail-btn').addEventListener('click', () => {
           document.getElementById('detail-modal').style.display = 'none';
         });
