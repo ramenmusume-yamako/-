@@ -81,7 +81,8 @@
             window.location.href = 'index.html';
         }
 
-        let scoreUnsubscribe = null; // リアルタイムリスナーの解除用
+        // リアルタイムリスナー解除用の保持配列
+        let scoreUnsubscribes = [];
 
         document.addEventListener('DOMContentLoaded', () => {
             // 2. Firebaseからリアルタイムで全デバイスのPVデータを読み込み＆表示
@@ -117,10 +118,10 @@
             const scoreDateInput = document.getElementById('score-date');
             const today = new Date().toISOString().split('T')[0];
             scoreDateInput.value = today;
-            loadScoresForDate(today);
+            loadScoresForDate(today); // 今日の日付（scoreday）を初期セット
 
             scoreDateInput.addEventListener('change', (e) => {
-                loadScoresForDate(e.target.value);
+                loadScoresForDate(e.target.value); // 日付選択変更時
             });
 
             // 4. デバッグモード解除ボタン
@@ -131,57 +132,61 @@
             });
         });
 
-        // Firebaseから選択された日付のゲームスコアをリアルタイム取得
-        // Firebaseから選択された日付のゲームスコアを取得（インデックスエラー回避版）
-function loadScoresForDate(selectedDate) {
-    if (scoreUnsubscribe) scoreUnsubscribe();
+        // Firebaseから選択された日付 (scoreday) のゲームスコアを難易度別コレクション(easy, normal, hard)から取得
+        function loadScoresForDate(scoreday) {
+            // 前回のリスナーが存在すれば全て解除
+            scoreUnsubscribes.forEach(unsub => unsub());
+            scoreUnsubscribes = [];
 
-    // 日付指定をせず、コレクション全体をリアルタイム監視（PVと同じ方式）
-    const scoresQuery = query(collection(db, "game_scores"));
+            // 各難易度コレクションと描画先要素IDのマッピング
+            const diffs = [
+                { name: 'easy', elementId: 'easy-score-list' },
+                { name: 'normal', elementId: 'normal-score-list' },
+                { name: 'hard', elementId: 'hard-score-list' }
+            ];
 
-    scoreUnsubscribe = onSnapshot(scoresQuery, (snapshot) => {
-        const dayScores = { easy: [], normal: [], hard: [] };
+            diffs.forEach(diff => {
+                // それぞれのコレクション(easy, normal, hard)に対して date == scoreday 条件でクエリ発行
+                const q = query(
+                    collection(db, diff.name),
+                    where("date", "==", scoreday)
+                );
 
-        snapshot.forEach(docSnap => {
-            const data = docSnap.data();
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    const scoreList = [];
 
-            // JavaScript側で日付をチェックして一致するものだけ抽出
-            if (data.date !== selectedDate) return;
+                    snapshot.forEach(docSnap => {
+                        const data = docSnap.data();
 
-            const diff = (data.difficulty || '').toLowerCase();
+                        let timeStr = '';
+                        if (data.createdAt) {
+                            timeStr = data.createdAt.toDate().toLocaleTimeString('ja-JP');
+                        } else if (data.time) {
+                            timeStr = data.time;
+                        }
 
-            let timeStr = '';
-            if (data.createdAt) {
-                timeStr = data.createdAt.toDate().toLocaleTimeString('ja-JP');
-            } else if (data.time) {
-                timeStr = data.time;
-            }
+                        scoreList.push({
+                            score: data.score,
+                            device: data.device || 'SP',
+                            time: timeStr,
+                            timestamp: data.createdAt ? data.createdAt.toMillis() : 0
+                        });
+                    });
 
-            const scoreItem = {
-                score: data.score,
-                device: data.device || 'SP',
-                time: timeStr,
-                timestamp: data.createdAt ? data.createdAt.toMillis() : 0
-            };
+                    // 新しい時刻順にソート
+                    scoreList.sort((a, b) => b.timestamp - a.timestamp);
 
-            if (diff === 'easy') dayScores.easy.push(scoreItem);
-            else if (diff === 'normal' || diff === 'nomal') dayScores.normal.push(scoreItem);
-            else if (diff === 'hard') dayScores.hard.push(scoreItem);
-        });
+                    // リスト描画（デザインスタイルそのまま）
+                    renderDifficultyList(diff.elementId, scoreList);
+                }, (error) => {
+                    console.error(`${diff.name} スコア読み込みエラー:`, error);
+                });
 
-        // 新しい順にソート
-        dayScores.easy.sort((a, b) => b.timestamp - a.timestamp);
-        dayScores.normal.sort((a, b) => b.timestamp - a.timestamp);
-        dayScores.hard.sort((a, b) => b.timestamp - a.timestamp);
+                scoreUnsubscribes.push(unsubscribe);
+            });
+        }
 
-        renderDifficultyList('easy-score-list', dayScores.easy);
-        renderDifficultyList('normal-score-list', dayScores.normal);
-        renderDifficultyList('hard-score-list', dayScores.hard);
-    }, (error) => {
-        console.error("スコア読み込みエラー:", error);
-    });
-}
-
+        // 難易度ごとのリスト描画関数
         function renderDifficultyList(elementId, scores) {
             const listElem = document.getElementById(elementId);
 
