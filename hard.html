@@ -121,6 +121,25 @@
     </style>
 </head>
 <body>
+    <!-- Firebase SDK (v10 compat版) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+  // あなたのFirebaseプロジェクト設定
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "XXXXX",
+    appId: "XXXXX"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
     <div id="ui">BEST: 0<br>SCORE: 0</div>
     <canvas id="gameCanvas"></canvas>
 
@@ -629,6 +648,11 @@
                     ctx.textBaseline = gameOverTimer > 0 ? 'middle' : 'alphabetic';
                     ctx.fillStyle = '#e67e22'; ctx.font = `bold ${Math.floor(fontSize * scaleRatio)}px sans-serif`;
                     ctx.fillText('完 食', textX * scaleRatio, textY * scaleRatio); ctx.restore();
+                    // ゲームオーバー確定のタイミング
+const currentFinalScore = Math.floor(score);
+
+// Firebaseへ送る
+saveScoreToFirebase(currentFinalScore);
                     
                     if (gameOverTimer === 0) {
                         ctx.save(); const leftCenterX = V_WIDTH / 2 - 220; 
@@ -661,39 +685,34 @@
         }
         window.addEventListener('load', () => { resize(); setTimeout(resize, 200); });
         requestAnimationFrame(update);
+
+        // スコアをFirebaseに保存する関数
+function saveScoreToFirebase(finalScore) {
+    // 0秒などのデータは送信しないガード（必要に応じて調整）
+    if (finalScore <= 0) return;
+
+    // 現在の日付を "YYYY-MM-DD" 形式で取得
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`; // 例: "2026-07-28"
+
+    db.collection("scores").add({
+        score: finalScore,
+        date: dateStr, // 日付検索用
+        createdAt: firebase.firestore.FieldValue.serverTimestamp() // 厳密な送信日時
+    })
+    .then((docRef) => {
+        console.log("スコア送信完了:", docRef.id);
+    })
+    .catch((error) => {
+        console.error("送信エラー:", error);
+    });
+}
     </script>
 
-    <!-- Firebase SDK の読み込み -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-      import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    
 
-      const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT.appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-
-      window.recordScoreToCloud = async function(difficulty, device, scoreVal) {
-        const today = new Date().toISOString().split('T')[0];
-        try {
-          await addDoc(collection(db, "game_scores"), {
-            difficulty: difficulty,
-            device: device,
-            score: scoreVal,
-            date: today,
-            createdAt: serverTimestamp()
-          });
-        } catch (e) {
-          console.error("Score send error: ", e);
-        }
-      };
-    </script>
 </body>
 </html>
