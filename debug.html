@@ -132,52 +132,55 @@
         });
 
         // Firebaseから選択された日付のゲームスコアをリアルタイム取得
-        function loadScoresForDate(selectedDate) {
-            // 以前のリスナーがあれば解除
-            if (scoreUnsubscribe) scoreUnsubscribe();
+        // Firebaseから選択された日付のゲームスコアを取得（インデックスエラー回避版）
+function loadScoresForDate(selectedDate) {
+    if (scoreUnsubscribe) scoreUnsubscribe();
 
-            const scoresQuery = query(
-                collection(db, "game_scores"),
-                where("date", "==", selectedDate)
-            );
+    // 日付指定をせず、コレクション全体をリアルタイム監視（PVと同じ方式）
+    const scoresQuery = query(collection(db, "game_scores"));
 
-            scoreUnsubscribe = onSnapshot(scoresQuery, (snapshot) => {
-                const dayScores = { easy: [], normal: [], hard: [] };
+    scoreUnsubscribe = onSnapshot(scoresQuery, (snapshot) => {
+        const dayScores = { easy: [], normal: [], hard: [] };
 
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    const diff = (data.difficulty || '').toLowerCase();
+        snapshot.forEach(docSnap => {
+            const data = docSnap.data();
 
-                    // createdAt から時刻文字列（例: 14:30:15）を生成
-                    let timeStr = '';
-                    if (data.createdAt) {
-                        timeStr = data.createdAt.toDate().toLocaleTimeString('ja-JP');
-                    }
+            // JavaScript側で日付をチェックして一致するものだけ抽出
+            if (data.date !== selectedDate) return;
 
-                    const scoreItem = {
-                        score: data.score,
-                        device: data.device || '',
-                        time: timeStr,
-                        timestamp: data.createdAt ? data.createdAt.toMillis() : 0
-                    };
+            const diff = (data.difficulty || '').toLowerCase();
 
-                    if (diff === 'easy') dayScores.easy.push(scoreItem);
-                    else if (diff === 'normal' || diff === 'nomal') dayScores.normal.push(scoreItem);
-                    else if (diff === 'hard') dayScores.hard.push(scoreItem);
-                });
+            let timeStr = '';
+            if (data.createdAt) {
+                timeStr = data.createdAt.toDate().toLocaleTimeString('ja-JP');
+            } else if (data.time) {
+                timeStr = data.time;
+            }
 
-                // 新しい順（タイムスタンプ順）にソート
-                dayScores.easy.sort((a, b) => b.timestamp - a.timestamp);
-                dayScores.normal.sort((a, b) => b.timestamp - a.timestamp);
-                dayScores.hard.sort((a, b) => b.timestamp - a.timestamp);
+            const scoreItem = {
+                score: data.score,
+                device: data.device || 'SP',
+                time: timeStr,
+                timestamp: data.createdAt ? data.createdAt.toMillis() : 0
+            };
 
-                renderDifficultyList('easy-score-list', dayScores.easy);
-                renderDifficultyList('normal-score-list', dayScores.normal);
-                renderDifficultyList('hard-score-list', dayScores.hard);
-            }, (error) => {
-                console.error("スコア読み込みエラー:", error);
-            });
-        }
+            if (diff === 'easy') dayScores.easy.push(scoreItem);
+            else if (diff === 'normal' || diff === 'nomal') dayScores.normal.push(scoreItem);
+            else if (diff === 'hard') dayScores.hard.push(scoreItem);
+        });
+
+        // 新しい順にソート
+        dayScores.easy.sort((a, b) => b.timestamp - a.timestamp);
+        dayScores.normal.sort((a, b) => b.timestamp - a.timestamp);
+        dayScores.hard.sort((a, b) => b.timestamp - a.timestamp);
+
+        renderDifficultyList('easy-score-list', dayScores.easy);
+        renderDifficultyList('normal-score-list', dayScores.normal);
+        renderDifficultyList('hard-score-list', dayScores.hard);
+    }, (error) => {
+        console.error("スコア読み込みエラー:", error);
+    });
+}
 
         function renderDifficultyList(elementId, scores) {
             const listElem = document.getElementById(elementId);
