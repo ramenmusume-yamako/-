@@ -77,10 +77,14 @@
     </footer>
 
     <!-- デバッグモード起動JavaScript -->
+    <!-- デバッグモード起動JavaScript -->
     <script>
   let headerTaps = 0;
   let footerTaps = 0;
   let resetTimer = null;
+
+  // 🔒 デバッグモード解除用のパスワード（好きな文字列に変更できます）
+  const DEBUG_PASSWORD = "ramen";
 
   function updateDebugMenu() {
     const debugMenuItem = document.getElementById('debug-menu-item');
@@ -100,12 +104,23 @@
       footerTaps = 0;
     }, 5000);
 
+    // ヘッダーとフッターがそれぞれ5回以上タップされたら処理を実行
     if (headerTaps >= 5 && footerTaps >= 5) {
-      localStorage.setItem('debug_mode', 'true');
-      alert('デバッグモードが有効になりました！ハンバーガーメニューをご確認ください。');
-      updateDebugMenu();
+      // 連続発動を防ぐためにタップ数をリセット
       headerTaps = 0;
       footerTaps = 0;
+
+      // パスワード入力ダイアログを表示
+      const inputPassword = prompt('🔒 デバッグモードのパスワードを入力してください:');
+
+      if (inputPassword === DEBUG_PASSWORD) {
+        localStorage.setItem('debug_mode', 'true');
+        alert('🔓 認証成功！ハンバーガーメニューにデバッグページが追加されました。');
+        updateDebugMenu();
+      } else if (inputPassword !== null) {
+        // キャンセルボタン以外が押されてパスワードが違った場合
+        alert('❌ パスワードが違います。');
+      }
     }
   }
 
@@ -113,9 +128,9 @@
   function attachSecretTapEvent(element, tapCallback) {
     if (!element) return;
 
-    // スマホ用のタッチイベント（ブラウザのデフォルト動作を抑止してカウント）
+    // スマホ用のタッチイベント
     element.addEventListener('touchstart', (e) => {
-      e.preventDefault(); // Google検索や拡大の判定をキャンセル！
+      e.preventDefault(); 
       tapCallback();
     }, { passive: false });
 
