@@ -40,14 +40,29 @@
         .crop-btn-cancel {
             background-color: #ccc;
         }
-        /* トリミング完了後のプレビュー表示 */
-        .cropped-preview {
+        /* トリミング完了後のプレビュー表示エリア */
+        .preview-wrapper {
             margin-top: 10px;
+            position: relative;
+            display: inline-block;
+        }
+        .cropped-preview {
             max-width: 100%;
             height: 100px;
             object-fit: cover;
             border: 2px dashed #800000;
             display: none;
+        }
+        .remove-img-btn {
+            display: none;
+            margin-top: 5px;
+            padding: 4px 10px;
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -137,8 +152,12 @@
                 <div class="form-group">
                     <label>アイキャッチ画像 (ヘッダー用に範囲指定)</label>
                     <input type="file" id="news-title-img" accept="image/*">
-                    <!-- 切り抜いた結果の切り抜きプレビュー表示 -->
-                    <img id="title-cropped-preview" class="cropped-preview" alt="調整済み画像">
+                    
+                    <!-- 切り抜いた結果の切り抜きプレビュー表示と削除ボタン -->
+                    <div class="preview-wrapper">
+                        <img id="title-cropped-preview" class="cropped-preview" alt="調整済み画像">
+                        <button type="button" id="remove-title-img-btn" class="remove-img-btn">画像を削除 ✖</button>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -251,6 +270,28 @@
             return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
         }
 
+        // アイキャッチ画像をクリアする関数
+        function clearTitleImage() {
+            const titleImgInput = document.getElementById('news-title-img');
+            const titleCroppedPreview = document.getElementById('title-cropped-preview');
+            const removeTitleImgBtn = document.getElementById('remove-title-img-btn');
+
+            if (titleImgInput) titleImgInput.value = '';
+            croppedBase64Result = '';
+            if (titleCroppedPreview) {
+                titleCroppedPreview.src = '';
+                titleCroppedPreview.style.display = 'none';
+            }
+            if (removeTitleImgBtn) removeTitleImgBtn.style.display = 'none';
+        }
+
+        // 投稿フォームを完全にリセット（下書きを破棄）する関数
+        function resetNewsForm() {
+            const newsForm = document.getElementById('news-form');
+            if (newsForm) newsForm.reset();
+            clearTitleImage();
+        }
+
         // お知らせ描画
         function renderNews() {
             const newsListEl = document.getElementById('news-list');
@@ -343,9 +384,9 @@
             }
         }
 
-        // ★ 初期化メインルーチン (DOMContentLoadedを挟まず直接実行) ★
+        // ★ 初期化メインルーチン ★
         function initApp() {
-            // 1. デバッグモード判定 ('true' 文字列でチェック)
+            // 1. デバッグモード判定
             isDebug = localStorage.getItem('debug_mode') === 'true';
 
             const debugMenuItem = document.getElementById('debug-menu-item');
@@ -376,8 +417,22 @@
             // 3. デバッグ機能（投稿・切り抜き等）のセットアップ
             if (isDebug) {
                 if (fabBtn) fabBtn.style.display = 'flex';
-                if (fabBtn) fabBtn.addEventListener('click', () => modal.style.display = 'flex');
-                if (closeModalBtn) closeModalBtn.addEventListener('click', () => modal.style.display = 'none');
+                
+                // 新規投稿モーダルを開くとき
+                if (fabBtn) {
+                    fabBtn.addEventListener('click', () => {
+                        resetNewsForm(); // 常にフレッシュな状態にする
+                        modal.style.display = 'flex';
+                    });
+                }
+
+                // モーダルを閉じるとき（下書きをクリア）
+                if (closeModalBtn) {
+                    closeModalBtn.addEventListener('click', () => {
+                        resetNewsForm();
+                        modal.style.display = 'none';
+                    });
+                }
 
                 const titleImgInput = document.getElementById('news-title-img');
                 const cropModal = document.getElementById('crop-modal');
@@ -385,6 +440,14 @@
                 const cropSubmitBtn = document.getElementById('crop-submit-btn');
                 const cropCancelBtn = document.getElementById('crop-cancel-btn');
                 const titleCroppedPreview = document.getElementById('title-cropped-preview');
+                const removeTitleImgBtn = document.getElementById('remove-title-img-btn');
+
+                // 選択した画像の削除ボタンイベント
+                if (removeTitleImgBtn) {
+                    removeTitleImgBtn.addEventListener('click', () => {
+                        clearTitleImage();
+                    });
+                }
 
                 if (titleImgInput) {
                     titleImgInput.addEventListener('change', (e) => {
@@ -419,15 +482,14 @@
 
                         titleCroppedPreview.src = croppedBase64Result;
                         titleCroppedPreview.style.display = 'block';
+                        if (removeTitleImgBtn) removeTitleImgBtn.style.display = 'inline-block';
                         cropModal.style.display = 'none';
                     });
                 }
 
                 if (cropCancelBtn) {
                     cropCancelBtn.addEventListener('click', () => {
-                        titleImgInput.value = '';
-                        croppedBase64Result = '';
-                        titleCroppedPreview.style.display = 'none';
+                        clearTitleImage();
                         cropModal.style.display = 'none';
                     });
                 }
@@ -464,9 +526,7 @@
                         try {
                             await addDoc(collection(db, "news"), newNewsItem);
 
-                            newsForm.reset();
-                            croppedBase64Result = '';
-                            titleCroppedPreview.style.display = 'none';
+                            resetNewsForm();
                             modal.style.display = 'none';
                             alert('全体へお知らせを配信しました！');
                         } catch (error) {
