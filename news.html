@@ -64,6 +64,46 @@
             font-size: 0.8rem;
             cursor: pointer;
         }
+
+        /* ★ 追加：詳細画像の個別プレビュー管理用スタイル */
+        .detail-preview-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .detail-preview-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .detail-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .detail-preview-remove {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background-color: rgba(217, 83, 79, 0.85);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            line-height: 20px;
+            text-align: center;
+            cursor: pointer;
+            padding: 0;
+        }
+        .detail-preview-remove:hover {
+            background-color: #d9534f;
+        }
     </style>
 </head>
 <body class="news-page-theme">
@@ -168,6 +208,8 @@
                 <div class="form-group">
                     <label>詳細用追加画像 (複数可)</label>
                     <input type="file" id="news-detail-imgs" accept="image/*" multiple>
+                    <!-- ★ 1枚ずつプレビュー・削除を行うコンテナ -->
+                    <div id="detail-preview-list" class="detail-preview-list"></div>
                 </div>
 
                 <button type="submit" class="submit-btn">投稿する</button>
@@ -198,7 +240,7 @@
         <p>&copy; 2026 ramengirls</p>
     </footer>
 
-    <!-- ★ メイン処理スクリプト (1つのmoduleに統合) ★ -->
+    <!-- ★ メイン処理スクリプト ★ -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { 
@@ -253,6 +295,7 @@
         let newsDataList = [];
         let cropper = null; 
         let croppedBase64Result = ''; 
+        let detailImgFilesList = []; // ★ 詳細画像ファイルを保持する配列
 
         // ユーティリティ関数
         function fileToBase64(file) {
@@ -285,11 +328,44 @@
             if (removeTitleImgBtn) removeTitleImgBtn.style.display = 'none';
         }
 
+        // ★ 詳細画像プレビューの再描画処理
+        function renderDetailImagePreviews() {
+            const container = document.getElementById('detail-preview-list');
+            if (!container) return;
+
+            container.innerHTML = '';
+            detailImgFilesList.forEach((file, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'detail-preview-item';
+
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'detail-preview-remove';
+                removeBtn.innerHTML = '✕';
+                removeBtn.title = '画像を削除';
+                removeBtn.addEventListener('click', () => {
+                    detailImgFilesList.splice(index, 1);
+                    renderDetailImagePreviews();
+                });
+
+                itemDiv.appendChild(img);
+                itemDiv.appendChild(removeBtn);
+                container.appendChild(itemDiv);
+            });
+        }
+
         // 投稿フォームを完全にリセット（下書きを破棄）する関数
         function resetNewsForm() {
             const newsForm = document.getElementById('news-form');
             if (newsForm) newsForm.reset();
             clearTitleImage();
+            
+            // ★ 詳細画像配列およびプレビュー表示をクリア
+            detailImgFilesList = [];
+            renderDetailImagePreviews();
         }
 
         // お知らせ描画
@@ -471,6 +547,20 @@
                     });
                 }
 
+                // ★ 詳細用追加画像の選択イベント（追加で選んだ画像も順次追加されるように保持）
+                const detailImgsInput = document.getElementById('news-detail-imgs');
+                if (detailImgsInput) {
+                    detailImgsInput.addEventListener('change', (e) => {
+                        const files = Array.from(e.target.files);
+                        if (files.length > 0) {
+                            detailImgFilesList.push(...files);
+                            renderDetailImagePreviews();
+                        }
+                        // 追加選択を繰り返し行えるようにinputの値を一度クリア
+                        e.target.value = '';
+                    });
+                }
+
                 if (cropSubmitBtn) {
                     cropSubmitBtn.addEventListener('click', () => {
                         if (!cropper) return;
@@ -502,9 +592,9 @@
                         const title = document.getElementById('news-title').value;
                         const text = document.getElementById('news-detail-text').value;
 
-                        const detailImgFiles = Array.from(document.getElementById('news-detail-imgs').files);
+                        // ★ 個別削除後に残った画像配列（detailImgFilesList）をBase64変換
                         const detailImgsBase64 = [];
-                        for (const file of detailImgFiles) {
+                        for (const file of detailImgFilesList) {
                             const b64 = await fileToBase64(file);
                             detailImgsBase64.push(b64);
                         }
