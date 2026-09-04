@@ -221,13 +221,18 @@ body {
     border-color: #2980b9;
 }
 
-/* その他・イベント用の赤 */
+/* ラーむす赤 */
 .label-event {
     background-color: #fff0f0;
     color: #c0392b;
     border-color: #c0392b;
 }
-
+/*その他*/
+.label-sonota {
+    background-color: #D5EAD8;
+    color: #006036;
+    border-color: #006036;
+}
 /* --- 本文エリア --- */
 .news-content {
     margin-top: 5px;
