@@ -11,10 +11,9 @@ const V_WIDTH = 1280;
 const V_HEIGHT = 720;
 
 const isPC = window.innerWidth >= 960;
-const scaleRatio = isPC ? 1.0 : 0.5;
 
-canvas.width = V_WIDTH * scaleRatio;
-canvas.height = V_HEIGHT * scaleRatio;
+canvas.width = V_WIDTH;
+canvas.height = V_HEIGHT;
 
 
 // ==============================
