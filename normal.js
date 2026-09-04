@@ -1,4 +1,4 @@
-import { startGame } from './runner.js';
+import { startGame } from 'runner.js';
 
 startGame({
     difficulty: 'normal',
