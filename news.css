@@ -214,15 +214,15 @@ body {
     border-color: #e67e22;
 }
 
-/* 更新情報用の紺・青 */
-.label-update {
+/* お店情報用の紺・青 */
+.label-shop {
     background-color: #f0f4ff;
     color: #2980b9;
     border-color: #2980b9;
 }
 
 /* ラーむす赤 */
-.label-event {
+.label-girls {
     background-color: #fff0f0;
     color: #c0392b;
     border-color: #c0392b;
