@@ -1190,54 +1190,54 @@ function drawStickyChashu(
 
         ctx.drawImage(
             imgChashu,
-            (V_WIDTH / 2 - 400) * scaleRatio,
-            (V_HEIGHT / 2 - 250) * scaleRatio,
-            800 * scaleRatio,
-            500 * scaleRatio
+            (V_WIDTH / 2 - 400),
+            (V_HEIGHT / 2 - 250),
+            800,
+            500
         );
 
     } else if (pattern === 1) {
 
         ctx.drawImage(
             imgChashu,
-            260 * scaleRatio,
-            360 * scaleRatio,
-            280 * scaleRatio,
-            220 * scaleRatio
+            260,
+            360,
+            280,
+            220
         );
 
         ctx.drawImage(
             imgChashu,
-            740 * scaleRatio,
-            380 * scaleRatio,
-            280 * scaleRatio,
-            220 * scaleRatio
+            740,
+            380,
+            280,
+            220
         );
 
         ctx.drawImage(
             imgChashu,
-            440 * scaleRatio,
-            160 * scaleRatio,
-            440 * scaleRatio,
-            330 * scaleRatio
+            440,
+            160,
+            440,
+            330
         );
 
     } else {
 
         ctx.drawImage(
             imgChashu,
-            120 * scaleRatio,
-            300 * scaleRatio,
-            460 * scaleRatio,
-            350 * scaleRatio
+            120,
+            300,
+            460,
+            350
         );
 
         ctx.drawImage(
             imgChashu,
-            680 * scaleRatio,
-            180 * scaleRatio,
-            520 * scaleRatio,
-            390 * scaleRatio
+            680,
+            180,
+            520,
+            390
         );
     }
 
@@ -1300,10 +1300,10 @@ function draw() {
 
                 ctx.drawImage(
                     bgImages[i],
-                    dx * scaleRatio,
+                    dx,
                     0,
-                    bgW * scaleRatio,
-                    V_HEIGHT * scaleRatio
+                    bgW,
+                    V_HEIGHT
                 );
 
             } else {
@@ -1312,10 +1312,10 @@ function draw() {
                     '#34495e';
 
                 ctx.fillRect(
-                    dx * scaleRatio,
+                    dx,
                     0,
-                    bgW * scaleRatio,
-                    V_HEIGHT * scaleRatio
+                    bgW,
+                    V_HEIGHT
                 );
             }
         }
@@ -1329,9 +1329,9 @@ function draw() {
 
     ctx.fillRect(
         0,
-        GROUND_Y * scaleRatio,
+        GROUND_Y,
         canvas.width,
-        4 * scaleRatio
+        4
     );
 
 
@@ -1354,10 +1354,10 @@ function draw() {
 
         ctx.drawImage(
             currentImg,
-            player.x * scaleRatio,
-            player.y * scaleRatio,
-            player.width * scaleRatio,
-            player.height * scaleRatio
+            player.x,
+            player.y,
+            player.width,
+            player.height
         );
 
     } else {
@@ -1366,10 +1366,10 @@ function draw() {
             '#e74c3c';
 
         ctx.fillRect(
-            player.x * scaleRatio,
-            player.y * scaleRatio,
-            player.width * scaleRatio,
-            player.height * scaleRatio
+            player.x,
+            player.y,
+            player.width,
+            player.height
         );
     }
 
@@ -1386,10 +1386,10 @@ function draw() {
 
             ctx.drawImage(
                 o.img,
-                o.x * scaleRatio,
-                o.y * scaleRatio,
-                o.w * scaleRatio,
-                o.h * scaleRatio
+                o.x,
+                o.y,
+                o.w,
+                o.h
             );
 
         } else {
@@ -1398,10 +1398,10 @@ function draw() {
                 '#f39c12';
 
             ctx.fillRect(
-                o.x * scaleRatio,
-                o.y * scaleRatio,
-                o.w * scaleRatio,
-                o.h * scaleRatio
+                o.x,
+                o.y,
+                o.w,
+                o.h
             );
         }
     });
@@ -1454,13 +1454,13 @@ function draw() {
                 (
                     V_WIDTH / 2 -
                     imgW / 2
-                ) * scaleRatio,
+                ),
                 (
                     V_HEIGHT / 2 -
                     imgH / 2
-                ) * scaleRatio,
-                imgW * scaleRatio,
-                imgH * scaleRatio
+                ),
+                imgW,
+                imgH
             );
         }
 
@@ -1472,7 +1472,7 @@ function draw() {
 
         ctx.font =
             `bold ${Math.floor(
-                90 * scaleRatio
+                90
             )}px sans-serif`;
 
         ctx.shadowColor =
@@ -1482,8 +1482,8 @@ function draw() {
 
         ctx.fillText(
             'スタート！',
-            (V_WIDTH / 2) * scaleRatio,
-            (V_HEIGHT / 2) * scaleRatio
+            (V_WIDTH / 2),
+            (V_HEIGHT / 2)
         );
 
         ctx.restore();
@@ -1522,26 +1522,26 @@ function draw() {
 
             ctx.font =
                 `bold ${Math.floor(
-                    80 * scaleRatio
+                    80
                 )}px sans-serif`;
 
             ctx.fillText(
                 '走れ！ラーメン娘！！',
-                (V_WIDTH / 2) * scaleRatio,
-                (V_HEIGHT / 2 - 100) * scaleRatio
+                (V_WIDTH / 2),
+                (V_HEIGHT / 2 - 100)
             );
 
             ctx.fillStyle = 'white';
 
             ctx.font =
                 `${Math.floor(
-                    30 * scaleRatio
+                    30
                 )}px sans-serif`;
 
             ctx.fillText(
                 'スペースキー または タップでジャンプ！',
-                (V_WIDTH / 2) * scaleRatio,
-                (V_HEIGHT / 2 + 30) * scaleRatio
+                (V_WIDTH / 2),
+                (V_HEIGHT / 2 + 30)
             );
 
             ctx.fillStyle =
@@ -1549,13 +1549,13 @@ function draw() {
 
             ctx.font =
                 `bold ${Math.floor(
-                    36 * scaleRatio
+                    36
                 )}px sans-serif`;
 
             ctx.fillText(
                 '>> Press Space or Tap <<',
-                (V_WIDTH / 2) * scaleRatio,
-                (V_HEIGHT / 2 + 180) * scaleRatio
+                (V_WIDTH / 2),
+                (V_HEIGHT / 2 + 180)
             );
 
         } else {
@@ -1591,13 +1591,13 @@ function draw() {
 
             ctx.font =
                 `bold ${Math.floor(
-                    fontSize * scaleRatio
+                    fontSize
                 )}px sans-serif`;
 
             ctx.fillText(
                 '完 食',
-                textX * scaleRatio,
-                textY * scaleRatio
+                textX,
+                textY
             );
 
             ctx.restore();
@@ -1618,24 +1618,24 @@ function draw() {
 
                 ctx.font =
                     `${Math.floor(
-                        45 * scaleRatio
+                        45
                     )}px sans-serif`;
 
                 ctx.fillText(
                     `記録: ${displayScore} 秒`,
-                    leftCenterX * scaleRatio,
-                    (V_HEIGHT / 2 + 10) * scaleRatio
+                    leftCenterX,
+                    (V_HEIGHT / 2 + 10)
                 );
 
                 ctx.font =
                     `${Math.floor(
-                        30 * scaleRatio
+                        30
                     )}px sans-serif`;
 
                 ctx.fillText(
                     `最高記録: ${Math.floor(highScore)} 秒`,
-                    leftCenterX * scaleRatio,
-                    (V_HEIGHT / 2 + 65) * scaleRatio
+                    leftCenterX,
+                    (V_HEIGHT / 2 + 65)
                 );
 
 
@@ -1648,7 +1648,7 @@ function draw() {
 
                     ctx.font =
                         `${Math.floor(
-                            24 * scaleRatio
+                            24
                         )}px sans-serif`;
 
                     if (
@@ -1658,16 +1658,16 @@ function draw() {
 
                         ctx.fillText(
                             '【 スペース 】or【 タップ 】でスコアスキップ',
-                            leftCenterX * scaleRatio,
-                            (V_HEIGHT / 2 + 160) * scaleRatio
+                            leftCenterX,
+                            (V_HEIGHT / 2 + 160)
                         );
 
                     } else {
 
                         ctx.fillText(
                             '【 スペース 】or【 タップ 】でメニューを開く ➔',
-                            leftCenterX * scaleRatio,
-                            (V_HEIGHT / 2 + 160) * scaleRatio
+                            leftCenterX,
+                            (V_HEIGHT / 2 + 160)
                         );
                     }
                 }
@@ -1685,10 +1685,10 @@ function draw() {
                     'rgba(255,255,255,0.08)';
 
                 ctx.fillRect(
-                    (rightCenterX - 200) * scaleRatio,
-                    (rankYStart - 60) * scaleRatio,
-                    400 * scaleRatio,
-                    310 * scaleRatio
+                    (rightCenterX - 200),
+                    (rankYStart - 60),
+                    400,
+                    310
                 );
 
                 ctx.fillStyle =
@@ -1696,13 +1696,13 @@ function draw() {
 
                 ctx.font =
                     `bold ${Math.floor(
-                        32 * scaleRatio
+                        32
                     )}px sans-serif`;
 
                 ctx.fillText(
                     '歴代最高記録 TOP3',
-                    rightCenterX * scaleRatio,
-                    (rankYStart - 15) * scaleRatio
+                    rightCenterX,
+                    (rankYStart - 15)
                 );
 
 
@@ -1738,13 +1738,13 @@ function draw() {
 
                     ctx.font =
                         `bold ${Math.floor(
-                            30 * scaleRatio
+                            30
                         )}px sans-serif`;
 
                     ctx.fillText(
                         medals[i],
-                        (rightCenterX - 150) * scaleRatio,
-                        currentY * scaleRatio
+                        (rightCenterX - 150),
+                        currentY
                     );
 
                     ctx.textAlign =
@@ -1755,13 +1755,13 @@ function draw() {
 
                     ctx.font =
                         `bold ${Math.floor(
-                            32 * scaleRatio
+                            32
                         )}px serif`;
 
                     ctx.fillText(
                         `${topScores[i]} 秒`,
-                        (rightCenterX + 150) * scaleRatio,
-                        currentY * scaleRatio
+                        (rightCenterX + 150),
+                        currentY
                     );
                 }
 
