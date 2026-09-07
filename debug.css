@@ -2,137 +2,430 @@
    デバッグページ専用スタイル
    ========================================================================== */
 
+body {
+background: #f7f3e9;
+color: #17233d;
+}
+
 .debug-container {
-    max-width: 600px;
-    margin: 40px auto;
-    padding: 0 20px;
-    box-sizing: border-box;
+max-width: 1000px;
+margin: 30px auto;
+padding: 0 20px;
+box-sizing: border-box;
 }
 
 .debug-title {
-    font-size: 1.8rem;
-    color: #800000;
-    text-align: center;
-    margin-bottom: 30px;
-    border-bottom: 3px solid #2b2b2b;
-    padding-bottom: 10px;
+font-size: 1.8rem;
+color: #800000;
+text-align: center;
+margin: 0 0 25px;
+border-bottom: 3px solid #2b2b2b;
+padding-bottom: 10px;
 }
 
 .debug-card {
-    background: #ffffff;
-    border: 2px solid #2b2b2b;
-    box-shadow: 6px 6px 0px #800000;
-    padding: 20px;
-    margin-bottom: 30px;
+background: #fff;
+border: 2px solid #d5d5d5;
+border-radius: 8px;
+padding: 18px;
+margin-bottom: 18px;
+box-sizing: border-box;
 }
 
 .debug-card h2 {
-    font-size: 1.2rem;
-    color: #2b2b2b;
-    margin-top: 0;
-    margin-bottom: 15px;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 8px;
+font-size: 1.2rem;
+color: #17233d;
+margin: 0 0 14px;
+border-bottom: 1px solid #ddd;
+padding-bottom: 8px;
 }
 
-/* ゲームスコア用サブヘッダー */
-.debug-score-section h3 {
-    font-size: 1rem;
-    color: #800000;
-    margin-top: 20px;
-    margin-bottom: 10px;
-    padding-left: 8px;
-    border-left: 4px solid #800000;
+/* ==========================================================================
+   PVカレンダー
+   ========================================================================== */
+
+.pv-calendar-area {
+display: flex;
+gap: 20px;
+align-items: stretch;
 }
 
-/* 日付選択エリア */
+.pv-calendar-main {
+flex: 1;
+min-width: 0;
+}
+
+.pv-month-selector {
+display: flex;
+justify-content: center;
+align-items: center;
+gap: 40px;
+margin-bottom: 10px;
+}
+
+.pv-month-selector input[type="month"] {
+padding: 6px 10px;
+font-size: 1.4rem;
+font-weight: bold;
+border: none;
+background: transparent;
+color: #17233d;
+text-align: center;
+}
+
+.pv-month-selector button {
+width: 60px;
+height: 42px;
+font-size: 1.8rem;
+font-weight: bold;
+background: #fff;
+color: #9b1c31;
+border: 2px solid #cfd5df;
+border-radius: 7px;
+cursor: pointer;
+}
+
+.pv-month-selector button:hover {
+background: #f7f3e9;
+}
+
+.pv-month-selector button:active {
+transform: translate(2px, 2px);
+}
+
+.pv-weekdays,
+.pv-calendar {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+}
+
+.pv-weekdays div {
+text-align: center;
+font-weight: bold;
+padding: 6px 0;
+color: #17233d;
+}
+
+.pv-weekdays div:nth-child(6) {
+color: #1976d2;
+}
+
+.pv-weekdays div:nth-child(7) {
+color: #d32f45;
+}
+
+.pv-day {
+min-height: 65px;
+border: 1px solid #ddd;
+background: #fff;
+padding: 6px;
+box-sizing: border-box;
+cursor: pointer;
+transition: background-color 0.1s;
+}
+
+.pv-day:hover {
+background: #f5f8fc;
+}
+
+.pv-day.empty {
+background: #fafafa;
+cursor: default;
+}
+
+.pv-day.today {
+border: 2px solid #d32f45;
+}
+
+.pv-day.selected {
+background: #ffe5e8;
+box-shadow: inset 0 0 0 2px #e44b5f;
+}
+
+.pv-day-number {
+font-weight: bold;
+font-size: 0.95rem;
+color: #17233d;
+}
+
+.pv-day.saturday .pv-day-number {
+color: #1976d2;
+}
+
+.pv-day.sunday .pv-day-number {
+color: #d32f45;
+}
+
+.pv-day.holiday .pv-day-number {
+color: #d32f45;
+}
+
+.pv-day-count {
+font-size: 0.8rem;
+font-weight: bold;
+color: #617493;
+margin-top: 7px;
+}
+
+.pv-detail {
+width: 290px;
+border-left: 2px solid #d5d5d5;
+padding-left: 18px;
+box-sizing: border-box;
+}
+
+.pv-detail h3 {
+font-size: 1rem;
+margin: 0;
+padding: 0;
+}
+
+.pv-selected-date {
+font-size: 1.25rem;
+font-weight: bold;
+margin: 8px 0 14px;
+color: #6d1720;
+}
+
+.pv-selected-count {
+font-size: 1.3rem;
+font-weight: bold;
+color: #d93668;
+}
+
+/* ==========================================================================
+   ゲームスコア
+   ========================================================================== */
+
 .debug-date-picker {
-    margin-bottom: 15px;
-    font-size: 1rem;
-    font-weight: bold;
-    color: #2b2b2b;
+margin-bottom: 14px;
+font-size: 1rem;
+font-weight: bold;
+color: #176b50;
 }
 
 .debug-date-picker input[type="date"] {
-    padding: 6px 10px;
-    font-size: 1rem;
-    border: 2px solid #2b2b2b;
-    background-color: #f7f3e9;
-    color: #2b2b2b;
-    border-radius: 4px;
-    outline: none;
+padding: 7px 10px;
+font-size: 1rem;
+border: 2px solid #cfd5df;
+background: #fff;
+color: #17233d;
+border-radius: 6px;
+outline: none;
 }
 
-/* PVリスト / スコアリスト共通 */
+.score-columns {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 16px;
+}
+
+.debug-score-section {
+min-width: 0;
+}
+
+.score-header {
+font-size: 1.05rem;
+font-weight: bold;
+padding: 10px 12px;
+border-radius: 7px 7px 0 0;
+}
+
+/* EASY */
+
+.debug-score-section.easy .score-header {
+background: #e3f5ed;
+color: #167653;
+border: 2px solid #72c9a5;
+}
+
+.debug-score-section.easy .score-mode-block {
+border-color: #72c9a5;
+}
+
+/* NORMAL */
+
+.debug-score-section.normal .score-header {
+background: #e6f2ff;
+color: #18558e;
+border: 2px solid #7bb8ed;
+}
+
+.debug-score-section.normal .score-mode-block {
+border-color: #7bb8ed;
+}
+
+/* HARD */
+
+.debug-score-section.hard .score-header {
+background: #f3e8fc;
+color: #7023a0;
+border: 2px solid #c28bea;
+}
+
+.debug-score-section.hard .score-mode-block {
+border-color: #c28bea;
+}
+
+/* スコア欄 */
+
+.score-mode-block {
+height: 230px;
+max-height: 230px;
+overflow-y: auto;
+background: #fff;
+border: 2px solid;
+border-top: none;
+border-radius: 0 0 7px 7px;
+padding: 0 10px;
+box-sizing: border-box;
+}
+
+.score-list-header {
+display: grid;
+grid-template-columns: 1fr 70px;
+padding: 8px 0;
+border-bottom: 1px solid #ddd;
+font-size: 0.85rem;
+font-weight: bold;
+color: #71809a;
+position: sticky;
+top: 0;
+background: #fff;
+}
+
+.score-list-header span:last-child {
+text-align: right;
+}
+
 .pv-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+list-style: none;
+padding: 0;
+margin: 0;
 }
 
 .pv-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px dashed #ddd;
-    font-size: 1rem;
+display: grid;
+grid-template-columns: 1fr 70px;
+align-items: center;
+gap: 8px;
+padding: 9px 0;
+border-bottom: 1px dashed #ddd;
+font-size: 0.9rem;
 }
 
 .pv-item:last-child {
-    border-bottom: none;
+border-bottom: none;
 }
 
-.pv-date {
-    font-weight: bold;
-    color: #555;
+.score-time {
+color: #60708a;
 }
 
-.pv-count {
-    font-weight: bold;
-    color: #800000;
-    background: #f7f3e9;
-    padding: 4px 10px;
-    border-radius: 4px;
-    border: 1px solid #2b2b2b;
+.score-value {
+font-weight: bold;
+font-size: 1rem;
+color: #17233d;
+text-align: right;
 }
 
 .pv-empty {
-    color: #888;
-    text-align: center;
-    padding: 15px 0;
+color: #888;
+text-align: center;
+padding: 15px 0;
 }
 
-/* 解除ボタン */
+/* ==========================================================================
+   操作
+   ========================================================================== */
+
+.debug-operation {
+padding: 14px;
+}
+
 .debug-btn-danger {
-    width: 100%;
-    background-color: #ff4757;
-    color: #ffffff;
-    border: 2px solid #2b2b2b;
-    box-shadow: 3px 3px 0px #2b2b2b;
-    padding: 12px 0;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
+width: 100%;
+background-color: #d93232;
+color: #fff;
+border: 2px solid #b52323;
+border-radius: 6px;
+box-shadow: 3px 3px 0 #8c1c1c;
+padding: 12px 0;
+font-size: 1rem;
+font-weight: bold;
+cursor: pointer;
+transition: transform 0.1s, box-shadow 0.1s;
 }
 
 .debug-btn-danger:active {
-    transform: translate(2px, 2px);
-    box-shadow: 1px 1px 0px #2b2b2b;
+transform: translate(2px, 2px);
+box-shadow: 1px 1px 0 #8c1c1c;
 }
 
 .debug-back-link {
-    text-align: center;
-    margin-top: 20px;
+text-align: left;
+margin-top: 15px;
 }
 
 .debug-back-link a {
-    color: #2b2b2b;
-    font-weight: bold;
-    text-decoration: none;
+color: #1670c5;
+font-weight: bold;
+text-decoration: none;
 }
 
 .debug-back-link a:hover {
-    text-decoration: underline;
+text-decoration: underline;
+}
+
+/* ==========================================================================
+   スマホ
+   ========================================================================== */
+
+@media (max-width: 800px) {
+
+.debug-container {
+margin: 20px auto;
+padding: 0 12px;
+}
+
+.debug-card {
+padding: 14px;
+margin-bottom: 16px;
+}
+
+.pv-calendar-area {
+flex-direction: column;
+}
+
+.pv-calendar-main {
+width: 100%;
+}
+
+.pv-detail {
+width: 100%;
+border-left: none;
+border-top: 2px solid #d5d5d5;
+padding-left: 0;
+padding-top: 15px;
+}
+
+.pv-day {
+min-height: 58px;
+}
+
+.pv-day-count {
+font-size: 0.7rem;
+margin-top: 5px;
+}
+
+.score-columns {
+grid-template-columns: 1fr;
+gap: 12px;
+}
+
+.score-mode-block {
+height: 220px;
+max-height: 220px;
+}
+
 }
