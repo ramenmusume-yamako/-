@@ -302,8 +302,9 @@
                         'click',
                         () => {
 
-                            localStorage.removeItem(
-                                'debug_mode'
+                            localStorage.setItem(
+                                'debug_mode',
+                                'false'
                             );
 
                             alert(
