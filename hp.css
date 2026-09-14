@@ -287,6 +287,137 @@ body {
     color: #666;
 }
 
+
+/* ==========================================================================
+   5. お知らせ
+   ========================================================================== */
+.home-news {
+    background: #fff;
+    border: 3px solid #2b2b2b;
+    box-shadow: 12px 12px 0px #800000;
+    padding: 40px 30px;
+    box-sizing: border-box;
+}
+.home-news-title {
+    font-size: 1.6rem;
+    color: #800000;
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #2b2b2b;
+    padding-bottom: 10px;
+    display: inline-block;
+}
+.home-news-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.home-news-item {
+    border-bottom: 1px dashed #999;
+    padding: 20px 0;
+}
+.home-news-item:last-child {
+    border-bottom: none;
+}
+.home-news-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+}
+.home-news-link:hover {
+    opacity: 0.8;
+}
+.home-news-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+.home-news-date {
+    color: #800000;
+    font-family: Georgia, serif;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+.home-news-label {
+    padding: 3px 8px;
+    border: 1px solid #2b2b2b;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+.home-news-label.label-menu {
+    background-color: #fff4eb;
+    color: #e67e22;
+    border-color: #e67e22;
+}
+.home-news-label.label-shop {
+    background-color: #f0f4ff;
+    color: #2980b9;
+    border-color: #2980b9;
+}
+.home-news-label.label-girls {
+    background-color: #fff0f0;
+    color: #c0392b;
+    border-color: #c0392b;
+}
+.home-news-label.label-sonota {
+    background-color: #d5ead8;
+    color: #006036;
+    border-color: #006036;
+}
+.home-news-content {
+    margin-top: 5px;
+}
+.home-news-item-title {
+    margin: 0 0 10px 0;
+    color: #2b2b2b;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+.home-news-title-img-wrap {
+    width: 100%;
+    margin: 10px 0;
+    overflow: hidden;
+}
+.home-news-title-img {
+    display: block;
+    width: 100%;
+    max-height: 180px;
+    object-fit: contain;
+}
+.home-news-toggle {
+    display: inline-block;
+    margin-top: 5px;
+    color: #800000;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+.home-news-loading,
+.home-news-empty {
+    margin: 0;
+    padding: 25px 0;
+    color: #666;
+    text-align: center;
+}
+.home-news-more {
+    display: block;
+    width: fit-content;
+    margin: 25px auto 0;
+    padding: 8px 25px;
+    border: 2px solid #2b2b2b;
+    background: #fff;
+    color: #2b2b2b;
+    text-decoration: none;
+    font-weight: bold;
+    box-shadow: 3px 3px 0px #2b2b2b;
+}
+.home-news-more:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #2b2b2b;
+}
+
 /* ==========================================================================
    5. スマホ・タブレット用の自動レイアウト調整（レスポンシブ）
    ========================================================================== */

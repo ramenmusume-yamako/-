@@ -43,30 +43,14 @@
             <p class="intro-text">山形工業高校と山形のラーメン屋さんが協力して行っている企画。<br>ラーメン消費量日本一位である山形県の様々なラーメン屋さんの魅力を伝えることが目的。<br>ラーメン屋さんごとにそれぞれのお店の魅力を詰め込んだ"ラーメン娘"という女の子キャラクターを作り、宣伝している。</p>
         </section>
 
-        <section id="characters" class="menu-card-home">
-            <h2 class="section-title">Character List</h2>
-            <div class="character-grid">
-                
-                <article class="chara-fuda">
-                    <div class="fuda-img-wrap">
-                        <img src="仮.png" alt="キャラ1" class="fuda-img">
-                    </div>
-                    <h4 class="fuda-name">メーナ</h4>
-                    <p class="fuda-desc">ケンチャンラーメン</p>
-                    <a href="meana.html" class="fuda-btn">詳細を見る</a>
-                </article>
-
-                <article class="chara-fuda">
-                    <div class="fuda-img-wrap">
-                        <img src="left.png" alt="キャラ2" class="fuda-img">
-                    </div>
-                    <h4 class="fuda-name">たつ子</h4>
-                    <p class="fuda-desc">麺辰</p>
-                    <a href="tatsuko.html" class="fuda-btn">詳細を見る</a>
-                </article>
-
-            </div>
+        <section class="home-news">
+          <h2 class="home-news-title">お知らせ</h2>
+          <ul class="home-news-list" id="home-news-list">
+            <li class="home-news-loading">お知らせを読み込んでいます...</li>
+          </ul>
+          <a href="news.html" class="home-news-more">もっと見る</a>
         </section>
+
     </main>
 
     <hr>
@@ -157,7 +141,17 @@
 <!-- PVカウント用スクリプト (Firebase連動) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import {
+    getFirestore,
+    doc,
+    setDoc,
+    increment,
+    collection,
+    query,
+    orderBy,
+    limit,
+    onSnapshot
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD5HT-oNq3hFOLSpBqG19Vw7ZmmaEHPzSY",
@@ -170,6 +164,100 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+
+  const categoryLabels = {
+    'label-menu': '新メニュー',
+    'label-shop': 'お店情報',
+    'label-girls': 'ラーメン娘',
+    'label-sonota': 'その他'
+};
+
+function loadLatestNews() {
+    const newsList = document.getElementById('home-news-list');
+    if (!newsList) return;
+
+    const newsQuery = query(
+        collection(db, "news"),
+        orderBy("createdAt", "desc"),
+        limit(3)
+    );
+
+    onSnapshot(newsQuery, (snapshot) => {
+        if (snapshot.empty) {
+            newsList.innerHTML = '<li class="home-news-empty">現在、お知らせはありません。</li>';
+            return;
+        }
+
+        newsList.innerHTML = '';
+
+        snapshot.forEach((docSnap) => {
+            const item = docSnap.data();
+
+            const newsItem = document.createElement('li');
+            newsItem.className = 'home-news-item';
+
+            const newsLink = document.createElement('a');
+            newsLink.href = 'news.html';
+            newsLink.className = 'home-news-link';
+
+            const meta = document.createElement('div');
+            meta.className = 'home-news-meta';
+
+            const date = document.createElement('span');
+            date.className = 'home-news-date';
+            date.textContent = item.date || '';
+
+            const label = document.createElement('span');
+            label.className = `home-news-label ${item.category || ''}`;
+            label.textContent =
+                item.categoryName ||
+                categoryLabels[item.category] ||
+                'お知らせ';
+
+            meta.appendChild(date);
+            meta.appendChild(label);
+
+            const content = document.createElement('div');
+            content.className = 'home-news-content';
+
+            const title = document.createElement('h3');
+            title.className = 'home-news-item-title';
+            title.textContent = item.title || '';
+
+            content.appendChild(title);
+
+            if (item.titleImg) {
+                const imgWrap = document.createElement('div');
+                imgWrap.className = 'home-news-title-img-wrap';
+
+                const img = document.createElement('img');
+                img.src = item.titleImg;
+                img.alt = item.title || 'お知らせ画像';
+                img.className = 'home-news-title-img';
+
+                imgWrap.appendChild(img);
+                content.appendChild(imgWrap);
+            }
+
+            const toggle = document.createElement('span');
+            toggle.className = 'home-news-toggle';
+            toggle.textContent = 'クリックで詳細を表示 🔍';
+
+            content.appendChild(toggle);
+
+            newsLink.appendChild(meta);
+            newsLink.appendChild(content);
+            newsItem.appendChild(newsLink);
+            newsList.appendChild(newsItem);
+        });
+    }, (error) => {
+        console.error('お知らせ取得エラー:', error);
+        newsList.innerHTML =
+            '<li class="home-news-empty">お知らせを取得できませんでした。</li>';
+    });
+}
+
+loadLatestNews();
 
   (async function trackPV() {
     // セッション（タブを開いてから閉じるまで）で1回だけカウント
