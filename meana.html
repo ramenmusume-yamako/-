@@ -40,16 +40,104 @@
             <div class="hanko">極</div>
         </div>
 
-    </div> <div class="google-map-chara-zone">
-        <div class="map-card-box">
-            <h2 class="map-card-title">店舗情報</h2>
-            <p class="map-card-text">メーナの所属しているお店は、ここ！ぜひ足を運んでみてください。</p>
-            
-            <div class="map-iframe-wrapper">
-                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2033.653635609655!2d140.31149941246326!3d38.2632279585344!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x5f8bb625bd3ab039%3A0xc417bf766437a7bd!2z44Kx44Oz44OB44Oj44Oz44Op44O844Oh44Oz5bGx5b2i!5e0!3m2!1sja!2sjp!4v1779682261027!5m2!1sja!2sjp" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <!-- 店舗情報 -->
+<div class="shop-info-zone">
+
+    <div class="shop-info-card">
+
+        <h2 class="shop-info-title">店舗情報</h2>
+
+        <!-- 店舗紹介 上段 -->
+        <div class="shop-introduction">
+
+            <!-- 店舗写真 -->
+            <div class="shop-main-photo">
+                <img src="meana_TOP.jpg" alt="店舗写真">
             </div>
+
+            <!-- 店舗紹介文 -->
+            <div class="shop-introduction-text">
+                <h3>店舗紹介</h3>
+
+                <p>
+                    メーナが働いているラーメン屋さん。<br>
+                    こだわりの醤油ラーメンが人気のお店です。<br>
+                    ぜひ実際に足を運んでみてください！
+                </p>
+
+                <!-- 画像ボタン -->
+                <div class="shop-image-buttons">
+                    <a href="https://81sta.jp/" class="image-button">
+                        <img src="home.png" alt="HP">
+                    </a>
+
+                    <a href="https://twitter.com/kenchan_ymgt?ref_src=twsrc%5Etfw" class="image-button">
+                        <img src="twitter.png" alt="X">
+                    </a>
+                </div>
+            </div>
+
         </div>
+
+
+        <!-- 店舗写真3枚 -->
+        <div class="shop-photo-slider">
+
+    <div class="shop-photo-track">
+
+        <div class="shop-photo-slide">
+            <img src="meana1.JPG" alt="店舗写真">
+        </div>
+
+        <div class="shop-photo-slide">
+            <img src="meana2.JPG" alt="店舗写真">
+        </div>
+
+        <div class="shop-photo-slide">
+            <img src="meana3.jpg" alt="店舗写真">
+        </div>
+
     </div>
+
+</div>
+
+
+        <!-- おすすめメニュー -->
+        <div class="recommend-area">
+
+    <!-- 吹き出し左側の画像 -->
+    <div class="recommend-image">
+        <img src="meanar.png" alt="キャラクター">
+    </div>
+
+    <!-- 吹き出し -->
+    <div class="recommend-bubble">
+        <p>おすすめメニューは</p>
+        <p><strong>中華そば</strong></p>
+        <p>だよ！</p>
+    </div>
+
+</div>
+
+        <!-- Googleマップ -->
+        <div class="map-area">
+
+            <h3 class="map-title">アクセス</h3>
+
+            <div class="map-iframe-wrapper">
+                <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2033.653635609655!2d140.31149941246326!3d38.2632279585344!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x5f8bb625bd3ab039%3A0xc417bf766437a7bd!2z44Kx44Oz44OB44Oj44Oz44Op44O844Oh44Oz5bGx5b2i!5e0!3m2!1sja!2sjp!4v1779682261027!5m2!1sja!2sjp"
+                    allowfullscreen=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
 
     <!-- PVカウント用スクリプト (Firebase連動) -->
 <script type="module">
@@ -83,6 +171,102 @@
       }
     }
   })();
+</script>
+
+<script>
+    if (window.innerWidth <= 768) {
+
+        const photoTrack = document.querySelector('.shop-photo-track');
+        const photoSlides = document.querySelectorAll('.shop-photo-slide');
+
+        let currentPhoto = 0;
+
+        // 自動スライド用タイマー
+        let autoSlideTimer;
+
+        // 写真を表示する
+        function showPhoto(index) {
+            currentPhoto = index;
+
+            photoTrack.style.transform =
+                `translateX(-${currentPhoto * 100}%)`;
+        }
+
+        // 3秒後に自動スライドを開始する
+        function startAutoSlide() {
+            clearTimeout(autoSlideTimer);
+
+            autoSlideTimer = setTimeout(function() {
+                nextPhoto();
+            }, 3000);
+        }
+
+        // 次の写真へ
+        function nextPhoto() {
+            currentPhoto++;
+
+            if (currentPhoto >= photoSlides.length) {
+                currentPhoto = 0;
+            }
+
+            showPhoto(currentPhoto);
+
+            // 自動スライド後も3秒待つ
+            startAutoSlide();
+        }
+
+        // 最初の自動スライド
+        startAutoSlide();
+
+
+        // =========================
+        // スワイプ操作
+        // =========================
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        photoTrack.addEventListener('touchstart', function(event) {
+            touchStartX = event.touches[0].clientX;
+
+            // スワイプした瞬間に自動スライドのタイマーをリセット
+            clearTimeout(autoSlideTimer);
+        });
+
+        photoTrack.addEventListener('touchend', function(event) {
+
+            touchEndX = event.changedTouches[0].clientX;
+
+            const difference = touchStartX - touchEndX;
+
+            // 左スワイプ
+            if (difference > 50) {
+
+                currentPhoto++;
+
+                if (currentPhoto >= photoSlides.length) {
+                    currentPhoto = 0;
+                }
+
+                showPhoto(currentPhoto);
+            }
+
+            // 右スワイプ
+            else if (difference < -50) {
+
+                currentPhoto--;
+
+                if (currentPhoto < 0) {
+                    currentPhoto = photoSlides.length - 1;
+                }
+
+                showPhoto(currentPhoto);
+            }
+
+            // スワイプ後は3秒待ってから自動スライド
+            startAutoSlide();
+        });
+    }
 </script>
 
 </body>
