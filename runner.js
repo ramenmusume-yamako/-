@@ -202,9 +202,6 @@ imgMenma.src = 'menma.png';
 const imgNori = new Image();
 imgNori.src = 'nori.png';
 
-const imgStartCallBg = new Image();
-imgStartCallBg.src = 'start_bg.png';
-
 const imgChashu = new Image();
 if (config.useChashu) {
     imgChashu.src = 'tya-syu-.png';
@@ -538,16 +535,7 @@ const handleInput = (e) => {
 
         player.isJumping = true;
 
-        const speedRatio =
-            currentSpeed / initialBaseSpeed;
-
-        const gentleRatio =
-            1.0 +
-            (speedRatio - 1.0) * 0.4;
-
-        player.vy =
-            BASE_JUMP *
-            Math.sqrt(gentleRatio);
+        player.vy = BASE_JUMP;
     }
 };
 
@@ -1482,32 +1470,6 @@ for (let i = 0; i < bgFrames.length; i++) {
         if (startCallTimer < 15) {
             ctx.globalAlpha =
                 startCallTimer / 15;
-        }
-
-        if (
-            imgStartCallBg.complete &&
-            imgStartCallBg.width > 0
-        ) {
-
-            const imgW =
-                imgStartCallBg.width;
-
-            const imgH =
-                imgStartCallBg.height;
-
-            ctx.drawImage(
-                imgStartCallBg,
-                (
-                    V_WIDTH / 2 -
-                    imgW / 2
-                ),
-                (
-                    V_HEIGHT / 2 -
-                    imgH / 2
-                ),
-                imgW,
-                imgH
-            );
         }
 
         ctx.textAlign = 'center';
