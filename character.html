@@ -1,121 +1,476 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
     <title>キャラクター紹介 | ラーメン娘</title>
+
     <link rel="stylesheet" href="character.css">
+    <link rel="stylesheet" href="debug-button.css">
+
 </head>
 
-<header>
-    <div class="hamburger-menu">
-        <input type="checkbox" id="menu-btn-check">
-        <label for="menu-btn-check" class="menu-btn"><span></span></label>
-        <div class="menu-content">
-            <ul>
-                <li><a href="index.html">ホーム</a></li>
-                <li><a href="character.html">キャラ紹介</a></li>
-                <li><a href="game.html">ミニゲーム</a></li>
-                <li><a href="news.html">お知らせ</a></li>
-                <li id="debug-menu-item" style="display: none;">
-                    <a href="debug.html" class="debug-link">🔧 デバッグページ</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</header>
 
 <body class="chara-page-theme">
 
-    <div class="full-container">
-        <h1 class="page-title">本日のおすすめ（娘選択）</h1>
 
-        <!-- 画面いっぱいに広がるグリッド -->
-        <div class="grid-container" id="gridContainer"></div>
+<!-- =========================================================
+     PC用ヘッダー
+     ========================================================= -->
+
+<header class="common-pc-header">
+
+    <nav class="pc-header-nav">
+
+        <!-- 左側 -->
+        <div class="pc-nav-left">
+
+            <a href="index.html">
+                ホーム
+            </a>
+
+            <span>|</span>
+
+            <a href="character.html">
+                キャラ紹介
+            </a>
+
+        </div>
+
+
+        <!-- 中央ロゴ -->
+        <a
+            href="index.html"
+            class="pc-header-logo"
+        >
+
+            <img
+                src="rogo.png"
+                alt="ラーメン娘"
+            >
+
+        </a>
+
+
+        <!-- 右側 -->
+        <div class="pc-nav-right">
+
+            <a href="game.html">
+                ミニゲーム
+            </a>
+
+            <span>|</span>
+
+            <a href="news.html">
+                お知らせ
+            </a>
+
+        </div>
+
+    </nav>
+
+</header>
+
+
+
+<!-- =========================================================
+     スマホ用ヘッダー
+     PCでは表示しない
+     ========================================================= -->
+
+<header class="mobile-common-header">
+
+    <div class="hamburger-menu">
+
+        <input
+            type="checkbox"
+            id="menu-btn-check"
+        >
+
+        <label
+            for="menu-btn-check"
+            class="menu-btn"
+        >
+            <span></span>
+        </label>
+
+
+        <div class="menu-content">
+
+            <ul>
+
+                <li>
+                    <a href="index.html">
+                        ホーム
+                    </a>
+                </li>
+
+                <li>
+                    <a href="character.html">
+                        キャラ紹介
+                    </a>
+                </li>
+
+                <li>
+                    <a href="game.html">
+                        ミニゲーム
+                    </a>
+                </li>
+
+                <li>
+                    <a href="news.html">
+                        お知らせ
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
     </div>
 
-    <!-- PVカウント用スクリプト (Firebase連動) -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-      import { getFirestore, doc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+</header>
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyD5HT-oNq3hFOLSpBqG19Vw7ZmmaEHPzSY",
-        authDomain: "ramengirls-bd769.firebaseapp.com",
-        projectId: "ramengirls-bd769",
-        storageBucket: "ramengirls-bd769.firebasestorage.app",
-        messagingSenderId: "211447953783",
-        appId: "1:211447953783:web:3d3ee33f78e0d830f48972"
-      };
 
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
 
-      (async function trackPV() {
-        if (!sessionStorage.getItem('visited_session')) {
-          const today = new Date().toISOString().split('T')[0];
-          const pvRef = doc(db, "pv", today);
+<!-- =========================================================
+     デバッグモード中だけ表示されるボタン
+     ========================================================= -->
 
-          try {
-            await setDoc(pvRef, { count: increment(1) }, { merge: true });
-            sessionStorage.setItem('visited_session', 'true');
-          } catch (e) {
-            console.error("PVカウントエラー:", e);
-          }
+<a
+    id="debug-spana-btn"
+    href="debug.html"
+    aria-label="デバッグページへ"
+>
+
+    <img
+        src="spana.png"
+        alt=""
+    >
+
+</a>
+
+
+
+<!-- =========================================================
+     キャラクター一覧
+     ========================================================= -->
+
+<div class="full-container">
+
+    <h1 class="page-title">
+        本日のおすすめ（娘選択）
+    </h1>
+
+
+    <!-- キャラクター一覧 -->
+    <div
+        class="grid-container"
+        id="gridContainer"
+    ></div>
+
+</div>
+
+
+
+<!-- =========================================================
+     PVカウント用スクリプト
+     Firebase連動
+     ========================================================= -->
+
+<script type="module">
+
+    import {
+        initializeApp
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
+
+    import {
+        getFirestore,
+        doc,
+        setDoc,
+        increment
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+    const firebaseConfig = {
+
+        apiKey:
+            "AIzaSyD5HT-oNq3hFOLSpBqG19Vw7ZmmaEHPzSY",
+
+        authDomain:
+            "ramengirls-bd769.firebaseapp.com",
+
+        projectId:
+            "ramengirls-bd769",
+
+        storageBucket:
+            "ramengirls-bd769.firebasestorage.app",
+
+        messagingSenderId:
+            "211447953783",
+
+        appId:
+            "1:211447953783:web:3d3ee33f78e0d830f48972"
+
+    };
+
+
+    const app =
+        initializeApp(firebaseConfig);
+
+
+    const db =
+        getFirestore(app);
+
+
+
+    /* =========================================================
+       PVカウント
+       ========================================================= */
+
+    (async function trackPV() {
+
+        // 同じタブでは1回だけカウント
+        if (
+            !sessionStorage.getItem(
+                'visited_session'
+            )
+        ) {
+
+            const today =
+                new Date()
+                    .toISOString()
+                    .split('T')[0];
+
+
+            const pvRef =
+                doc(
+                    db,
+                    "pv",
+                    today
+                );
+
+
+            try {
+
+                await setDoc(
+                    pvRef,
+                    {
+                        count: increment(1)
+                    },
+                    {
+                        merge: true
+                    }
+                );
+
+
+                sessionStorage.setItem(
+                    'visited_session',
+                    'true'
+                );
+
+
+            } catch (e) {
+
+                console.error(
+                    "PVカウントエラー:",
+                    e
+                );
+
+            }
+
         }
-      })();
-    </script>
 
-    <script>
-      // デバッグモード判定
-      document.addEventListener('DOMContentLoaded', () => {
-        const debugMenuItem = document.getElementById('debug-menu-item');
-        if (debugMenuItem && localStorage.getItem('debug_mode') === 'true') {
-          debugMenuItem.style.display = 'block';
+    })();
+
+</script>
+
+
+
+<!-- =========================================================
+     キャラクター一覧生成
+     ========================================================= -->
+
+<script>
+
+    /* =========================================================
+       キャラクターデータ
+       ========================================================= */
+
+    const CHAR_DATA = [
+
+        {
+            id: "hajime",
+            name: "ハジメ",
+            img: "hajime up.png",
+            link: "hajime.html"
+        },
+
+        {
+            id: "meana",
+            name: "メーナ",
+            img: "meana up.png",
+            link: "meana.html"
         }
-      });
 
-      // キャラクターデータ
-      const CHAR_DATA = [
-        { id: "meana",   name: "メーナ",     img: "meana up.png", link: "meana.html" },
-      ];
+    ];
 
-      // グリッド生成（全10マス）
-      function renderGrid() {
-        const container = document.getElementById("gridContainer");
+
+
+    /* =========================================================
+       キャラクター一覧を生成
+       ========================================================= */
+
+    function renderGrid() {
+
+        const container =
+            document.getElementById(
+                "gridContainer"
+            );
+
+
         if (!container) return;
+
+
+        // 一度中身を空にする
         container.innerHTML = "";
 
-        for (let i = 0; i < 8; i++) {
-          const card = document.createElement('a');
 
-          if (i < CHAR_DATA.length) {
-            const char = CHAR_DATA[i];
-            card.className = "chara-grid-card unlocked";
-            card.href = char.link;
-            card.innerHTML = `
-              <div class="avatar-crop">
-                <img src="${char.img}" alt="${char.name}">
-              </div>
-              <div class="chara-grid-name">${char.name}</div>
-              <div class="chara-grid-sub">お品書きを見る ➔</div>
-            `;
-          } else {
-            card.className = "chara-grid-card locked";
-            card.innerHTML = `
-              <div class="avatar-crop">
-                <img src="shignon.png" alt="準備中">
-              </div>
-              <div class="chara-grid-name" style="color:#888;">????</div>
-              <div class="chara-grid-sub" style="color:#aaa;">準備中</div>
-            `;
-          }
-          container.appendChild(card);
+
+        // 8マス作る
+        for (
+            let i = 0;
+            i < 8;
+            i++
+        ) {
+
+            const card =
+                document.createElement("a");
+
+
+
+            /* -------------------------------------------------
+               キャラクターが登録されている場合
+               ------------------------------------------------- */
+
+            if (
+                i < CHAR_DATA.length
+            ) {
+
+                const char =
+                    CHAR_DATA[i];
+
+
+                card.className =
+                    "chara-grid-card unlocked";
+
+
+                card.href =
+                    char.link;
+
+
+                card.innerHTML = `
+
+                    <div class="avatar-crop">
+
+                        <img
+                            src="${char.img}"
+                            alt="${char.name}"
+                        >
+
+                    </div>
+
+
+                    <div class="chara-grid-name">
+
+                        ${char.name}
+
+                    </div>
+
+
+                    <div class="chara-grid-sub">
+
+                        お品書きを見る ➔
+
+                    </div>
+
+                `;
+
+
+
+            /* -------------------------------------------------
+               キャラクターがまだ登録されていない場合
+               ------------------------------------------------- */
+
+            } else {
+
+                card.className =
+                    "chara-grid-card locked";
+
+
+                card.innerHTML = `
+
+                    <div class="avatar-crop">
+
+                        <img
+                            src="shignon.png"
+                            alt="準備中"
+                        >
+
+                    </div>
+
+
+                    <div class="chara-grid-name">
+
+                        ????
+
+                    </div>
+
+
+                    <div class="chara-grid-sub">
+
+                        準備中
+
+                    </div>
+
+                `;
+
+            }
+
+
+            container.appendChild(card);
+
         }
-      }
 
-      renderGrid();
-    </script>
+    }
+
+
+
+    /* =========================================================
+       キャラクター一覧を表示
+       ========================================================= */
+
+    renderGrid();
+
+</script>
+
+
+
+<!-- =========================================================
+     デバッグボタン用JavaScript
+     ========================================================= -->
+
+<script src="debug-button.js"></script>
+
 
 </body>
+
 </html>
